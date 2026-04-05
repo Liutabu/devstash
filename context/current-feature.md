@@ -1,26 +1,22 @@
 # Current Feature
 
-Dashboard UI Phase 1 — Core layout, shadcn/ui setup, and top bar.
-
 ## Status
-
-In Progress
 
 ## Goals
 
-- Initialize shadcn/ui and install required components
-- Create dashboard route at `/dashboard`
-- Main dashboard layout with global dark mode styles
-- Top bar with search input and "New Item" button (display only)
-- Placeholder sidebar (`<h2>Sidebar</h2>`) and main area (`<h2>Main</h2>`)
-
 ## Notes
 
-- Reference screenshot: `context/screenshots/dashboard-ui-main.png`
-- Mock data available at `src/lib/mock-data.ts`
-- Phase 2 and 3 specs exist in `context/features/`
-
 ## History
+
+### 2026-04-05 — Dashboard UI Phase 1
+- Initialized shadcn/ui (v4.1.2) with Tailwind CSS v4 support
+- Installed `Button` and `Input` shadcn components
+- Created `/dashboard` route with full-height layout
+- Built `TopBar` component with search input and "New Collection" / "+ New Item" buttons (display only)
+- Added sidebar and main area placeholders
+- Set dark mode by default via `dark` class on `<html>`
+- Fixed Geist font not loading — shadcn init generated a self-referencing `--font-sans` CSS variable
+- Added `suppressHydrationWarning` to `<html>` and `<body>` to suppress browser extension attribute injection
 
 ### 2026-04-04 — Initial Next.js Setup
 - Bootstrapped Next.js 16 with App Router, React 19, TypeScript, and Tailwind CSS v4
