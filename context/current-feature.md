@@ -8,6 +8,14 @@
 
 ## History
 
+### 2026-04-07 — Dashboard UI Phase 2
+- Created `Sidebar` component with Types nav (colored icons + counts), Favorites and All Collections sections, user avatar area at the bottom
+- Created `DashboardShell` client wrapper managing collapse state (desktop) and open/close state (mobile drawer)
+- Updated `TopBar` with `PanelLeft` desktop toggle and `Menu` mobile hamburger button
+- Desktop sidebar collapses to 52px icon-only strip, expands to 240px with smooth CSS transition
+- Mobile sidebar is a fixed slide-in drawer with a backdrop overlay
+- Type links route to `/items/[slug]`, collection links route to `/collections/[id]`
+
 ### 2026-04-05 — Dashboard UI Phase 1
 - Initialized shadcn/ui (v4.1.2) with Tailwind CSS v4 support
 - Installed `Button` and `Input` shadcn components

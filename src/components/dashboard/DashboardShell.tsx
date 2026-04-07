@@ -1,0 +1,52 @@
+'use client';
+
+import { useState } from 'react';
+import { TopBar } from './TopBar';
+import { Sidebar } from './Sidebar';
+import { cn } from '@/lib/utils';
+
+interface DashboardShellProps {
+  children: React.ReactNode;
+}
+
+export function DashboardShell({ children }: DashboardShellProps) {
+  const [collapsed, setCollapsed] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  return (
+    <div className="flex h-full flex-col" suppressHydrationWarning>
+      <TopBar
+        onToggleSidebar={() => setCollapsed((c) => !c)}
+        onMobileMenuClick={() => setMobileOpen(true)}
+      />
+
+      <div className="relative flex flex-1 overflow-hidden" suppressHydrationWarning>
+        {/* Mobile overlay */}
+        {mobileOpen && (
+          <div
+            className="fixed inset-0 z-40 bg-black/50 md:hidden"
+            onClick={() => setMobileOpen(false)}
+          />
+        )}
+
+        {/* Desktop sidebar */}
+        <div className="hidden md:flex" suppressHydrationWarning>
+          <Sidebar collapsed={collapsed} />
+        </div>
+
+        {/* Mobile drawer */}
+        <div
+          className={cn(
+            'fixed inset-y-0 left-0 z-50 md:hidden transition-transform duration-300 ease-in-out',
+            mobileOpen ? 'translate-x-0' : '-translate-x-full',
+          )}
+        >
+          <Sidebar collapsed={false} />
+        </div>
+
+        {/* Main content */}
+        <main className="flex-1 overflow-auto bg-background p-6">{children}</main>
+      </div>
+    </div>
+  );
+}
