@@ -8,6 +8,13 @@
 
 ## History
 
+### 2026-04-07 — Dashboard UI Phase 3
+- Created `StatsCards` component with 4 stat cards: total items, collections, favorite items, favorite collections
+- Created `CollectionCard` component with colored top border, icon chips, item count, and star indicator
+- Created `ItemRow` component with colored left border, type badge, tags, and pin/favorite indicators
+- Created `DashboardMain` assembling all sections: heading, stats, collections grid, pinned items, 10 recent items
+- Updated dashboard page to render `DashboardMain` inside `DashboardShell`
+
 ### 2026-04-07 — Dashboard UI Phase 2
 - Created `Sidebar` component with Types nav (colored icons + counts), Favorites and All Collections sections, user avatar area at the bottom
 - Created `DashboardShell` client wrapper managing collapse state (desktop) and open/close state (mobile drawer)
