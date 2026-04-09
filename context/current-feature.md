@@ -4,21 +4,28 @@
 Complete
 
 ## Goals
-Replace dummy item data displayed in the main area of the dashboard (right side) with actual data from the database. This includes both pinned and recent items.
+Replace mock data in stats/sidebar with real database data.
 
-- Create `src/lib/db/items.ts` with data fetching functions
-- Fetch items directly in server component
-- Item card icon/border derived from the item type
-- Display item type tags and anything else currently shown
-- If there are no pinned items, nothing should display there
-- Update collection stats display
+- Display stats from the database (already done)
+- Display system item types in the sidebar with their icons and item counts, linking to `/items/[typename]`
+- Display sidebar collections (favorites + recents) from the database
+- For favorite collections show star icon; for recents show a colored circle based on dominant item type
+- Add "View all collections" link under the collections list going to `/collections`
+- Create `getItemTypesWithCounts()` in `src/lib/db/items.ts`
+- Create `getSidebarCollections()` in `src/lib/db/collections.ts`
 
 ## Notes
-- Reference `context/screenshots/dashboard-ui-main.png` for design reference
-- Fetch data in server component, not client component
-- Replace mock data from `src/lib/mock-data.ts`
+- Sidebar is a client component (uses useState); data must be passed as props from the server-side page
+- DashboardShell (client) will accept itemTypes + sidebarCollections props and forward to Sidebar
 
 ## History
+
+### 2026-04-09 — Stats & sidebar from database
+- Added `getItemTypesWithCounts()` to `src/lib/db/items.ts` — fetches system item types with per-type item counts and derived slug
+- Added `getSidebarCollections()` to `src/lib/db/collections.ts` — fetches favorites first then recents, computes dominant color per collection
+- Updated `Sidebar` to accept `itemTypes` and `collections` props; recents now show a colored circle; added "View all collections" link to `/collections`
+- Updated `DashboardShell` to accept and forward sidebar data props to both desktop and mobile `<Sidebar>` instances
+- Converted `DashboardPage` to async server component; fetches sidebar data in parallel and passes to `DashboardShell`
 
 ### 2026-04-09 — Dashboard items from database
 - Created `src/lib/db/items.ts` with `getPinnedItems()`, `getRecentItems(limit)`, and `getDashboardStats()` — each item query joins `itemType` and `tags` via Prisma relations

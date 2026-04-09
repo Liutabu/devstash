@@ -15,8 +15,10 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import { useState } from 'react';
-import { mockItemTypes, mockItemTypeCounts, mockCollections, mockUser } from '@/lib/mock-data';
+import { mockUser } from '@/lib/mock-data';
 import { cn } from '@/lib/utils';
+import type { ItemTypeWithCount } from '@/lib/db/items';
+import type { SidebarCollectionData } from '@/lib/db/collections';
 
 const iconMap: Record<string, LucideIcon> = {
   Code,
@@ -28,15 +30,17 @@ const iconMap: Record<string, LucideIcon> = {
   Link: LinkIcon,
 };
 
-const favoriteCollections = mockCollections.filter((c) => c.isFavorite);
-const recentCollections = mockCollections.filter((c) => !c.isFavorite);
-
 interface SidebarProps {
   collapsed: boolean;
+  itemTypes: ItemTypeWithCount[];
+  collections: SidebarCollectionData[];
 }
 
-export function Sidebar({ collapsed }: SidebarProps) {
+export function Sidebar({ collapsed, itemTypes, collections }: SidebarProps) {
   const [collectionsOpen, setCollectionsOpen] = useState(true);
+
+  const favoriteCollections = collections.filter((c) => c.isFavorite);
+  const recentCollections = collections.filter((c) => !c.isFavorite);
 
   const initials = mockUser.name
     .split(' ')
@@ -61,9 +65,8 @@ export function Sidebar({ collapsed }: SidebarProps) {
             </p>
           )}
           <nav className="space-y-0.5 px-2">
-            {mockItemTypes.map((type) => {
+            {itemTypes.map((type) => {
               const Icon = iconMap[type.icon];
-              const count = mockItemTypeCounts[type.id] ?? 0;
               return (
                 <Link
                   key={type.id}
@@ -80,7 +83,7 @@ export function Sidebar({ collapsed }: SidebarProps) {
                   {!collapsed && (
                     <>
                       <span className="flex-1 truncate">{type.name}</span>
-                      <span className="text-xs text-muted-foreground tabular-nums">{count}</span>
+                      <span className="text-xs text-muted-foreground tabular-nums">{type.count}</span>
                     </>
                   )}
                 </Link>
@@ -125,7 +128,7 @@ export function Sidebar({ collapsed }: SidebarProps) {
 
             {collectionsOpen && recentCollections.length > 0 && (
               <div>
-                <p className="px-3 py-0.5 text-xs text-muted-foreground">All Collections</p>
+                <p className="px-3 py-0.5 text-xs text-muted-foreground">Recent</p>
                 <nav className="space-y-0.5 px-2">
                   {recentCollections.map((col) => (
                     <Link
@@ -133,7 +136,10 @@ export function Sidebar({ collapsed }: SidebarProps) {
                       href={`/collections/${col.id}`}
                       className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors"
                     >
-                      <span className="h-3.5 w-3.5 shrink-0" />
+                      <span
+                        className="h-3.5 w-3.5 shrink-0 rounded-full"
+                        style={{ backgroundColor: col.dominantColor }}
+                      />
                       <span className="flex-1 truncate">{col.name}</span>
                       <span className="text-xs text-muted-foreground tabular-nums">
                         {col.itemCount}
@@ -141,6 +147,17 @@ export function Sidebar({ collapsed }: SidebarProps) {
                     </Link>
                   ))}
                 </nav>
+              </div>
+            )}
+
+            {collectionsOpen && (
+              <div className="px-2 pt-1">
+                <Link
+                  href="/collections"
+                  className="block rounded-md px-2 py-1.5 text-xs text-muted-foreground hover:text-foreground hover:bg-sidebar-accent transition-colors"
+                >
+                  View all collections
+                </Link>
               </div>
             )}
           </section>

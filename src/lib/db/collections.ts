@@ -10,6 +10,48 @@ export interface CollectionCardData {
   icons: string[];
 }
 
+export interface SidebarCollectionData {
+  id: string;
+  name: string;
+  isFavorite: boolean;
+  itemCount: number;
+  dominantColor: string;
+}
+
+export async function getSidebarCollections(limit = 8): Promise<SidebarCollectionData[]> {
+  const collections = await prisma.collection.findMany({
+    take: limit,
+    orderBy: [{ isFavorite: 'desc' }, { updatedAt: 'desc' }],
+    include: {
+      items: {
+        include: {
+          item: {
+            include: {
+              itemType: { select: { color: true } },
+            },
+          },
+        },
+      },
+    },
+  });
+
+  return collections.map((col) => {
+    const typeCounts: Record<string, { count: number; color: string }> = {};
+    for (const ic of col.items) {
+      const { color } = ic.item.itemType;
+      typeCounts[color] = { count: (typeCounts[color]?.count ?? 0) + 1, color };
+    }
+    const dominant = Object.values(typeCounts).sort((a, b) => b.count - a.count)[0];
+    return {
+      id: col.id,
+      name: col.name,
+      isFavorite: col.isFavorite,
+      itemCount: col.items.length,
+      dominantColor: dominant?.color ?? '#6b7280',
+    };
+  });
+}
+
 export async function getRecentCollections(limit = 6): Promise<CollectionCardData[]> {
   const collections = await prisma.collection.findMany({
     take: limit,
