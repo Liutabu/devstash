@@ -76,6 +76,31 @@ export async function getRecentItems(limit = 10): Promise<ItemRowData[]> {
   return items.map(mapItem);
 }
 
+export interface ItemTypeWithCount {
+  id: string;
+  name: string;
+  icon: string;
+  color: string;
+  slug: string;
+  count: number;
+}
+
+export async function getItemTypesWithCounts(): Promise<ItemTypeWithCount[]> {
+  const itemTypes = await prisma.itemType.findMany({
+    where: { isSystem: true },
+    include: { _count: { select: { items: true } } },
+    orderBy: { name: 'asc' },
+  });
+  return itemTypes.map((t) => ({
+    id: t.id,
+    name: t.name,
+    icon: t.icon,
+    color: t.color,
+    slug: t.name.toLowerCase() + 's',
+    count: t._count.items,
+  }));
+}
+
 export async function getDashboardStats(): Promise<DashboardStats> {
   const [totalItems, totalCollections, favoriteItems, favoriteCollections] = await Promise.all([
     prisma.item.count(),

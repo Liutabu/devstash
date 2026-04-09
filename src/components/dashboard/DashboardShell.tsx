@@ -4,12 +4,16 @@ import { useState } from 'react';
 import { TopBar } from './TopBar';
 import { Sidebar } from './Sidebar';
 import { cn } from '@/lib/utils';
+import type { ItemTypeWithCount } from '@/lib/db/items';
+import type { SidebarCollectionData } from '@/lib/db/collections';
 
 interface DashboardShellProps {
   children: React.ReactNode;
+  itemTypes: ItemTypeWithCount[];
+  sidebarCollections: SidebarCollectionData[];
 }
 
-export function DashboardShell({ children }: DashboardShellProps) {
+export function DashboardShell({ children, itemTypes, sidebarCollections }: DashboardShellProps) {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -31,7 +35,7 @@ export function DashboardShell({ children }: DashboardShellProps) {
 
         {/* Desktop sidebar */}
         <div className="hidden md:flex" suppressHydrationWarning>
-          <Sidebar collapsed={collapsed} />
+          <Sidebar collapsed={collapsed} itemTypes={itemTypes} collections={sidebarCollections} />
         </div>
 
         {/* Mobile drawer */}
@@ -41,7 +45,7 @@ export function DashboardShell({ children }: DashboardShellProps) {
             mobileOpen ? 'translate-x-0' : '-translate-x-full',
           )}
         >
-          <Sidebar collapsed={false} />
+          <Sidebar collapsed={false} itemTypes={itemTypes} collections={sidebarCollections} />
         </div>
 
         {/* Main content */}
