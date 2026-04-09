@@ -1,10 +1,21 @@
 # Current Feature
 
 ## Status
+Complete — seed runs successfully, idempotent (safe to re-run)
 
 ## Goals
+Create a seed script at `prisma/seed.ts` to populate the database with sample data for development and demos.
+
+- Create demo user (demo@devstash.io)
+- Seed all 7 system item types
+- Create 5 collections with realistic items (snippets, prompts, commands, links)
+- Wire up tags and collection memberships
 
 ## Notes
+- Uses `bcryptjs` to hash the demo user password (12 rounds)
+- Seed script uses the `PrismaPg` adapter directly (same pattern as `src/lib/prisma.ts`)
+- Run with: `npx prisma db seed`
+- Add `"prisma": { "seed": "tsx prisma/seed.ts" }` to `package.json`
 
 ## History
 
