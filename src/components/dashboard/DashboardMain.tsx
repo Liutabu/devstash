@@ -1,15 +1,17 @@
 import Link from 'next/link';
-import { mockItems } from '@/lib/mock-data';
+import { getPinnedItems, getRecentItems } from '@/lib/db/items';
 import { getRecentCollections } from '@/lib/db/collections';
 import { StatsCards } from './StatsCards';
 import { CollectionCard } from './CollectionCard';
 import { ItemRow } from './ItemRow';
 
-const pinnedItems = mockItems.filter((i) => i.isPinned);
-const recentItems = mockItems.slice(0, 10);
-
 export async function DashboardMain() {
-  const recentCollections = await getRecentCollections();
+  const [recentCollections, pinnedItems, recentItems] = await Promise.all([
+    getRecentCollections(),
+    getPinnedItems(),
+    getRecentItems(),
+  ]);
+
   return (
     <div className="space-y-8">
       {/* Heading */}
