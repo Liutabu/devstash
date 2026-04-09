@@ -1,23 +1,39 @@
 # Current Feature
 
 ## Status
-Complete — seed runs successfully, idempotent (safe to re-run)
+Complete
 
 ## Goals
-Create a seed script at `prisma/seed.ts` to populate the database with sample data for development and demos.
+Replace dummy collection data on the dashboard with real data from the Neon database via Prisma.
 
-- Create demo user (demo@devstash.io)
-- Seed all 7 system item types
-- Create 5 collections with realistic items (snippets, prompts, commands, links)
-- Wire up tags and collection memberships
+- Create `src/lib/db/collections.ts` with data fetching functions
+- Fetch collections directly in a server component
+- Collection card border color derived from most-used content type in that collection
+- Show small icons of all types present in that collection
+- Keep the current design (no layout changes)
+- Update collection stats display
 
 ## Notes
-- Uses `bcryptjs` to hash the demo user password (12 rounds)
-- Seed script uses the `PrismaPg` adapter directly (same pattern as `src/lib/prisma.ts`)
-- Run with: `npx prisma db seed`
-- Add `"prisma": { "seed": "tsx prisma/seed.ts" }` to `package.json`
+- Do not add items underneath collections yet — that is a separate feature
+- Reference `context/screenshots/dashboard-ui-main.png` for design reference
+- Fetch data in server component, not client component
 
 ## History
+
+### 2026-04-09 — Dashboard collections from database
+- Created `src/lib/db/collections.ts` with `getRecentCollections()` — fetches 6 most recent collections via Prisma, joins through `ItemCollection → Item → ItemType` to compute dominant color and icon list per collection
+- Converted `DashboardMain` to an async server component, replaced `mockCollections` with real DB fetch
+- Fixed `src/lib/prisma.ts` to explicitly set `sslmode=verify-full` on the connection string, eliminating a pg SSL warning in the dev overlay
+
+### 2026-04-09 — Seed demo data
+- Created `prisma/seed.ts` to populate database with sample data for development and demos
+- Creates demo user (`demo@devstash.io`) with bcryptjs-hashed password (12 rounds)
+- Seeds all 7 system item types
+- Creates 5 collections with realistic items (snippets, prompts, commands, links)
+- Wires up tags and collection memberships
+- Seed is idempotent (safe to re-run)
+- Uses `PrismaPg` adapter directly (same pattern as `src/lib/prisma.ts`)
+- Run with: `npx prisma db seed`
 
 ### 2026-04-09 — Prisma + Neon PostgreSQL setup
 - Installed Prisma 7, `@prisma/adapter-pg`, `pg`, `dotenv`
