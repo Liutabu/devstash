@@ -8,6 +8,16 @@
 
 ## History
 
+### 2026-04-09 — Prisma + Neon PostgreSQL setup
+- Installed Prisma 7, `@prisma/adapter-pg`, `pg`, `dotenv`
+- Created `prisma/schema.prisma` with all models (`User`, `ItemType`, `Item`, `Collection`, `ItemCollection`, `Tag`, `TagsOnItems`) plus NextAuth models, with indexes and cascade deletes
+- Created `prisma.config.ts` at project root — datasource URL lives here in Prisma 7, not in the schema
+- Created `src/lib/prisma.ts` singleton using `PrismaPg` driver adapter (required by Prisma 7)
+- Generated client to `src/generated/prisma/` (gitignored)
+- Ran initial migration `20260409143823_init` against Neon dev branch
+- Created `scripts/test-db.ts` to verify connection and table row counts
+- Import path for generated client: `@/generated/prisma/client`
+
 ### 2026-04-07 — Dashboard UI Phase 3
 - Created `StatsCards` component with 4 stat cards: total items, collections, favorite items, favorite collections
 - Created `CollectionCard` component with colored top border, icon chips, item count, and star indicator
