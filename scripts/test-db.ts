@@ -49,7 +49,8 @@ async function main() {
   console.log(`  name          ${user.name}`);
   console.log(`  emailVerified ${user.emailVerified?.toISOString()}`);
   console.log(`  isPro         ${user.isPro}`);
-  console.log(`  accounts      ${user.accounts.map((a) => a.provider).join(", ")}`);
+  console.log(`  password      ${user.password ? "[hashed]" : "NOT SET"}`);
+  console.log(`  accounts      ${user.accounts.map((a) => a.provider).join(", ") || "none"}`);
 
   // ─── Item types ────────────────────────────────────────────────────────────
 

@@ -15,13 +15,13 @@ async function main() {
 
   const user = await prisma.user.upsert({
     where: { email: "demo@devstash.io" },
-    update: {},
+    update: { password: passwordHash },
     create: {
       email: "demo@devstash.io",
       name: "Demo User",
       emailVerified: new Date(),
       isPro: false,
-      // Store hashed password via a credentials account record
+      password: passwordHash,
     },
   });
 
@@ -30,24 +30,6 @@ async function main() {
   // Wipe existing items and collections so re-runs don't duplicate
   await prisma.item.deleteMany({ where: { userId: user.id } });
   await prisma.collection.deleteMany({ where: { userId: user.id } });
-
-  // Store hashed password as a credentials provider account
-  await prisma.account.upsert({
-    where: {
-      provider_providerAccountId: {
-        provider: "credentials",
-        providerAccountId: user.id,
-      },
-    },
-    update: {},
-    create: {
-      userId: user.id,
-      type: "credentials",
-      provider: "credentials",
-      providerAccountId: user.id,
-      access_token: passwordHash,
-    },
-  });
 
   // ─── Item Types ───────────────────────────────────────────────────────────
 
