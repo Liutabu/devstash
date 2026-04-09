@@ -1,19 +1,16 @@
-import { mockItems, mockCollections } from '@/lib/mock-data';
+import { getDashboardStats } from '@/lib/db/items';
 import { LayoutGrid, Star, Layers } from 'lucide-react';
 
-const totalItems = mockItems.length;
-const totalCollections = mockCollections.length;
-const favoriteItems = mockItems.filter((i) => i.isFavorite).length;
-const favoriteCollections = mockCollections.filter((c) => c.isFavorite).length;
+export async function StatsCards() {
+  const { totalItems, totalCollections, favoriteItems, favoriteCollections } = await getDashboardStats();
 
-const stats = [
-  { label: 'Items', value: totalItems, icon: LayoutGrid, color: 'text-blue-400' },
-  { label: 'Collections', value: totalCollections, icon: Layers, color: 'text-purple-400' },
-  { label: 'Favorite Items', value: favoriteItems, icon: Star, color: 'text-yellow-400' },
-  { label: 'Favorite Collections', value: favoriteCollections, icon: Star, color: 'text-yellow-400' },
-];
+  const stats = [
+    { label: 'Items', value: totalItems, icon: LayoutGrid, color: 'text-blue-400' },
+    { label: 'Collections', value: totalCollections, icon: Layers, color: 'text-purple-400' },
+    { label: 'Favorite Items', value: favoriteItems, icon: Star, color: 'text-yellow-400' },
+    { label: 'Favorite Collections', value: favoriteCollections, icon: Star, color: 'text-yellow-400' },
+  ];
 
-export function StatsCards() {
   return (
     <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
       {stats.map((stat) => {

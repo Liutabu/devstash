@@ -4,21 +4,27 @@
 Complete
 
 ## Goals
-Replace dummy collection data on the dashboard with real data from the Neon database via Prisma.
+Replace dummy item data displayed in the main area of the dashboard (right side) with actual data from the database. This includes both pinned and recent items.
 
-- Create `src/lib/db/collections.ts` with data fetching functions
-- Fetch collections directly in a server component
-- Collection card border color derived from most-used content type in that collection
-- Show small icons of all types present in that collection
-- Keep the current design (no layout changes)
+- Create `src/lib/db/items.ts` with data fetching functions
+- Fetch items directly in server component
+- Item card icon/border derived from the item type
+- Display item type tags and anything else currently shown
+- If there are no pinned items, nothing should display there
 - Update collection stats display
 
 ## Notes
-- Do not add items underneath collections yet — that is a separate feature
 - Reference `context/screenshots/dashboard-ui-main.png` for design reference
 - Fetch data in server component, not client component
+- Replace mock data from `src/lib/mock-data.ts`
 
 ## History
+
+### 2026-04-09 — Dashboard items from database
+- Created `src/lib/db/items.ts` with `getPinnedItems()`, `getRecentItems(limit)`, and `getDashboardStats()` — each item query joins `itemType` and `tags` via Prisma relations
+- Converted `StatsCards` to an async server component, replaced mock counts with real DB aggregates via `prisma.item.count` / `prisma.collection.count`
+- Updated `DashboardMain` to fetch pinned and recent items from DB in parallel; pinned section conditionally hidden when no pinned items exist
+- Removed all `mockItems` / `mockCollections` usage from dashboard components
 
 ### 2026-04-09 — Dashboard collections from database
 - Created `src/lib/db/collections.ts` with `getRecentCollections()` — fetches 6 most recent collections via Prisma, joins through `ItemCollection → Item → ItemType` to compute dominant color and icon list per collection
