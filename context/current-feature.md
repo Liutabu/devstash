@@ -4,21 +4,16 @@
 Complete
 
 ## Goals
-Replace mock data in stats/sidebar with real database data.
-
-- Display stats from the database (already done)
-- Display system item types in the sidebar with their icons and item counts, linking to `/items/[typename]`
-- Display sidebar collections (favorites + recents) from the database
-- For favorite collections show star icon; for recents show a colored circle based on dominant item type
-- Add "View all collections" link under the collections list going to `/collections`
-- Create `getItemTypesWithCounts()` in `src/lib/db/items.ts`
-- Create `getSidebarCollections()` in `src/lib/db/collections.ts`
 
 ## Notes
-- Sidebar is a client component (uses useState); data must be passed as props from the server-side page
-- DashboardShell (client) will accept itemTypes + sidebarCollections props and forward to Sidebar
 
 ## History
+
+### 2026-04-10 — Add Pro Badge to Sidebar
+- Installed shadcn/ui `Badge` component (`src/components/ui/badge.tsx`)
+- Added a "PRO" badge next to the File and Image types in the sidebar type list
+- Badge uses `badgeVariants({ variant: 'secondary' })` applied to a `<span>` (the `<Badge>` component itself rendered incorrectly due to a base-ui rendering issue in this context)
+- Badge is only shown when the sidebar is expanded; identified by slug (`'files'` / `'images'`)
 
 ### 2026-04-09 — Stats & sidebar from database
 - Added `getItemTypesWithCounts()` to `src/lib/db/items.ts` — fetches system item types with per-type item counts and derived slug
