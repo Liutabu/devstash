@@ -17,6 +17,7 @@ import {
 import { useState } from 'react';
 import { mockUser } from '@/lib/mock-data';
 import { cn } from '@/lib/utils';
+import { badgeVariants } from '@/components/ui/badge';
 import type { ItemTypeWithCount } from '@/lib/db/items';
 import type { SidebarCollectionData } from '@/lib/db/collections';
 
@@ -83,6 +84,11 @@ export function Sidebar({ collapsed, itemTypes, collections }: SidebarProps) {
                   {!collapsed && (
                     <>
                       <span className="flex-1 truncate">{type.name}</span>
+                      {(type.slug === 'files' || type.slug === 'images') && (
+                        <span className={cn(badgeVariants({ variant: 'secondary' }), 'px-1.5 text-[10px] font-semibold tracking-wide')}>
+                          PRO
+                        </span>
+                      )}
                       <span className="text-xs text-muted-foreground tabular-nums">{type.count}</span>
                     </>
                   )}
