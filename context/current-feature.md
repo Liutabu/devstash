@@ -1,24 +1,11 @@
 # Current Feature
 
 ## Status
-In Progress
+Complete
 
 ## Goals
 
-- [x] Remove unnecessary `'use client'` from `TopBar` — it has no hooks or state, forcing it into the client bundle unnecessarily
-- [x] Add `src/app/dashboard/error.tsx` — no error boundary exists for dashboard DB failures; Next.js shows a generic crash page if the DB is unreachable
-- [x] Extract `iconMap` to `src/lib/item-type-icons.ts` — identical icon map is copy-pasted in `Sidebar`, `CollectionCard`, and `ItemRow`; single source of truth
-- [x] Remove dead exports from `src/lib/mock-data.ts` — `mockCollections`, `mockItems`, and `mockItemTypeCounts` deleted
-- [x] Fix array index used as React key in `CollectionCard` — now uses `iconName` as key
-- [x] Cap nested items include in collection queries — added `take: 100` to both `getRecentCollections` and `getSidebarCollections`
-- Slug derivation in `getItemTypesWithCounts` — skipped; DB slugs are singular but routes need plural; requires coordinated seed update + migration
-- Read seed password from env var — skipped per user request
-
 ## Notes
-
-- `TopBar` is rendered inside `DashboardShell` which is already `'use client'`, so `TopBar` can safely be a server component and still receive `onClick` props from its parent
-- `error.tsx` must be a client component (`'use client'`) per Next.js App Router requirements
-- The `take: 100` cap is a pragmatic short-term fix; long-term, `dominantColor` should be stored directly on `Collection`
 
 ## History
 
@@ -95,3 +82,11 @@ In Progress
 - Added a "PRO" badge next to the File and Image types in the sidebar type list
 - Badge uses `badgeVariants({ variant: 'secondary' })` applied to a `<span>` (the `<Badge>` component itself rendered incorrectly due to a base-ui rendering issue in this context)
 - Badge is only shown when the sidebar is expanded; identified by slug (`'files'` / `'images'`)
+
+### 2026-04-10 — Code Quality Quick Wins
+- Extracted `ITEM_TYPE_ICON_MAP` to `src/lib/item-type-icons.ts` — was duplicated verbatim in `Sidebar`, `CollectionCard`, and `ItemRow`
+- Removed `'use client'` from `TopBar` — it has no hooks or state; rendered inside an existing client component so `onClick` props still work
+- Added `src/app/dashboard/error.tsx` — Next.js App Router error boundary for dashboard DB failures
+- Deleted dead exports from `src/lib/mock-data.ts` (`mockCollections`, `mockItems`, `mockItemTypeCounts`)
+- Fixed React key in `CollectionCard` icon list from array index to `iconName`
+- Added `take: 100` cap to nested items include in both `getSidebarCollections` and `getRecentCollections` to prevent unbounded memory load
