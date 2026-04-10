@@ -1,9 +1,5 @@
 import { Star, MoreHorizontal } from 'lucide-react';
-import { Code, Sparkles, Terminal, StickyNote, File, Image, Link as LinkIcon, type LucideIcon } from 'lucide-react';
-
-const iconMap: Record<string, LucideIcon> = {
-  Code, Sparkles, Terminal, StickyNote, File, Image, Link: LinkIcon,
-};
+import { ITEM_TYPE_ICON_MAP } from '@/lib/item-type-icons';
 
 interface Collection {
   id: string;
@@ -44,10 +40,10 @@ export function CollectionCard({ collection }: CollectionCardProps) {
       {/* Footer */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-1">
-          {collection.icons.slice(0, 3).map((iconName, i) => {
-            const Icon = iconMap[iconName];
+          {collection.icons.slice(0, 3).map((iconName) => {
+            const Icon = ITEM_TYPE_ICON_MAP[iconName];
             return Icon ? (
-              <div key={i} className="rounded bg-muted p-1">
+              <div key={iconName} className="rounded bg-muted p-1">
                 <Icon className="h-3 w-3 text-muted-foreground" />
               </div>
             ) : null;

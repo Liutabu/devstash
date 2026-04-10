@@ -1,11 +1,24 @@
 # Current Feature
 
 ## Status
-Complete
+In Progress
 
 ## Goals
 
+- [x] Remove unnecessary `'use client'` from `TopBar` — it has no hooks or state, forcing it into the client bundle unnecessarily
+- [x] Add `src/app/dashboard/error.tsx` — no error boundary exists for dashboard DB failures; Next.js shows a generic crash page if the DB is unreachable
+- [x] Extract `iconMap` to `src/lib/item-type-icons.ts` — identical icon map is copy-pasted in `Sidebar`, `CollectionCard`, and `ItemRow`; single source of truth
+- [x] Remove dead exports from `src/lib/mock-data.ts` — `mockCollections`, `mockItems`, and `mockItemTypeCounts` deleted
+- [x] Fix array index used as React key in `CollectionCard` — now uses `iconName` as key
+- [x] Cap nested items include in collection queries — added `take: 100` to both `getRecentCollections` and `getSidebarCollections`
+- Slug derivation in `getItemTypesWithCounts` — skipped; DB slugs are singular but routes need plural; requires coordinated seed update + migration
+- Read seed password from env var — skipped per user request
+
 ## Notes
+
+- `TopBar` is rendered inside `DashboardShell` which is already `'use client'`, so `TopBar` can safely be a server component and still receive `onClick` props from its parent
+- `error.tsx` must be a client component (`'use client'`) per Next.js App Router requirements
+- The `take: 100` cap is a pragmatic short-term fix; long-term, `dominantColor` should be stored directly on `Collection`
 
 ## History
 

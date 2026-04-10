@@ -24,6 +24,7 @@ export async function getSidebarCollections(limit = 8): Promise<SidebarCollectio
     orderBy: [{ isFavorite: 'desc' }, { updatedAt: 'desc' }],
     include: {
       items: {
+        take: 100,
         include: {
           item: {
             include: {
@@ -58,6 +59,7 @@ export async function getRecentCollections(limit = 6): Promise<CollectionCardDat
     orderBy: { createdAt: 'desc' },
     include: {
       items: {
+        take: 100,
         include: {
           item: {
             include: {

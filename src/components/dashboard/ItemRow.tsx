@@ -1,9 +1,5 @@
 import { Star, Pin } from 'lucide-react';
-import { Code, Sparkles, Terminal, StickyNote, File, Image, Link as LinkIcon, type LucideIcon } from 'lucide-react';
-
-const iconMap: Record<string, LucideIcon> = {
-  Code, Sparkles, Terminal, StickyNote, File, Image, Link: LinkIcon,
-};
+import { ITEM_TYPE_ICON_MAP } from '@/lib/item-type-icons';
 
 interface ItemType {
   id: string;
@@ -28,7 +24,7 @@ interface ItemRowProps {
 }
 
 export function ItemRow({ item }: ItemRowProps) {
-  const Icon = iconMap[item.itemType.icon];
+  const Icon = ITEM_TYPE_ICON_MAP[item.itemType.icon];
   const date = item.createdAt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 
   return (

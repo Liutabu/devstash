@@ -1,5 +1,3 @@
-'use client';
-
 import { Search, Plus, PanelLeft, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

@@ -1,35 +1,14 @@
 'use client';
 
 import Link from 'next/link';
-import {
-  Code,
-  Sparkles,
-  Terminal,
-  StickyNote,
-  File,
-  Image,
-  Link as LinkIcon,
-  Star,
-  Settings,
-  ChevronDown,
-  type LucideIcon,
-} from 'lucide-react';
+import { Star, Settings, ChevronDown } from 'lucide-react';
 import { useState } from 'react';
 import { mockUser } from '@/lib/mock-data';
 import { cn } from '@/lib/utils';
 import { badgeVariants } from '@/components/ui/badge';
+import { ITEM_TYPE_ICON_MAP } from '@/lib/item-type-icons';
 import type { ItemTypeWithCount } from '@/lib/db/items';
 import type { SidebarCollectionData } from '@/lib/db/collections';
-
-const iconMap: Record<string, LucideIcon> = {
-  Code,
-  Sparkles,
-  Terminal,
-  StickyNote,
-  File,
-  Image,
-  Link: LinkIcon,
-};
 
 interface SidebarProps {
   collapsed: boolean;
@@ -67,7 +46,7 @@ export function Sidebar({ collapsed, itemTypes, collections }: SidebarProps) {
           )}
           <nav className="space-y-0.5 px-2">
             {itemTypes.map((type) => {
-              const Icon = iconMap[type.icon];
+              const Icon = ITEM_TYPE_ICON_MAP[type.icon];
               return (
                 <Link
                   key={type.id}
