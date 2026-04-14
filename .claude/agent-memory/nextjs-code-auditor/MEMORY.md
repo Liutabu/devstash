@@ -1,0 +1,2 @@
+- [DevStash Architecture Patterns](project_architecture.md) — server components + Prisma direct; auth scaffolded but not enforced; no API routes or actions yet
+- [Audit Findings — Recurring Patterns](audit_patterns.md) — missing userId isolation in all DB queries, iconMap duplication, mockUser in sidebar, missing composite index
