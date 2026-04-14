@@ -1,21 +1,11 @@
-# Current Feature: Auth Credentials - Email/Password Provider
+# Current Feature
 
 ## Status
-In Progress
+Complete
 
 ## Goals
-- Add `password` field to `User` model via migration if not already present
-- Add Credentials provider placeholder (`authorize: () => null`) in `auth.config.ts`
-- Override Credentials provider in `auth.ts` with bcrypt validation logic
-- Create `POST /api/auth/register` route: validate inputs, check for existing user, hash password, create user
-- Email/password sign-in works via `/api/auth/signin` and redirects to `/dashboard`
-- GitHub OAuth continues to work alongside Credentials
 
 ## Notes
-- Use bcryptjs for hashing (already installed from seed)
-- Split config pattern: `auth.config.ts` stays edge-compatible (no bcrypt), `auth.ts` handles full validation
-- Registration accepts: name, email, password, confirmPassword
-- Return success/error JSON from registration route
 
 ## History
 
@@ -109,3 +99,10 @@ In Progress
 - Created `src/proxy.ts` — named `proxy` export; protects `/dashboard/*` routes, redirects unauthenticated users to sign-in with `callbackUrl`
 - Created `src/types/next-auth.d.ts` — extends `Session` type with `user.id`
 - Uses split config pattern for edge compatibility (adapter only in `auth.ts`, not in `auth.config.ts`)
+
+### 2026-04-14 — Auth Credentials - Email/Password Provider
+- `password` field was already present in `User` model — no migration needed
+- Added Credentials provider placeholder with `credentials` fields to `src/auth.config.ts` (edge-safe, `authorize: () => null`)
+- Overrode Credentials provider in `src/auth.ts` with bcrypt validation — looks up user by email, compares hash, returns user or null
+- Created `src/app/api/auth/register/route.ts` (`POST /api/auth/register`) — validates name/email/password/confirmPassword, checks for existing user (409), hashes with bcryptjs (12 rounds), excludes password from response via `select`
+- `credentials` fields defined on both config and auth providers so the built-in sign-in page renders email/password inputs
