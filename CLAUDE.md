@@ -29,6 +29,13 @@ No test runner is configured.
 - **Tailwind CSS v4** via `@tailwindcss/postcss` — configuration is done in CSS, not `tailwind.config.js`
 - **TypeScript**
 
+## Neon Database (MCP)
+
+- **Project:** `devstash` — project ID `autumn-leaf-47247046`
+- **Default branch:** `development` — branch ID `br-empty-cell-al0dw7o7`
+- **Production branch:** `production` — branch ID `br-royal-waterfall-alx9rvfh`
+- **NEVER** query or modify the production branch unless explicitly told to. Always default to the development branch for all Neon MCP operations.
+
 ## Architecture
 
 App Router layout: `src/app/layout.tsx` is the root layout, wrapping all pages with Geist fonts and global styles. Global styles live in `src/app/globals.css` (currently only the Tailwind import). Pages are colocated under `src/app/`.
