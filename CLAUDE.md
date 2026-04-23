@@ -39,3 +39,5 @@ No test runner is configured.
 ## Architecture
 
 App Router layout: `src/app/layout.tsx` is the root layout, wrapping all pages with Geist fonts and global styles. Global styles live in `src/app/globals.css` (currently only the Tailwind import). Pages are colocated under `src/app/`.
+
+**IMPORTANT:** Do not add Claude to any commit messages

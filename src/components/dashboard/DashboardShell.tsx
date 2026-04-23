@@ -7,13 +7,20 @@ import { cn } from '@/lib/utils';
 import type { ItemTypeWithCount } from '@/lib/db/items';
 import type { SidebarCollectionData } from '@/lib/db/collections';
 
+interface SidebarUser {
+  name?: string | null;
+  email?: string | null;
+  image?: string | null;
+}
+
 interface DashboardShellProps {
   children: React.ReactNode;
   itemTypes: ItemTypeWithCount[];
   sidebarCollections: SidebarCollectionData[];
+  user: SidebarUser;
 }
 
-export function DashboardShell({ children, itemTypes, sidebarCollections }: DashboardShellProps) {
+export function DashboardShell({ children, itemTypes, sidebarCollections, user }: DashboardShellProps) {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -35,7 +42,7 @@ export function DashboardShell({ children, itemTypes, sidebarCollections }: Dash
 
         {/* Desktop sidebar */}
         <div className="hidden md:flex" suppressHydrationWarning>
-          <Sidebar collapsed={collapsed} itemTypes={itemTypes} collections={sidebarCollections} />
+          <Sidebar collapsed={collapsed} itemTypes={itemTypes} collections={sidebarCollections} user={user} />
         </div>
 
         {/* Mobile drawer */}
@@ -45,7 +52,7 @@ export function DashboardShell({ children, itemTypes, sidebarCollections }: Dash
             mobileOpen ? 'translate-x-0' : '-translate-x-full',
           )}
         >
-          <Sidebar collapsed={false} itemTypes={itemTypes} collections={sidebarCollections} />
+          <Sidebar collapsed={false} itemTypes={itemTypes} collections={sidebarCollections} user={user} />
         </div>
 
         {/* Main content */}
