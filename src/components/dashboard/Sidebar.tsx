@@ -1,31 +1,35 @@
 'use client';
 
 import Link from 'next/link';
-import { Star, Settings, ChevronDown } from 'lucide-react';
+import { Star, ChevronDown, LogOut, User } from 'lucide-react';
 import { useState } from 'react';
-import { mockUser } from '@/lib/mock-data';
 import { cn } from '@/lib/utils';
 import { badgeVariants } from '@/components/ui/badge';
+import { UserAvatar } from '@/components/ui/UserAvatar';
 import { ITEM_TYPE_ICON_MAP } from '@/lib/item-type-icons';
+import { signOutAction } from '@/actions/auth';
 import type { ItemTypeWithCount } from '@/lib/db/items';
 import type { SidebarCollectionData } from '@/lib/db/collections';
+
+interface SidebarUser {
+  name?: string | null;
+  email?: string | null;
+  image?: string | null;
+}
 
 interface SidebarProps {
   collapsed: boolean;
   itemTypes: ItemTypeWithCount[];
   collections: SidebarCollectionData[];
+  user: SidebarUser;
 }
 
-export function Sidebar({ collapsed, itemTypes, collections }: SidebarProps) {
+export function Sidebar({ collapsed, itemTypes, collections, user }: SidebarProps) {
   const [collectionsOpen, setCollectionsOpen] = useState(true);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
 
   const favoriteCollections = collections.filter((c) => c.isFavorite);
   const recentCollections = collections.filter((c) => !c.isFavorite);
-
-  const initials = mockUser.name
-    .split(' ')
-    .map((n) => n[0])
-    .join('');
 
   return (
     <aside
@@ -102,9 +106,7 @@ export function Sidebar({ collapsed, itemTypes, collections }: SidebarProps) {
                     >
                       <Star className="h-3.5 w-3.5 shrink-0 fill-yellow-400 text-yellow-400" />
                       <span className="flex-1 truncate">{col.name}</span>
-                      <span className="text-xs text-muted-foreground tabular-nums">
-                        {col.itemCount}
-                      </span>
+                      <span className="text-xs text-muted-foreground tabular-nums">{col.itemCount}</span>
                     </Link>
                   ))}
                 </nav>
@@ -126,9 +128,7 @@ export function Sidebar({ collapsed, itemTypes, collections }: SidebarProps) {
                         style={{ backgroundColor: col.dominantColor }}
                       />
                       <span className="flex-1 truncate">{col.name}</span>
-                      <span className="text-xs text-muted-foreground tabular-nums">
-                        {col.itemCount}
-                      </span>
+                      <span className="text-xs text-muted-foreground tabular-nums">{col.itemCount}</span>
                     </Link>
                   ))}
                 </nav>
@@ -150,32 +150,61 @@ export function Sidebar({ collapsed, itemTypes, collections }: SidebarProps) {
       </div>
 
       {/* User area */}
-      <div
-        className={cn(
-          'shrink-0 border-t border-border p-3',
-          collapsed && 'flex justify-center',
+      <div className={cn('relative shrink-0 border-t border-border p-3', collapsed && 'flex justify-center')}>
+        {/* Dropdown menu */}
+        {userMenuOpen && (
+          <>
+            {/* Backdrop */}
+            <div
+              className="fixed inset-0 z-10"
+              onClick={() => setUserMenuOpen(false)}
+            />
+            <div className={cn(
+              'absolute bottom-full mb-1 z-20 min-w-[160px] rounded-md border border-border bg-popover py-1 shadow-md',
+              collapsed ? 'left-1' : 'left-3',
+            )}>
+              <Link
+                href="/profile"
+                onClick={() => setUserMenuOpen(false)}
+                className="flex items-center gap-2 px-3 py-2 text-sm text-popover-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
+              >
+                <User className="h-4 w-4" />
+                Profile
+              </Link>
+              <div className="my-1 h-px bg-border" />
+              <form action={signOutAction}>
+                <button
+                  type="submit"
+                  className="flex w-full items-center gap-2 px-3 py-2 text-sm text-popover-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
+                >
+                  <LogOut className="h-4 w-4" />
+                  Sign out
+                </button>
+              </form>
+            </div>
+          </>
         )}
-      >
+
         {collapsed ? (
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-sidebar-accent text-xs font-semibold">
-            {initials}
-          </div>
+          <button
+            onClick={() => setUserMenuOpen((o) => !o)}
+            className="rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            aria-label="User menu"
+          >
+            <UserAvatar name={user.name} image={user.image} />
+          </button>
         ) : (
-          <div className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-sidebar-accent text-xs font-semibold">
-              {initials}
-            </div>
+          <button
+            onClick={() => setUserMenuOpen((o) => !o)}
+            className="flex w-full items-center gap-2.5 rounded-md hover:bg-sidebar-accent px-1 py-1 transition-colors text-left"
+          >
+            <UserAvatar name={user.name} image={user.image} />
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-medium">{mockUser.name}</p>
-              <p className="truncate text-xs text-muted-foreground">{mockUser.email}</p>
+              <p className="truncate text-sm font-medium">{user.name ?? 'User'}</p>
+              <p className="truncate text-xs text-muted-foreground">{user.email}</p>
             </div>
-            <button
-              className="shrink-0 text-muted-foreground hover:text-foreground transition-colors"
-              aria-label="Settings"
-            >
-              <Settings className="h-4 w-4" />
-            </button>
-          </div>
+            <ChevronDown className={cn('h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-150', userMenuOpen && 'rotate-180')} />
+          </button>
         )}
       </div>
     </aside>
