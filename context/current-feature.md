@@ -1,19 +1,11 @@
-# Current Feature: Auth UI - Sign In, Register & Sign Out
+# Current Feature
 
 ## Status
-In Progress
+Complete
 
 ## Goals
-- Create custom `/sign-in` page with email/password fields, GitHub OAuth button, and link to register
-- Create custom `/register` page with name/email/password/confirmPassword fields, validation, submit to `/api/auth/register`, redirect to sign-in on success
-- Update NextAuth to use custom pages (`signIn: '/sign-in'`)
-- Update sidebar bottom: show user avatar (GitHub image or initials fallback), user name, dropdown on click with "Sign out", clicking icon routes to `/profile`
-- Create reusable `UserAvatar` component handling both image and initials cases
 
 ## Notes
-- Initials generated from name (e.g. "Brad Traversy" → "BT")
-- Avatar fallback: initials in a styled div, not an external service
-- Sidebar bottom dropdown should include "Sign out" action
 
 ## History
 
@@ -114,3 +106,15 @@ In Progress
 - Overrode Credentials provider in `src/auth.ts` with bcrypt validation — looks up user by email, compares hash, returns user or null
 - Created `src/app/api/auth/register/route.ts` (`POST /api/auth/register`) — validates name/email/password/confirmPassword, checks for existing user (409), hashes with bcryptjs (12 rounds), excludes password from response via `select`
 - `credentials` fields defined on both config and auth providers so the built-in sign-in page renders email/password inputs
+
+### 2026-04-23 — Auth UI - Sign In, Register & Sign Out
+- Created `src/app/(auth)/sign-in/page.tsx` — server-rendered sign-in page with email/password form, GitHub OAuth button, error display via `?error=` params, and register link
+- Created `src/app/(auth)/register/page.tsx` — server-rendered register page with full validation and error display via `?error=` params
+- Created `src/actions/auth.ts` — `signInWithCredentials`, `signInWithGitHub`, `registerAction`, `signOutAction` server actions
+- Created `src/app/(auth)/layout.tsx` — centered auth layout
+- Updated `src/auth.ts` — added `pages: { signIn: '/sign-in' }` config
+- Updated `src/proxy.ts` — middleware now redirects unauthenticated users to `/sign-in`
+- Created `src/components/ui/UserAvatar.tsx` — renders GitHub image or initials (first+last name uppercase) with consistent sizing
+- Updated `Sidebar` — replaced `mockUser` with real session user prop; added avatar dropdown with Profile link and Sign out form action
+- Updated `DashboardShell` — accepts and forwards `user` prop to both Sidebar instances
+- Updated `DashboardPage` — fetches session via `auth()` in parallel with other data and passes user to shell
