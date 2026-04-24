@@ -6,7 +6,7 @@ import { signIn, signOut } from '@/auth';
 import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
 import { randomBytes } from 'crypto';
-import { sendVerificationEmail } from '@/lib/email';
+import { sendVerificationEmail, sendPasswordResetEmail } from '@/lib/email';
 
 export async function signInWithGitHub() {
   await signIn('github', { redirectTo: '/dashboard' });
@@ -70,6 +70,67 @@ export async function registerAction(formData: FormData) {
   await sendVerificationEmail(email, token);
 
   redirect(`/check-email?email=${encodeURIComponent(email)}`);
+}
+
+export async function forgotPasswordAction(formData: FormData) {
+  const email = (formData.get('email') as string)?.trim().toLowerCase();
+
+  if (!email) {
+    redirect('/forgot-password?error=required');
+  }
+
+  const user = await prisma.user.findUnique({ where: { email } });
+
+  if (user) {
+    await prisma.verificationToken.deleteMany({ where: { identifier: `reset:${email}` } });
+
+    const token = randomBytes(32).toString('hex');
+    await prisma.verificationToken.create({
+      data: {
+        identifier: `reset:${email}`,
+        token,
+        expires: new Date(Date.now() + 60 * 60 * 1000),
+      },
+    });
+
+    await sendPasswordResetEmail(email, token);
+  }
+
+  redirect('/forgot-password?sent=1');
+}
+
+export async function resetPasswordAction(formData: FormData) {
+  const token = (formData.get('token') as string)?.trim();
+  const password = formData.get('password') as string;
+  const confirmPassword = formData.get('confirmPassword') as string;
+
+  if (!token || !password || !confirmPassword) {
+    redirect(`/reset-password?token=${token}&error=required`);
+  }
+  if (password !== confirmPassword) {
+    redirect(`/reset-password?token=${token}&error=mismatch`);
+  }
+  if (password.length < 8) {
+    redirect(`/reset-password?token=${token}&error=short`);
+  }
+
+  const record = await prisma.verificationToken.findUnique({ where: { token } });
+
+  if (!record || !record.identifier.startsWith('reset:')) {
+    redirect('/forgot-password?error=invalid_token');
+  }
+  if (record.expires < new Date()) {
+    await prisma.verificationToken.delete({ where: { token } });
+    redirect('/forgot-password?error=token_expired');
+  }
+
+  const email = record.identifier.replace('reset:', '');
+  const hashed = await bcrypt.hash(password, 12);
+
+  await prisma.user.update({ where: { email }, data: { password: hashed } });
+  await prisma.verificationToken.delete({ where: { token } });
+
+  redirect('/sign-in?reset=1');
 }
 
 export async function signOutAction() {
