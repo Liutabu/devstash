@@ -137,3 +137,11 @@ Complete
 - Updated `src/app/api/auth/register/route.ts` — same skip for the API route path
 - Updated `src/auth.ts` — `authorize` skips `emailVerified` null check when disabled, allowing immediate sign-in
 - Documented the variable in `.env.example` with an explanatory comment
+
+### 2026-04-24 — Forgot Password
+- Added `sendPasswordResetEmail` to `src/lib/email.ts` — reset link with 1-hour expiry, same style as verification email
+- Added `forgotPasswordAction` to `src/actions/auth.ts` — deletes any existing reset token for the email, generates a new 32-byte hex token stored as `reset:{email}` identifier in `VerificationToken`, sends email; always redirects to `?sent=1` regardless of whether email exists (no enumeration)
+- Added `resetPasswordAction` to `src/actions/auth.ts` — validates token exists and has `reset:` prefix, checks expiry, hashes new password with bcryptjs (12 rounds), updates user, deletes token, redirects to `/sign-in?reset=1`
+- Created `src/app/(auth)/forgot-password/page.tsx` — email form; shows generic success message after submit; routes expired/invalid token errors here
+- Created `src/app/(auth)/reset-password/page.tsx` — validates token server-side on load (redirects to `/forgot-password` if invalid/expired); renders password form with hidden token field
+- Updated sign-in page — added "Forgot password?" link next to password label and `reset=1` success banner
