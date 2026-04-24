@@ -15,12 +15,13 @@ const ERROR_MESSAGES: Record<string, string> = {
 export default async function SignInPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string; registered?: string; verified?: string }>;
+  searchParams: Promise<{ error?: string; registered?: string; verified?: string; reset?: string }>;
 }) {
   const params = await searchParams;
   const errorMsg = params.error ? (ERROR_MESSAGES[params.error] ?? 'Something went wrong.') : null;
   const registered = params.registered === '1';
   const verified = params.verified === '1';
+  const reset = params.reset === '1';
 
   return (
     <div className="space-y-6">
@@ -47,6 +48,13 @@ export default async function SignInPage({
         </div>
       )}
 
+      {/* Password reset success */}
+      {reset && (
+        <div className="rounded-md border border-green-500/30 bg-green-500/10 px-4 py-3 text-sm text-green-400">
+          Password reset — sign in with your new password.
+        </div>
+      )}
+
       {/* Error */}
       {errorMsg && (
         <div className="rounded-md border border-destructive/50 bg-destructive/10 px-4 py-3 text-sm text-destructive">
@@ -61,7 +69,12 @@ export default async function SignInPage({
           <Input id="email" name="email" type="email" placeholder="you@example.com" required autoComplete="email" />
         </div>
         <div className="space-y-1.5">
-          <label htmlFor="password" className="text-sm font-medium">Password</label>
+          <div className="flex items-center justify-between">
+            <label htmlFor="password" className="text-sm font-medium">Password</label>
+            <Link href="/forgot-password" className="text-xs text-muted-foreground underline underline-offset-4 hover:text-primary transition-colors">
+              Forgot password?
+            </Link>
+          </div>
           <Input id="password" name="password" type="password" placeholder="••••••••" required autoComplete="current-password" />
         </div>
         <Button type="submit" className="w-full">Sign in</Button>
