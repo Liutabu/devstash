@@ -1,11 +1,22 @@
-# Current Feature
+# Current Feature: Email Verification Toggle Flag
 
 ## Status
-Complete
+In Progress
 
 ## Goals
 
+- Add a flag (env variable) to enable or disable email verification globally
+- When disabled: registration completes immediately without sending a verification email and without requiring `emailVerified` to sign in
+- When enabled: existing flow is unchanged — token sent, user must verify before signing in
+- Flag should be easy to flip locally (`.env.local`) without code changes
+- No behavior changes to GitHub OAuth (unaffected by this flag)
+
 ## Notes
+
+- Recommended: `REQUIRE_EMAIL_VERIFICATION=true|false` env variable in `.env.local` / `.env`
+- Affected files: `src/actions/auth.ts` (registerAction), `src/app/api/auth/register/route.ts`, `src/auth.ts` (UnverifiedEmailError authorize check)
+- When disabled, skip the token generation + Resend call and skip the `emailVerified` null check in `authorize`
+- Add the variable to `.env.example` (or equivalent) with a comment explaining it
 
 ## History
 
