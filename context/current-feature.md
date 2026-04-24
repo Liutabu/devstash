@@ -1,24 +1,11 @@
-# Current Feature: Email Verification on Register
+# Current Feature
 
 ## Status
-In Progress
+Complete
 
 ## Goals
 
-- After a user registers, send a verification email via Resend containing a unique, time-limited link
-- New accounts are marked unverified until the user clicks the link
-- Clicking the link marks the account as verified and redirects to the dashboard (or sign-in)
-- Unverified users see an appropriate message if they try to sign in before verifying
-- Resend integration uses `onboarding@resend.dev` as the from address and the `RESEND_API_KEY` env variable
-
 ## Notes
-
-- Email service: Resend (`RESEND_API_KEY` already in `.env`)
-- From address: `onboarding@resend.dev`
-- Verification tokens need to be stored (use `VerificationToken` model already in schema)
-- Token should expire (e.g. 24 hours)
-- Flow: register → send email → user clicks link → verify token → mark verified → redirect
-- Need to add `emailVerified` handling — field already exists on the `User` model
 
 ## History
 
@@ -131,3 +118,15 @@ In Progress
 - Updated `Sidebar` — replaced `mockUser` with real session user prop; added avatar dropdown with Profile link and Sign out form action
 - Updated `DashboardShell` — accepts and forwards `user` prop to both Sidebar instances
 - Updated `DashboardPage` — fetches session via `auth()` in parallel with other data and passes user to shell
+
+### 2026-04-24 — Email Verification on Register
+- Installed `resend` package
+- Created `src/lib/email.ts` — Resend client + `sendVerificationEmail` (from: `onboarding@resend.dev`, link expires 24h)
+- Created `src/app/(auth)/verify-email/page.tsx` — validates token, sets `emailVerified`, deletes token, redirects to `/sign-in?verified=1`; handles expired/invalid token with error redirects
+- Created `src/app/(auth)/check-email/page.tsx` — "check your inbox" page shown after registration
+- Updated `registerAction` in `src/actions/auth.ts` — generates 32-byte hex token, stores in `VerificationToken`, sends email, redirects to `/check-email`
+- Updated `src/app/api/auth/register/route.ts` — same token + email logic for API route
+- Updated `src/auth.ts` — added `UnverifiedEmailError extends CredentialsSignin` (code: `'unverified'`); `authorize` throws it when `emailVerified` is null
+- Updated `src/actions/auth.ts` — `signInWithCredentials` catches `unverified` code and redirects to `/sign-in?error=unverified`
+- Updated sign-in page — added `unverified`, `invalid_token`, `token_expired` error messages and `verified=1` success banner
+- Added `scripts/reset-users.ts` + `db:reset-users` npm script — deletes all users except `demo@devstash.io` and all their content
