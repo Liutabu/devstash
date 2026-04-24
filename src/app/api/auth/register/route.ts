@@ -48,16 +48,18 @@ export async function POST(req: NextRequest) {
     select: { id: true, name: true, email: true },
   });
 
-  const token = randomBytes(32).toString('hex');
-  await prisma.verificationToken.create({
-    data: {
-      identifier: email,
-      token,
-      expires: new Date(Date.now() + 24 * 60 * 60 * 1000),
-    },
-  });
+  if (process.env.REQUIRE_EMAIL_VERIFICATION !== 'false') {
+    const token = randomBytes(32).toString('hex');
+    await prisma.verificationToken.create({
+      data: {
+        identifier: email,
+        token,
+        expires: new Date(Date.now() + 24 * 60 * 60 * 1000),
+      },
+    });
 
-  await sendVerificationEmail(email, token);
+    await sendVerificationEmail(email, token);
+  }
 
   return NextResponse.json({ success: true, user }, { status: 201 });
 }

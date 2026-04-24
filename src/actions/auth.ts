@@ -54,6 +54,10 @@ export async function registerAction(formData: FormData) {
   const hashed = await bcrypt.hash(password, 12);
   await prisma.user.create({ data: { name, email, password: hashed } });
 
+  if (process.env.REQUIRE_EMAIL_VERIFICATION === 'false') {
+    redirect('/sign-in');
+  }
+
   const token = randomBytes(32).toString('hex');
   await prisma.verificationToken.create({
     data: {
