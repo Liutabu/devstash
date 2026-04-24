@@ -1,11 +1,24 @@
-# Current Feature
+# Current Feature: Email Verification on Register
 
 ## Status
-Complete
+In Progress
 
 ## Goals
 
+- After a user registers, send a verification email via Resend containing a unique, time-limited link
+- New accounts are marked unverified until the user clicks the link
+- Clicking the link marks the account as verified and redirects to the dashboard (or sign-in)
+- Unverified users see an appropriate message if they try to sign in before verifying
+- Resend integration uses `onboarding@resend.dev` as the from address and the `RESEND_API_KEY` env variable
+
 ## Notes
+
+- Email service: Resend (`RESEND_API_KEY` already in `.env`)
+- From address: `onboarding@resend.dev`
+- Verification tokens need to be stored (use `VerificationToken` model already in schema)
+- Token should expire (e.g. 24 hours)
+- Flow: register → send email → user clicks link → verify token → mark verified → redirect
+- Need to add `emailVerified` handling — field already exists on the `User` model
 
 ## History
 

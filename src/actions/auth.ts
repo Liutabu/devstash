@@ -1,10 +1,12 @@
 'use server';
 
 import { redirect } from 'next/navigation';
-import { AuthError } from 'next-auth';
+import { AuthError, CredentialsSignin } from 'next-auth';
 import { signIn, signOut } from '@/auth';
 import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
+import { randomBytes } from 'crypto';
+import { sendVerificationEmail } from '@/lib/email';
 
 export async function signInWithGitHub() {
   await signIn('github', { redirectTo: '/dashboard' });
@@ -18,6 +20,9 @@ export async function signInWithCredentials(formData: FormData) {
       redirectTo: '/dashboard',
     });
   } catch (error) {
+    if (error instanceof CredentialsSignin && error.code === 'unverified') {
+      redirect('/sign-in?error=unverified');
+    }
     if (error instanceof AuthError) {
       redirect('/sign-in?error=invalid');
     }
@@ -49,7 +54,18 @@ export async function registerAction(formData: FormData) {
   const hashed = await bcrypt.hash(password, 12);
   await prisma.user.create({ data: { name, email, password: hashed } });
 
-  redirect('/sign-in?registered=1');
+  const token = randomBytes(32).toString('hex');
+  await prisma.verificationToken.create({
+    data: {
+      identifier: email,
+      token,
+      expires: new Date(Date.now() + 24 * 60 * 60 * 1000),
+    },
+  });
+
+  await sendVerificationEmail(email, token);
+
+  redirect(`/check-email?email=${encodeURIComponent(email)}`);
 }
 
 export async function signOutAction() {

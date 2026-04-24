@@ -6,17 +6,21 @@ import { signInWithCredentials, signInWithGitHub } from '@/actions/auth';
 
 const ERROR_MESSAGES: Record<string, string> = {
   invalid: 'Invalid email or password.',
+  unverified: 'Please verify your email before signing in. Check your inbox for the verification link.',
+  invalid_token: 'Verification link is invalid. Please register again or request a new link.',
+  token_expired: 'Verification link has expired. Please register again or request a new link.',
   OAuthAccountNotLinked: 'This email is already linked to a different sign-in method.',
 };
 
 export default async function SignInPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string; registered?: string }>;
+  searchParams: Promise<{ error?: string; registered?: string; verified?: string }>;
 }) {
   const params = await searchParams;
   const errorMsg = params.error ? (ERROR_MESSAGES[params.error] ?? 'Something went wrong.') : null;
   const registered = params.registered === '1';
+  const verified = params.verified === '1';
 
   return (
     <div className="space-y-6">
@@ -32,7 +36,14 @@ export default async function SignInPage({
       {/* Registered success */}
       {registered && (
         <div className="rounded-md border border-green-500/30 bg-green-500/10 px-4 py-3 text-sm text-green-400">
-          Account created — sign in below.
+          Account created — check your email to verify before signing in.
+        </div>
+      )}
+
+      {/* Email verified success */}
+      {verified && (
+        <div className="rounded-md border border-green-500/30 bg-green-500/10 px-4 py-3 text-sm text-green-400">
+          Email verified — you can now sign in.
         </div>
       )}
 
