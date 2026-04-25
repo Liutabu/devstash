@@ -1,22 +1,11 @@
-# Current Feature: Profile Page
+# Current Feature
 
 ## Status
-In Progress
+Complete
 
 ## Goals
 
-- Create profile page at `/profile` route (protected, requires auth)
-- Display user info: email, name, avatar (GitHub or initials), account creation date
-- Show usage stats: total items, total collections, breakdown by item type (snippets, prompts, notes, commands, links, files, images)
-- Add change password action — email/password users only, not GitHub OAuth users
-- Add delete account action with confirmation dialog to prevent accidental deletion
-
 ## Notes
-
-- Avatar logic: use GitHub avatar if available, otherwise generate initials from name/email (reuse `UserAvatar` component)
-- Change password button hidden for OAuth-only users (check `password` field is null or no credentials account)
-- Delete account confirmation dialog required before deletion
-- Follow existing patterns: server component for data fetching, server actions for mutations
 
 ## History
 
@@ -156,3 +145,10 @@ In Progress
 - Created `src/app/(auth)/forgot-password/page.tsx` — email form; shows generic success message after submit; routes expired/invalid token errors here
 - Created `src/app/(auth)/reset-password/page.tsx` — validates token server-side on load (redirects to `/forgot-password` if invalid/expired); renders password form with hidden token field
 - Updated sign-in page — added "Forgot password?" link next to password label and `reset=1` success banner
+
+### 2026-04-25 — Profile Page
+- Created `src/lib/db/profile.ts` with `getProfileData(userId)` — fetches user info, hasPassword flag, total items/collections, and per-item-type counts (using `groupBy` for efficiency)
+- Created `src/actions/profile.ts` with `changePasswordAction` (validates current password, hashes new one, redirects with success/error params) and `deleteAccountAction` (deletes user, signs out)
+- Created `src/components/profile/DeleteAccountButton.tsx` — client component with two-step confirmation (click to reveal warning + confirm/cancel buttons)
+- Created `src/app/profile/page.tsx` — async server component; shows avatar, name, email, join date; usage stats with item type breakdown; change password form (email users only, hidden for OAuth); danger zone with delete account
+- Updated `src/proxy.ts` — added `/profile` to protected route matcher alongside `/dashboard`
