@@ -1,18 +1,29 @@
 'use server';
 
 import { redirect } from 'next/navigation';
+import { headers } from 'next/headers';
 import { AuthError, CredentialsSignin } from 'next-auth';
 import { signIn, signOut } from '@/auth';
 import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
 import { randomBytes } from 'crypto';
 import { sendVerificationEmail, sendPasswordResetEmail } from '@/lib/email';
+import { checkRateLimit, getIP, limiters } from '@/lib/rate-limit';
 
 export async function signInWithGitHub() {
   await signIn('github', { redirectTo: '/dashboard' });
 }
 
 export async function signInWithCredentials(formData: FormData) {
+  const email = (formData.get('email') as string)?.trim().toLowerCase() ?? '';
+
+  const headersList = await headers();
+  const ip = getIP(headersList);
+  const rl = await checkRateLimit(limiters.login, `${ip}:${email}`);
+  if (rl.limited) {
+    redirect('/sign-in?error=rate_limited');
+  }
+
   try {
     await signIn('credentials', {
       email: formData.get('email'),
@@ -21,7 +32,7 @@ export async function signInWithCredentials(formData: FormData) {
     });
   } catch (error) {
     if (error instanceof CredentialsSignin && error.code === 'unverified') {
-      redirect('/sign-in?error=unverified');
+      redirect(`/sign-in?error=unverified&email=${encodeURIComponent(email)}`);
     }
     if (error instanceof AuthError) {
       redirect('/sign-in?error=invalid');
@@ -44,6 +55,13 @@ export async function registerAction(formData: FormData) {
   }
   if (password.length < 8) {
     redirect('/register?error=short');
+  }
+
+  const headersList = await headers();
+  const ip = getIP(headersList);
+  const rl = await checkRateLimit(limiters.register, ip);
+  if (rl.limited) {
+    redirect('/register?error=rate_limited');
   }
 
   const existing = await prisma.user.findUnique({ where: { email } });
@@ -77,6 +95,13 @@ export async function forgotPasswordAction(formData: FormData) {
 
   if (!email) {
     redirect('/forgot-password?error=required');
+  }
+
+  const headersList = await headers();
+  const ip = getIP(headersList);
+  const rl = await checkRateLimit(limiters.forgotPassword, ip);
+  if (rl.limited) {
+    redirect('/forgot-password?error=rate_limited');
   }
 
   const user = await prisma.user.findUnique({ where: { email } });
@@ -114,6 +139,13 @@ export async function resetPasswordAction(formData: FormData) {
     redirect(`/reset-password?token=${token}&error=short`);
   }
 
+  const headersList = await headers();
+  const ip = getIP(headersList);
+  const rl = await checkRateLimit(limiters.resetPassword, ip);
+  if (rl.limited) {
+    redirect(`/reset-password?token=${token}&error=rate_limited`);
+  }
+
   const record = await prisma.verificationToken.findUnique({ where: { token } });
 
   if (!record || !record.identifier.startsWith('reset:')) {
@@ -131,6 +163,37 @@ export async function resetPasswordAction(formData: FormData) {
   await prisma.verificationToken.delete({ where: { token } });
 
   redirect('/sign-in?reset=1');
+}
+
+export async function resendVerificationAction(formData: FormData) {
+  const email = (formData.get('email') as string)?.trim().toLowerCase();
+
+  if (!email) {
+    redirect('/sign-in?error=unverified');
+  }
+
+  const headersList = await headers();
+  const ip = getIP(headersList);
+  const rl = await checkRateLimit(limiters.resendVerification, `${ip}:${email}`);
+  if (rl.limited) {
+    redirect(`/sign-in?error=resend_rate_limited&email=${encodeURIComponent(email)}`);
+  }
+
+  const user = await prisma.user.findUnique({ where: { email } });
+  if (user && !user.emailVerified) {
+    await prisma.verificationToken.deleteMany({ where: { identifier: email } });
+    const token = randomBytes(32).toString('hex');
+    await prisma.verificationToken.create({
+      data: {
+        identifier: email,
+        token,
+        expires: new Date(Date.now() + 24 * 60 * 60 * 1000),
+      },
+    });
+    await sendVerificationEmail(email, token);
+  }
+
+  redirect('/sign-in?resent=1');
 }
 
 export async function signOutAction() {

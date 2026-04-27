@@ -2,11 +2,13 @@ import Link from 'next/link';
 import { GitBranch } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { signInWithCredentials, signInWithGitHub } from '@/actions/auth';
+import { signInWithCredentials, signInWithGitHub, resendVerificationAction } from '@/actions/auth';
 
 const ERROR_MESSAGES: Record<string, string> = {
   invalid: 'Invalid email or password.',
-  unverified: 'Please verify your email before signing in. Check your inbox for the verification link.',
+  unverified: 'Please verify your email before signing in.',
+  resend_rate_limited: 'Too many resend attempts. Please wait before trying again.',
+  rate_limited: 'Too many sign-in attempts. Please wait a few minutes before trying again.',
   invalid_token: 'Verification link is invalid. Please register again or request a new link.',
   token_expired: 'Verification link has expired. Please register again or request a new link.',
   OAuthAccountNotLinked: 'This email is already linked to a different sign-in method.',
@@ -15,13 +17,15 @@ const ERROR_MESSAGES: Record<string, string> = {
 export default async function SignInPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string; registered?: string; verified?: string; reset?: string }>;
+  searchParams: Promise<{ error?: string; email?: string; registered?: string; verified?: string; reset?: string; resent?: string }>;
 }) {
   const params = await searchParams;
   const errorMsg = params.error ? (ERROR_MESSAGES[params.error] ?? 'Something went wrong.') : null;
+  const unverifiedEmail = params.error === 'unverified' || params.error === 'resend_rate_limited' ? (params.email ?? '') : '';
   const registered = params.registered === '1';
   const verified = params.verified === '1';
   const reset = params.reset === '1';
+  const resent = params.resent === '1';
 
   return (
     <div className="space-y-6">
@@ -55,11 +59,39 @@ export default async function SignInPage({
         </div>
       )}
 
+      {/* Verification email resent success */}
+      {resent && (
+        <div className="rounded-md border border-green-500/30 bg-green-500/10 px-4 py-3 text-sm text-green-400">
+          Verification email resent — check your inbox.
+        </div>
+      )}
+
       {/* Error */}
       {errorMsg && (
         <div className="rounded-md border border-destructive/50 bg-destructive/10 px-4 py-3 text-sm text-destructive">
           {errorMsg}
         </div>
+      )}
+
+      {/* Resend verification form */}
+      {(params.error === 'unverified' || params.error === 'resend_rate_limited') && (
+        <form action={resendVerificationAction} className="space-y-2">
+          {unverifiedEmail ? (
+            <>
+              <input type="hidden" name="email" value={unverifiedEmail} />
+              <Button type="submit" variant="outline" size="sm" className="w-full text-xs">
+                Resend verification email to {unverifiedEmail}
+              </Button>
+            </>
+          ) : (
+            <div className="space-y-1.5">
+              <Input name="email" type="email" placeholder="Enter your email to resend" required autoComplete="email" className="text-sm" />
+              <Button type="submit" variant="outline" size="sm" className="w-full text-xs">
+                Resend verification email
+              </Button>
+            </div>
+          )}
+        </form>
       )}
 
       {/* Credentials form */}
