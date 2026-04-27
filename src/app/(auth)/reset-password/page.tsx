@@ -9,6 +9,7 @@ const ERROR_MESSAGES: Record<string, string> = {
   required: 'All fields are required.',
   mismatch: 'Passwords do not match.',
   short: 'Password must be at least 8 characters.',
+  rate_limited: 'Too many attempts. Please wait before trying again.',
 };
 
 export default async function ResetPasswordPage({

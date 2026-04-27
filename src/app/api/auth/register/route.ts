@@ -3,8 +3,18 @@ import bcrypt from "bcryptjs";
 import { randomBytes } from "crypto";
 import { prisma } from "@/lib/prisma";
 import { sendVerificationEmail } from "@/lib/email";
+import { checkRateLimit, getIP, limiters } from "@/lib/rate-limit";
 
 export async function POST(req: NextRequest) {
+  const ip = getIP(req.headers);
+  const rl = await checkRateLimit(limiters.register, ip);
+  if (rl.limited) {
+    return NextResponse.json(
+      { error: `Too many attempts. Please try again in ${rl.retryAfterSeconds} seconds.` },
+      { status: 429, headers: { 'Retry-After': String(rl.retryAfterSeconds) } },
+    );
+  }
+
   const body = await req.json();
   const { name, email, password, confirmPassword } = body as {
     name: string;

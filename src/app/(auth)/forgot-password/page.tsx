@@ -5,6 +5,7 @@ import { forgotPasswordAction } from '@/actions/auth';
 
 const ERROR_MESSAGES: Record<string, string> = {
   required: 'Please enter your email address.',
+  rate_limited: 'Too many attempts. Please wait an hour before trying again.',
   invalid_token: 'Reset link is invalid. Please request a new one.',
   token_expired: 'Reset link has expired. Please request a new one.',
 };

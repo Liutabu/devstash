@@ -8,6 +8,7 @@ const ERROR_MESSAGES: Record<string, string> = {
   mismatch: 'Passwords do not match.',
   short: 'Password must be at least 8 characters.',
   exists: 'An account with that email already exists.',
+  rate_limited: 'Too many registration attempts. Please wait an hour before trying again.',
 };
 
 export default async function RegisterPage({
