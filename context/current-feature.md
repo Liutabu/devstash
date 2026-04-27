@@ -152,3 +152,17 @@ Complete
 - Created `src/components/profile/DeleteAccountButton.tsx` — client component with two-step confirmation (click to reveal warning + confirm/cancel buttons)
 - Created `src/app/profile/page.tsx` — async server component; shows avatar, name, email, join date; usage stats with item type breakdown; change password form (email users only, hidden for OAuth); danger zone with delete account
 - Updated `src/proxy.ts` — added `/profile` to protected route matcher alongside `/dashboard`
+
+### 2026-04-27 — Rate Limiting for Auth
+- Installed `@upstash/ratelimit` and `@upstash/redis`
+- Created `src/lib/rate-limit.ts` — Redis client, 5 pre-configured sliding window limiters, `checkRateLimit` (fails open on Upstash errors), `getIP` helper (reads `x-forwarded-for` / `x-real-ip`)
+- Rate limited login (5/15 min, IP + email) in `signInWithCredentials` server action via `headers()`
+- Rate limited register (3/1 hr, IP) in both `registerAction` and `POST /api/auth/register`
+- Rate limited forgot-password (3/1 hr, IP) in `forgotPasswordAction`
+- Rate limited reset-password (5/15 min, IP) in `resetPasswordAction`
+- Created `POST /api/auth/resend-verification` (3/15 min, IP + email) — sends new verification email; always returns 200 to avoid enumeration
+- Added `resendVerificationAction` to `src/actions/auth.ts` — same logic as API route for server-action path
+- API routes return 429 with `Retry-After` header; server actions redirect with `?error=rate_limited`
+- Updated sign-in page — `rate_limited` error, `resent=1` success banner, inline resend form when `?error=unverified`
+- Updated register, forgot-password, reset-password pages — added `rate_limited` error messages
+- Added `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` to `.env.example`
