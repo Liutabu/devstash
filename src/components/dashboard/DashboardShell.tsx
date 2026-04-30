@@ -6,6 +6,7 @@ import { Sidebar } from './Sidebar';
 import { cn } from '@/lib/utils';
 import type { ItemTypeWithCount } from '@/lib/db/items';
 import type { SidebarCollectionData } from '@/lib/db/collections';
+import { ItemDrawerProvider } from '@/components/items/ItemDrawerProvider';
 
 interface SidebarUser {
   name?: string | null;
@@ -56,7 +57,9 @@ export function DashboardShell({ children, itemTypes, sidebarCollections, user }
         </div>
 
         {/* Main content */}
-        <main className="flex-1 overflow-auto bg-background p-6">{children}</main>
+        <main className="flex-1 overflow-auto bg-background p-6">
+          <ItemDrawerProvider>{children}</ItemDrawerProvider>
+        </main>
       </div>
     </div>
   );

@@ -1,5 +1,8 @@
+'use client';
+
 import { Star, Pin } from 'lucide-react';
 import { ITEM_TYPE_ICON_MAP } from '@/lib/item-type-icons';
+import { useItemDrawer } from './ItemDrawerProvider';
 
 interface ItemType {
   id: string;
@@ -24,11 +27,13 @@ interface ItemCardProps {
 }
 
 export function ItemCard({ item }: ItemCardProps) {
+  const drawer = useItemDrawer();
   const Icon = ITEM_TYPE_ICON_MAP[item.itemType.icon];
   const date = item.createdAt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
   return (
     <div
+      onClick={() => drawer?.open(item.id)}
       className="group flex flex-col gap-3 rounded-lg border border-border bg-card px-4 py-4 hover:border-border/80 transition-colors cursor-pointer"
       style={{ borderLeftColor: item.itemType.color, borderLeftWidth: 3 }}
     >
