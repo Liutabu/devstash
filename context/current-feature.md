@@ -1,20 +1,11 @@
-# Current Feature: Items List View
+# Current Feature
 
 ## Status
-In Progress
+Complete
 
 ## Goals
 
-- Create dynamic route `/items/[type]` (e.g., `/items/snippets`, `/items/notes`)
-- Fetch and display items filtered by type slug
-- Render a responsive grid of ItemCard components (2 columns on md+)
-- Each card has a left border colored by item type
-- Follow existing codebase patterns
-
 ## Notes
-
-- Route param is the type slug (e.g., `snippets`, `notes`, `commands`)
-- Sidebar already links to `/items/[slug]` — this implements the destination
 
 ## History
 
@@ -175,3 +166,9 @@ In Progress
 - Updated sign-in page — `rate_limited` error, `resent=1` success banner, inline resend form when `?error=unverified`
 - Updated register, forgot-password, reset-password pages — added `rate_limited` error messages
 - Added `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` to `.env.example`
+
+### 2026-04-30 — Items List View
+- Added `getItemsByType(slug)` to `src/lib/db/items.ts` — looks up system ItemType by slug (strips trailing 's', case-insensitive), returns null for unknown slugs, fetches items with type+tags joined via existing `itemWithTypeAndTags` pattern
+- Created `src/components/items/ItemCard.tsx` — card with colored left border, icon, title, description excerpt (2-line clamp), type badge, tags (up to 3), and date
+- Created `src/app/items/[type]/page.tsx` — async server component; reuses `DashboardShell` for layout; parallel data fetching; 404 on unknown type; 1-column mobile / 2-column md+ grid; empty state message
+- Updated `src/proxy.ts` — added `/items` to `PROTECTED_PREFIXES` and `/items/:path*` to middleware matcher
