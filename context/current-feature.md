@@ -202,3 +202,11 @@ Complete
 - Created `src/components/items/ItemCard.tsx` — card with colored left border, icon, title, description excerpt (2-line clamp), type badge, tags (up to 3), and date
 - Created `src/app/items/[type]/page.tsx` — async server component; reuses `DashboardShell` for layout; parallel data fetching; 404 on unknown type; 1-column mobile / 2-column md+ grid; empty state message
 - Updated `src/proxy.ts` — added `/items` to `PROTECTED_PREFIXES` and `/items/:path*` to middleware matcher
+
+### 2026-04-30 — Delete Item
+- Installed shadcn `AlertDialog` component (`src/components/ui/alert-dialog.tsx`)
+- Added `deleteItem(id, userId)` to `src/lib/db/items.ts` — ownership check before delete, returns boolean
+- Added `deleteItemAction` to `src/actions/items.ts` — auth + ownership check, `{ success, error }` return pattern
+- Updated `src/components/items/ItemDrawer.tsx` — replaced bare Trash2 button with `AlertDialog` trigger; shows item title in confirmation; destructive-styled confirm button; calls `deleteItemAction` on confirm, shows Sonner toast on success, calls `onDelete()` and `router.refresh()`
+- Updated `src/components/items/ItemDrawerProvider.tsx` — passes `onDelete={close}` to `ItemDrawer` so drawer closes on deletion
+- Added 3 unit tests in `src/actions/items.test.ts` for `deleteItemAction` covering unauthorized, not-found, and success paths
