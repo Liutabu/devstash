@@ -6,14 +6,16 @@ vi.mock('@/auth', () => ({
 
 vi.mock('@/lib/db/items', () => ({
   updateItem: vi.fn(),
+  deleteItem: vi.fn(),
 }));
 
-import { updateItemAction } from './items';
+import { updateItemAction, deleteItemAction } from './items';
 import { auth } from '@/auth';
-import { updateItem } from '@/lib/db/items';
+import { updateItem, deleteItem } from '@/lib/db/items';
 
 const mockAuth = vi.mocked(auth);
 const mockUpdateItem = vi.mocked(updateItem);
+const mockDeleteItem = vi.mocked(deleteItem);
 
 const validInput = {
   title: 'Test Title',
@@ -104,5 +106,29 @@ describe('updateItemAction', () => {
     mockUpdateItem.mockResolvedValue(mockDetail);
     await updateItemAction('item-1', { ...validInput, language: '' });
     expect(mockUpdateItem).toHaveBeenCalledWith('item-1', 'user-1', expect.objectContaining({ language: null }));
+  });
+});
+
+describe('deleteItemAction', () => {
+  it('returns unauthorized when no session', async () => {
+    mockAuth.mockResolvedValue(null);
+    const result = await deleteItemAction('item-1');
+    expect(result).toEqual({ success: false, error: 'Unauthorized' });
+    expect(mockDeleteItem).not.toHaveBeenCalled();
+  });
+
+  it('returns item not found when deleteItem returns false', async () => {
+    mockAuth.mockResolvedValue({ user: { id: 'user-1' } } as never);
+    mockDeleteItem.mockResolvedValue(false);
+    const result = await deleteItemAction('item-1');
+    expect(result).toEqual({ success: false, error: 'Item not found' });
+  });
+
+  it('returns success when deleteItem returns true', async () => {
+    mockAuth.mockResolvedValue({ user: { id: 'user-1' } } as never);
+    mockDeleteItem.mockResolvedValue(true);
+    const result = await deleteItemAction('item-1');
+    expect(result).toEqual({ success: true });
+    expect(mockDeleteItem).toHaveBeenCalledWith('item-1', 'user-1');
   });
 });

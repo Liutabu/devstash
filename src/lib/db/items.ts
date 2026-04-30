@@ -223,6 +223,13 @@ export async function updateItem(
   };
 }
 
+export async function deleteItem(id: string, userId: string): Promise<boolean> {
+  const existing = await prisma.item.findFirst({ where: { id, userId } });
+  if (!existing) return false;
+  await prisma.item.delete({ where: { id } });
+  return true;
+}
+
 export async function getDashboardStats(userId: string): Promise<DashboardStats> {
   const [totalItems, totalCollections, favoriteItems, favoriteCollections] = await Promise.all([
     prisma.item.count({ where: { userId } }),
