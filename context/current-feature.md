@@ -1,11 +1,20 @@
-# Current Feature
+# Current Feature: Items List View
 
 ## Status
-Complete
+In Progress
 
 ## Goals
 
+- Create dynamic route `/items/[type]` (e.g., `/items/snippets`, `/items/notes`)
+- Fetch and display items filtered by type slug
+- Render a responsive grid of ItemCard components (2 columns on md+)
+- Each card has a left border colored by item type
+- Follow existing codebase patterns
+
 ## Notes
+
+- Route param is the type slug (e.g., `snippets`, `notes`, `commands`)
+- Sidebar already links to `/items/[slug]` — this implements the destination
 
 ## History
 

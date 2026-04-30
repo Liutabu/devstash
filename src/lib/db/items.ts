@@ -101,6 +101,22 @@ export async function getItemTypesWithCounts(): Promise<ItemTypeWithCount[]> {
   }));
 }
 
+export async function getItemsByType(slug: string): Promise<{ items: ItemRowData[]; typeName: string; typeColor: string } | null> {
+  const typeName = slug.slice(0, -1); // "snippets" → "snippet"
+  const itemType = await prisma.itemType.findFirst({
+    where: { isSystem: true, name: { equals: typeName, mode: 'insensitive' } },
+  });
+  if (!itemType) return null;
+
+  const items = await prisma.item.findMany({
+    where: { itemTypeId: itemType.id },
+    orderBy: { createdAt: 'desc' },
+    ...itemWithTypeAndTags,
+  });
+
+  return { items: items.map(mapItem), typeName: itemType.name, typeColor: itemType.color };
+}
+
 export async function getDashboardStats(): Promise<DashboardStats> {
   const [totalItems, totalCollections, favoriteItems, favoriteCollections] = await Promise.all([
     prisma.item.count(),
