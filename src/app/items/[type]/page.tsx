@@ -1,4 +1,4 @@
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { auth } from '@/auth';
 import { DashboardShell } from '@/components/dashboard/DashboardShell';
 import { ItemCard } from '@/components/items/ItemCard';
@@ -12,16 +12,19 @@ interface ItemsPageProps {
 export default async function ItemsPage({ params }: ItemsPageProps) {
   const { type } = await params;
 
-  const [session, itemTypes, sidebarCollections, result] = await Promise.all([
-    auth(),
-    getItemTypesWithCounts(),
-    getSidebarCollections(),
-    getItemsByType(type),
+  const session = await auth();
+  if (!session?.user?.id) redirect('/sign-in');
+
+  const userId = session.user.id;
+  const [itemTypes, sidebarCollections, result] = await Promise.all([
+    getItemTypesWithCounts(userId),
+    getSidebarCollections(userId),
+    getItemsByType(type, userId),
   ]);
 
   if (!result) notFound();
 
-  const user = session?.user ?? { name: null, email: null, image: null };
+  const user = session.user;
   const { items, typeName, typeColor } = result;
 
   return (

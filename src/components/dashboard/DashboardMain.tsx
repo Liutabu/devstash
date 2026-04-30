@@ -5,11 +5,11 @@ import { StatsCards } from './StatsCards';
 import { CollectionCard } from './CollectionCard';
 import { ItemRow } from './ItemRow';
 
-export async function DashboardMain() {
+export async function DashboardMain({ userId }: { userId: string }) {
   const [recentCollections, pinnedItems, recentItems] = await Promise.all([
-    getRecentCollections(),
-    getPinnedItems(),
-    getRecentItems(),
+    getRecentCollections(userId),
+    getPinnedItems(userId),
+    getRecentItems(userId),
   ]);
 
   return (
@@ -21,7 +21,7 @@ export async function DashboardMain() {
       </div>
 
       {/* Stats */}
-      <StatsCards />
+      <StatsCards userId={userId} />
 
       {/* Collections */}
       <section>
