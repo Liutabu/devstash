@@ -1,21 +1,24 @@
-# Current Feature: Items List — 3-Column Layout on Large Screens
+# Current Feature
 
 ## Status
-In Progress
+Complete
 
 ## Goals
 
-- Items grid shows 1 column on mobile, 2 columns on medium screens, 3 columns on large screens
-- Change is isolated to `src/app/items/[type]/page.tsx` grid class — no other files affected
-- Responsive behaviour is preserved at all breakpoints
-
 ## Notes
 
-- Current grid: `grid-cols-1 md:grid-cols-2`
-- Target grid: `grid-cols-1 md:grid-cols-2 lg:grid-cols-3`
-- Tailwind breakpoints: `md` = 768px, `lg` = 1024px
-
 ## History
+
+### 2026-04-30 — Vitest Unit Testing Setup
+- Installed `vitest` and configured `vitest.config.ts` with Node environment and native tsconfig path resolution
+- Created `src/__tests__/setup.ts` — global mocks for `next/headers`, `next/navigation`, `next/cache`
+- Added `src/lib/rate-limit.test.ts` — 4 smoke tests for `getIP` utility
+- Added `npm run test` (watch) and `npm run test:run` (CI) scripts
+- Updated `CLAUDE.md` and `context/ai-interaction.md` to document test scope and workflow step
+
+### 2026-04-30 — Items List 3-Column Layout
+- Updated grid in `src/app/items/[type]/page.tsx` from `md:grid-cols-2` to `md:grid-cols-2 lg:grid-cols-3`
+- Items now show 1 column on mobile, 2 on `md` (768px+), 3 on `lg` (1024px+)
 
 ### 2026-04-04 — Initial Next.js Setup
 - Bootstrapped Next.js 16 with App Router, React 19, TypeScript, and Tailwind CSS v4
