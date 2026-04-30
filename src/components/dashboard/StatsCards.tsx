@@ -1,8 +1,8 @@
 import { getDashboardStats } from '@/lib/db/items';
 import { LayoutGrid, Star, Layers } from 'lucide-react';
 
-export async function StatsCards() {
-  const { totalItems, totalCollections, favoriteItems, favoriteCollections } = await getDashboardStats();
+export async function StatsCards({ userId }: { userId: string }) {
+  const { totalItems, totalCollections, favoriteItems, favoriteCollections } = await getDashboardStats(userId);
 
   const stats = [
     { label: 'Items', value: totalItems, icon: LayoutGrid, color: 'text-blue-400' },
