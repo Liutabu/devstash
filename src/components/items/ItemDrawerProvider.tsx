@@ -46,6 +46,7 @@ export function ItemDrawerProvider({ children }: { children: React.ReactNode }) 
         detail={detail}
         loading={loading}
         onUpdate={setDetail}
+        onDelete={close}
       />
     </DrawerContext.Provider>
   );

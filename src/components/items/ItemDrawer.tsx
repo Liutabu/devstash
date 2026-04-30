@@ -5,8 +5,19 @@ import { useRouter } from 'next/navigation';
 import { Star, Pin, Copy, Pencil, Trash2, FolderOpen, X, Check } from 'lucide-react';
 import { toast } from 'sonner';
 import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { ITEM_TYPE_ICON_MAP } from '@/lib/item-type-icons';
-import { updateItemAction } from '@/actions/items';
+import { updateItemAction, deleteItemAction } from '@/actions/items';
 
 export interface ItemDetailResponse {
   id: string;
@@ -31,14 +42,15 @@ interface ItemDrawerProps {
   detail: ItemDetailResponse | null;
   loading: boolean;
   onUpdate: (detail: ItemDetailResponse) => void;
+  onDelete: () => void;
 }
 
-export function ItemDrawer({ isOpen, onClose, detail, loading, onUpdate }: ItemDrawerProps) {
+export function ItemDrawer({ isOpen, onClose, detail, loading, onUpdate, onDelete }: ItemDrawerProps) {
   return (
     <Sheet open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
       <SheetContent side="right" className="sm:max-w-[480px] p-0 flex flex-col overflow-hidden gap-0">
         {loading && <DrawerSkeleton />}
-        {!loading && detail && <DrawerBody detail={detail} onUpdate={onUpdate} />}
+        {!loading && detail && <DrawerBody detail={detail} onUpdate={onUpdate} onDelete={onDelete} />}
         {!loading && !detail && isOpen && (
           <>
             <SheetTitle className="sr-only">Item</SheetTitle>
@@ -71,9 +83,10 @@ function DrawerSkeleton() {
 interface DrawerBodyProps {
   detail: ItemDetailResponse;
   onUpdate: (detail: ItemDetailResponse) => void;
+  onDelete: () => void;
 }
 
-function DrawerBody({ detail, onUpdate }: DrawerBodyProps) {
+function DrawerBody({ detail, onUpdate, onDelete }: DrawerBodyProps) {
   const router = useRouter();
   const Icon = ITEM_TYPE_ICON_MAP[detail.itemType.icon];
 
@@ -116,6 +129,17 @@ function DrawerBody({ detail, onUpdate }: DrawerBodyProps) {
 
   function handleCancel() {
     setIsEditing(false);
+  }
+
+  async function handleDelete() {
+    const result = await deleteItemAction(detail.id);
+    if (!result.success) {
+      toast.error(result.error);
+      return;
+    }
+    toast.success('Item deleted');
+    onDelete();
+    router.refresh();
   }
 
   async function handleSave() {
@@ -236,12 +260,31 @@ function DrawerBody({ detail, onUpdate }: DrawerBodyProps) {
               Edit
             </ActionButton>
             <div className="flex-1" />
-            <button
-              className="rounded p-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
-              title="Delete"
-            >
-              <Trash2 className="h-3.5 w-3.5" />
-            </button>
+            <AlertDialog>
+              <AlertDialogTrigger
+                className="rounded p-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                title="Delete"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Delete item?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    &ldquo;{detail.title}&rdquo; will be permanently deleted. This cannot be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={handleDelete}
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  >
+                    Delete
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </div>
         )}
       </div>
