@@ -9,6 +9,15 @@ Complete
 
 ## History
 
+### 2026-04-30 — Item Create
+- Installed shadcn `Dialog` component (`src/components/ui/dialog.tsx`)
+- Added `createItem(userId, data)` to `src/lib/db/items.ts` — creates item with tag connect-or-create, returns `ItemDetail`
+- Added `createItemAction` to `src/actions/items.ts` — Zod-validated server action with URL-required refinement for link type, `{ success, data, error }` return pattern
+- Created `src/components/items/CreateItemDialog.tsx` — Dialog with type selector (snippet, prompt, command, note, link; file/image excluded), conditional fields per type (content+language for snippet/command, content for prompt/note, URL for link), comma-separated tags, form reset on close
+- Updated `src/components/dashboard/TopBar.tsx` — added `onNewItem` prop, wired to "New Item" button
+- Updated `src/components/dashboard/DashboardShell.tsx` — added `createOpen` state, renders `<CreateItemDialog>` with `itemTypes` prop, passes `onNewItem` to `TopBar`
+- Added 6 unit tests in `src/actions/items.test.ts` for `createItemAction` covering unauthorized, empty title, link-without-url, empty typeId, success, and url-type-with-valid-url paths
+
 ### 2026-04-30 — Item Drawer Edit Mode
 - Installed `zod` and `sonner`; added `<Toaster richColors position="bottom-right" />` to root layout
 - Added `updateItem(id, userId, data)` to `src/lib/db/items.ts` — checks ownership, disconnects all tag links, connect-or-creates new ones, returns updated `ItemDetail`
