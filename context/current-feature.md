@@ -1,26 +1,23 @@
-# Current Feature: Item Drawer
+# Current Feature
 
 ## Status
-In Progress
+Complete
 
 ## Goals
 
-- shadcn Sheet component opens from the right when clicking an ItemCard
-- Works on both the dashboard and items list pages
-- Action bar with Favorite (star, yellow when active), Pin, Copy, Edit (pencil), and Delete (trash, right-aligned) buttons
-- Client wrapper component manages drawer open/close state (pages remain server components)
-- Full item detail fetched on click via `/api/items/[id]` — no page navigation
-- Drawer shows a skeleton/loading state while the API fetch is in flight
-- Card data continues to be fetched server-side as before; only the detail payload is fetched client-side
-
 ## Notes
 
-- No separate item page — the drawer is the item detail view
-- Content/code editor and item-specific display come in a later phase; this phase is drawer shell + action bar + detail display only
-- `getItemById` query function lives in `src/lib/db/items.ts`, API route at `/api/items/[id]` calls it with an auth check
-- Visual reference: `context/screenshots/dashboard-ui-drawer.png`
-
 ## History
+
+### 2026-04-30 — Item Drawer
+- Installed shadcn `Sheet` component (`src/components/ui/sheet.tsx`)
+- Added `getItemById(id, userId)` to `src/lib/db/items.ts` — fetches full item detail (content, url, language, collections, tags) scoped to the requesting user
+- Created `GET /api/items/[id]/route.ts` — auth-checked API route that calls `getItemById`
+- Created `src/components/items/ItemDrawer.tsx` — Sheet-based drawer with header (title, type badge, language badge), action bar (Favorite, Pin, Copy, Edit, Delete), scrollable body (description, content/code block, tags, collections, created/updated dates), and skeleton loading state
+- Created `src/components/items/ItemDrawerProvider.tsx` — client context managing `open(itemId)`, fetches detail on click, renders the `ItemDrawer`
+- Updated `ItemCard` and `ItemRow` to be `'use client'` components using `useItemDrawer()` to open the drawer on click
+- Updated `DashboardShell` to wrap `<main>` with `ItemDrawerProvider` — drawer available on all pages (dashboard + items list)
+- Added 6 unit tests for `getItemById` in `src/lib/db/items.test.ts` covering null-return, userId scoping, tag/collection mapping, and scalar field mapping
 
 ### 2026-04-30 — Vitest Unit Testing Setup
 - Installed `vitest` and configured `vitest.config.ts` with Node environment and native tsconfig path resolution
