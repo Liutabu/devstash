@@ -223,6 +223,65 @@ export async function updateItem(
   };
 }
 
+export async function createItem(
+  userId: string,
+  data: {
+    title: string;
+    description?: string | null;
+    content?: string | null;
+    url?: string | null;
+    language?: string | null;
+    tags: string[];
+    itemTypeId: string;
+    contentType: 'text' | 'url';
+  },
+): Promise<ItemDetail> {
+  const item = await prisma.item.create({
+    data: {
+      title: data.title,
+      description: data.description ?? null,
+      content: data.content ?? null,
+      url: data.url ?? null,
+      language: data.language ?? null,
+      contentType: data.contentType,
+      userId,
+      itemTypeId: data.itemTypeId,
+      tags: {
+        create: data.tags.map((name) => ({
+          tag: {
+            connectOrCreate: {
+              where: { name },
+              create: { name },
+            },
+          },
+        })),
+      },
+    },
+    include: {
+      itemType: { select: { id: true, name: true, color: true, icon: true } },
+      tags: { include: { tag: { select: { name: true } } } },
+      collections: { include: { collection: { select: { id: true, name: true } } } },
+    },
+  });
+
+  return {
+    id: item.id,
+    title: item.title,
+    description: item.description,
+    content: item.content,
+    url: item.url,
+    language: item.language,
+    contentType: item.contentType,
+    isFavorite: item.isFavorite,
+    isPinned: item.isPinned,
+    tags: item.tags.map((t) => t.tag.name),
+    itemType: item.itemType,
+    collections: item.collections.map((ic) => ic.collection),
+    createdAt: item.createdAt,
+    updatedAt: item.updatedAt,
+  };
+}
+
 export async function deleteItem(id: string, userId: string): Promise<boolean> {
   const existing = await prisma.item.findFirst({ where: { id, userId } });
   if (!existing) return false;

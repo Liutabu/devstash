@@ -2,7 +2,7 @@
 
 import { z } from 'zod';
 import { auth } from '@/auth';
-import { updateItem, deleteItem } from '@/lib/db/items';
+import { createItem, updateItem, deleteItem } from '@/lib/db/items';
 import type { ItemDetail } from '@/lib/db/items';
 
 const UpdateItemSchema = z.object({
@@ -21,6 +21,44 @@ const UpdateItemSchema = z.object({
 });
 
 type UpdateItemInput = z.infer<typeof UpdateItemSchema>;
+
+const CreateItemSchema = z.object({
+  title: z.string().trim().min(1, 'Title is required'),
+  description: z.preprocess((v) => (v === '' ? null : v), z.string().nullable().optional()),
+  content: z.preprocess((v) => (v === '' ? null : v), z.string().nullable().optional()),
+  url: z.preprocess(
+    (v) => (v === '' ? null : v),
+    z.string().nullable().optional(),
+  ),
+  language: z.preprocess((v) => (v === '' ? null : v), z.string().nullable().optional()),
+  tags: z.array(z.string().trim().min(1)),
+  itemTypeId: z.string().min(1, 'Item type is required'),
+  contentType: z.enum(['text', 'url']),
+}).refine(
+  (data) => data.contentType !== 'url' || !!data.url,
+  { message: 'URL is required', path: ['url'] },
+);
+
+type CreateItemInput = z.infer<typeof CreateItemSchema>;
+
+type CreateItemResult =
+  | { success: true; data: ItemDetail }
+  | { success: false; error: string | Record<string, string[] | undefined> };
+
+export async function createItemAction(data: CreateItemInput): Promise<CreateItemResult> {
+  const session = await auth();
+  if (!session?.user?.id) return { success: false, error: 'Unauthorized' };
+
+  const parsed = CreateItemSchema.safeParse(data);
+  if (!parsed.success) return { success: false, error: parsed.error.flatten().fieldErrors };
+
+  const created = await createItem(session.user.id, {
+    ...parsed.data,
+    contentType: parsed.data.contentType as 'text' | 'url',
+  });
+
+  return { success: true, data: created };
+}
 
 type UpdateItemResult =
   | { success: true; data: ItemDetail }

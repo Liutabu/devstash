@@ -5,15 +5,17 @@ vi.mock('@/auth', () => ({
 }));
 
 vi.mock('@/lib/db/items', () => ({
+  createItem: vi.fn(),
   updateItem: vi.fn(),
   deleteItem: vi.fn(),
 }));
 
-import { updateItemAction, deleteItemAction } from './items';
+import { createItemAction, updateItemAction, deleteItemAction } from './items';
 import { auth } from '@/auth';
-import { updateItem, deleteItem } from '@/lib/db/items';
+import { createItem, updateItem, deleteItem } from '@/lib/db/items';
 
 const mockAuth = vi.mocked(auth);
+const mockCreateItem = vi.mocked(createItem);
 const mockUpdateItem = vi.mocked(updateItem);
 const mockDeleteItem = vi.mocked(deleteItem);
 
@@ -47,9 +49,77 @@ beforeEach(() => {
   vi.resetAllMocks();
 });
 
+const validCreateInput = {
+  title: 'New Snippet',
+  description: null,
+  content: 'console.log("hello")',
+  url: null,
+  language: 'typescript',
+  tags: ['js'],
+  itemTypeId: 'type-1',
+  contentType: 'text' as const,
+};
+
+describe('createItemAction', () => {
+  it('returns unauthorized when no session', async () => {
+    mockAuth.mockResolvedValue(null as never);
+    const result = await createItemAction(validCreateInput);
+    expect(result).toEqual({ success: false, error: 'Unauthorized' });
+    expect(mockCreateItem).not.toHaveBeenCalled();
+  });
+
+  it('returns validation error when title is empty', async () => {
+    mockAuth.mockResolvedValue({ user: { id: 'user-1' } } as never);
+    const result = await createItemAction({ ...validCreateInput, title: '  ' });
+    expect(result.success).toBe(false);
+    expect(mockCreateItem).not.toHaveBeenCalled();
+  });
+
+  it('returns validation error when link type has no url', async () => {
+    mockAuth.mockResolvedValue({ user: { id: 'user-1' } } as never);
+    const result = await createItemAction({
+      ...validCreateInput,
+      contentType: 'url',
+      url: null,
+    });
+    expect(result.success).toBe(false);
+    expect(mockCreateItem).not.toHaveBeenCalled();
+  });
+
+  it('returns validation error when itemTypeId is empty', async () => {
+    mockAuth.mockResolvedValue({ user: { id: 'user-1' } } as never);
+    const result = await createItemAction({ ...validCreateInput, itemTypeId: '' });
+    expect(result.success).toBe(false);
+    expect(mockCreateItem).not.toHaveBeenCalled();
+  });
+
+  it('returns created item on success', async () => {
+    mockAuth.mockResolvedValue({ user: { id: 'user-1' } } as never);
+    mockCreateItem.mockResolvedValue(mockDetail);
+    const result = await createItemAction(validCreateInput);
+    expect(result).toEqual({ success: true, data: mockDetail });
+    expect(mockCreateItem).toHaveBeenCalledWith('user-1', expect.objectContaining({
+      title: 'New Snippet',
+      itemTypeId: 'type-1',
+      contentType: 'text',
+    }));
+  });
+
+  it('accepts url type with valid url', async () => {
+    mockAuth.mockResolvedValue({ user: { id: 'user-1' } } as never);
+    mockCreateItem.mockResolvedValue(mockDetail);
+    const result = await createItemAction({
+      ...validCreateInput,
+      contentType: 'url',
+      url: 'https://example.com',
+    });
+    expect(result.success).toBe(true);
+  });
+});
+
 describe('updateItemAction', () => {
   it('returns unauthorized when no session', async () => {
-    mockAuth.mockResolvedValue(null);
+    mockAuth.mockResolvedValue(null as never);
     const result = await updateItemAction('item-1', validInput);
     expect(result).toEqual({ success: false, error: 'Unauthorized' });
     expect(mockUpdateItem).not.toHaveBeenCalled();
@@ -111,7 +181,7 @@ describe('updateItemAction', () => {
 
 describe('deleteItemAction', () => {
   it('returns unauthorized when no session', async () => {
-    mockAuth.mockResolvedValue(null);
+    mockAuth.mockResolvedValue(null as never);
     const result = await deleteItemAction('item-1');
     expect(result).toEqual({ success: false, error: 'Unauthorized' });
     expect(mockDeleteItem).not.toHaveBeenCalled();

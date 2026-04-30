@@ -5,9 +5,10 @@ import { Input } from "@/components/ui/input";
 interface TopBarProps {
   onToggleSidebar?: () => void;
   onMobileMenuClick?: () => void;
+  onNewItem?: () => void;
 }
 
-export function TopBar({ onToggleSidebar, onMobileMenuClick }: TopBarProps) {
+export function TopBar({ onToggleSidebar, onMobileMenuClick, onNewItem }: TopBarProps) {
   return (
     <header className="flex h-14 shrink-0 items-center gap-3 border-b border-border bg-background px-4">
       {/* Logo */}
@@ -52,7 +53,7 @@ export function TopBar({ onToggleSidebar, onMobileMenuClick }: TopBarProps) {
         <Button variant="outline" size="sm" className="hidden sm:flex">
           New Collection
         </Button>
-        <Button size="sm">
+        <Button size="sm" onClick={onNewItem}>
           <Plus className="h-4 w-4" />
           <span className="hidden sm:inline">New Item</span>
         </Button>

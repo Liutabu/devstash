@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils';
 import type { ItemTypeWithCount } from '@/lib/db/items';
 import type { SidebarCollectionData } from '@/lib/db/collections';
 import { ItemDrawerProvider } from '@/components/items/ItemDrawerProvider';
+import { CreateItemDialog } from '@/components/items/CreateItemDialog';
 
 interface SidebarUser {
   name?: string | null;
@@ -24,12 +25,19 @@ interface DashboardShellProps {
 export function DashboardShell({ children, itemTypes, sidebarCollections, user }: DashboardShellProps) {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [createOpen, setCreateOpen] = useState(false);
 
   return (
     <div className="flex h-full flex-col" suppressHydrationWarning>
       <TopBar
         onToggleSidebar={() => setCollapsed((c) => !c)}
         onMobileMenuClick={() => setMobileOpen(true)}
+        onNewItem={() => setCreateOpen(true)}
+      />
+      <CreateItemDialog
+        open={createOpen}
+        onClose={() => setCreateOpen(false)}
+        itemTypes={itemTypes}
       />
 
       <div className="relative flex flex-1 overflow-hidden" suppressHydrationWarning>
