@@ -117,6 +117,51 @@ export async function getItemsByType(slug: string): Promise<{ items: ItemRowData
   return { items: items.map(mapItem), typeName: itemType.name, typeColor: itemType.color };
 }
 
+export interface ItemDetail {
+  id: string;
+  title: string;
+  description: string | null;
+  content: string | null;
+  url: string | null;
+  language: string | null;
+  contentType: string;
+  isFavorite: boolean;
+  isPinned: boolean;
+  tags: string[];
+  itemType: { id: string; name: string; color: string; icon: string };
+  collections: { id: string; name: string }[];
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export async function getItemById(id: string, userId: string): Promise<ItemDetail | null> {
+  const item = await prisma.item.findFirst({
+    where: { id, userId },
+    include: {
+      itemType: { select: { id: true, name: true, color: true, icon: true } },
+      tags: { include: { tag: { select: { name: true } } } },
+      collections: { include: { collection: { select: { id: true, name: true } } } },
+    },
+  });
+  if (!item) return null;
+  return {
+    id: item.id,
+    title: item.title,
+    description: item.description,
+    content: item.content,
+    url: item.url,
+    language: item.language,
+    contentType: item.contentType,
+    isFavorite: item.isFavorite,
+    isPinned: item.isPinned,
+    tags: item.tags.map((t) => t.tag.name),
+    itemType: item.itemType,
+    collections: item.collections.map((ic) => ic.collection),
+    createdAt: item.createdAt,
+    updatedAt: item.updatedAt,
+  };
+}
+
 export async function getDashboardStats(): Promise<DashboardStats> {
   const [totalItems, totalCollections, favoriteItems, favoriteCollections] = await Promise.all([
     prisma.item.count(),
