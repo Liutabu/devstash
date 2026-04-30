@@ -9,6 +9,15 @@ Complete
 
 ## History
 
+### 2026-04-30 — Item Drawer Edit Mode
+- Installed `zod` and `sonner`; added `<Toaster richColors position="bottom-right" />` to root layout
+- Added `updateItem(id, userId, data)` to `src/lib/db/items.ts` — checks ownership, disconnects all tag links, connect-or-creates new ones, returns updated `ItemDetail`
+- Created `src/actions/items.ts` with `updateItemAction` — Zod-validated server action, auth + ownership check, `{ success, data, error }` return pattern
+- Updated `src/components/items/ItemDrawer.tsx` — Edit button toggles inline edit mode; action bar replaced with Save/Cancel; `EditForm` component with title input, description textarea, type-specific fields (content, language, url), comma-separated tags input; non-editable fields (type, collections, dates) shown as display-only; accessibility fix: `SheetTitle` rendered `sr-only` in edit mode
+- Updated `src/components/items/ItemDrawerProvider.tsx` — passes `onUpdate={setDetail}` so saved data refreshes the drawer in-place without a second fetch
+- Added 8 unit tests in `src/actions/items.test.ts` covering auth, Zod validation, not-found, success path, and empty-string-to-null coercion for url and language
+- Fixed pre-existing bug: all list queries (`getPinnedItems`, `getRecentItems`, `getDashboardStats`, `getItemTypesWithCounts`, `getItemsByType`, `getSidebarCollections`, `getRecentCollections`) were unscoped — added `userId` parameter to all and updated callers in `DashboardPage`, `ItemsPage`, `DashboardMain`, and `StatsCards`
+
 ### 2026-04-30 — Item Drawer
 - Installed shadcn `Sheet` component (`src/components/ui/sheet.tsx`)
 - Added `getItemById(id, userId)` to `src/lib/db/items.ts` — fetches full item detail (content, url, language, collections, tags) scoped to the requesting user
