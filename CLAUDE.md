@@ -14,13 +14,15 @@ Read the following to get the full context of the project:
 ## Commands
 
 ```bash
-npm run dev      # Start dev server
-npm run build    # Production build
-npm run start    # Start production server
-npm run lint     # Run ESLint
+npm run dev       # Start dev server
+npm run build     # Production build
+npm run start     # Start production server
+npm run lint      # Run ESLint
+npm run test      # Run unit tests (watch mode)
+npm run test:run  # Run unit tests once (CI)
 ```
 
-No test runner is configured.
+Tests use Vitest. Scope: server actions (`src/actions/`) and utilities (`src/lib/`). Do not write tests for React components.
 
 ## Stack
 
