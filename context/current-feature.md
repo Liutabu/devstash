@@ -1,11 +1,19 @@
-# Current Feature
+# Current Feature: Items List — 3-Column Layout on Large Screens
 
 ## Status
-Complete
+In Progress
 
 ## Goals
 
+- Items grid shows 1 column on mobile, 2 columns on medium screens, 3 columns on large screens
+- Change is isolated to `src/app/items/[type]/page.tsx` grid class — no other files affected
+- Responsive behaviour is preserved at all breakpoints
+
 ## Notes
+
+- Current grid: `grid-cols-1 md:grid-cols-2`
+- Target grid: `grid-cols-1 md:grid-cols-2 lg:grid-cols-3`
+- Tailwind breakpoints: `md` = 768px, `lg` = 1024px
 
 ## History
 
