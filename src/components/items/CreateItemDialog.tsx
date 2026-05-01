@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { ITEM_TYPE_ICON_MAP } from '@/lib/item-type-icons';
 import { CodeEditor } from '@/components/ui/CodeEditor';
+import { MarkdownEditor } from '@/components/ui/MarkdownEditor';
 import { createItemAction } from '@/actions/items';
 import type { ItemTypeWithCount } from '@/lib/db/items';
 
@@ -199,23 +200,21 @@ export function CreateItemDialog({ open, onClose, itemTypes, initialTypeId }: Cr
               <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                 Content
               </label>
-              {isLanguage ? (
-                <div className="mt-1">
+              <div className="mt-1">
+                {isLanguage ? (
                   <CodeEditor
                     value={content}
                     onChange={setContent}
                     language={language || undefined}
                   />
-                </div>
-              ) : (
-                <textarea
-                  className="mt-1 w-full bg-muted rounded px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-ring resize-none"
-                  rows={6}
-                  placeholder="Enter content"
-                  value={content}
-                  onChange={(e) => setContent(e.target.value)}
-                />
-              )}
+                ) : (
+                  <MarkdownEditor
+                    value={content}
+                    onChange={setContent}
+                    placeholder="Enter content"
+                  />
+                )}
+              </div>
             </div>
           )}
 
