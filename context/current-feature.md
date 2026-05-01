@@ -232,3 +232,11 @@ Complete
 - Updated `src/components/items/ItemDrawer.tsx` — replaced bare Trash2 button with `AlertDialog` trigger; shows item title in confirmation; destructive-styled confirm button; calls `deleteItemAction` on confirm, shows Sonner toast on success, calls `onDelete()` and `router.refresh()`
 - Updated `src/components/items/ItemDrawerProvider.tsx` — passes `onDelete={close}` to `ItemDrawer` so drawer closes on deletion
 - Added 3 unit tests in `src/actions/items.test.ts` for `deleteItemAction` covering unauthorized, not-found, and success paths
+
+### 2026-05-01 — Markdown Editor
+- Installed `react-markdown` and `remark-gfm`
+- Created `src/components/ui/MarkdownEditor.tsx` — Write/Preview tabs, copy button, auto-growing textarea (min 192px, max 400px via `scrollHeight` on input), readonly mode shows Preview tab only with "Markdown" label; dark theme (`bg-[#1e1e1e]`/`bg-[#2d2d2d]`) matches `CodeEditor`
+- Added `.markdown-preview` CSS class to `src/app/globals.css` — dark-mode styles for h1-h6, code blocks, inline code, lists, blockquotes, links, tables, HR, and GFM task checkboxes
+- Updated `src/components/items/CreateItemDialog.tsx` — note/prompt content field uses `<MarkdownEditor>`; snippet/command still uses `<CodeEditor>`
+- Updated `src/components/items/ItemDrawer.tsx` — edit mode uses `<MarkdownEditor>` for note/prompt content; view mode uses `<MarkdownEditor readOnly>` for note/prompt, routing now explicit by type name (not implicit fallthrough)
+- Fixed pre-existing issues in `ItemDrawer`: `handleCopy` was missing `toast.success`, Save/Cancel/ActionButton buttons were missing `type="button"`
