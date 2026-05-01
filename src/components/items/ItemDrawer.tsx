@@ -18,6 +18,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { ITEM_TYPE_ICON_MAP } from '@/lib/item-type-icons';
 import { CodeEditor } from '@/components/ui/CodeEditor';
+import { MarkdownEditor } from '@/components/ui/MarkdownEditor';
 import { updateItemAction, deleteItemAction } from '@/actions/items';
 
 export interface ItemDetailResponse {
@@ -116,6 +117,7 @@ function DrawerBody({ detail, onUpdate, onDelete }: DrawerBodyProps) {
   function handleCopy() {
     const text = detail.content ?? detail.url ?? detail.title;
     navigator.clipboard.writeText(text);
+    toast.success('Copied to clipboard');
   }
 
   function handleEdit() {
@@ -226,6 +228,7 @@ function DrawerBody({ detail, onUpdate, onDelete }: DrawerBodyProps) {
         {isEditing ? (
           <div className="flex items-center gap-2">
             <button
+              type="button"
               onClick={handleSave}
               disabled={saving || !title.trim()}
               className="flex items-center gap-1.5 rounded px-3 py-1.5 text-xs font-medium bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
@@ -234,6 +237,7 @@ function DrawerBody({ detail, onUpdate, onDelete }: DrawerBodyProps) {
               {saving ? 'Saving…' : 'Save'}
             </button>
             <button
+              type="button"
               onClick={handleCancel}
               disabled={saving}
               className="flex items-center gap-1.5 rounded px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
@@ -370,11 +374,9 @@ function EditForm({
               language={language || undefined}
             />
           ) : (
-            <textarea
-              className="w-full bg-muted rounded px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-ring resize-none"
-              rows={8}
+            <MarkdownEditor
               value={content}
-              onChange={(e) => setContent(e.target.value)}
+              onChange={setContent}
               placeholder="Content"
             />
           )}
@@ -489,6 +491,11 @@ function ViewBody({ detail, createdAt, updatedAt }: { detail: ItemDetailResponse
               language={detail.language ?? undefined}
               readOnly
             />
+          ) : (typeName === 'note' || typeName === 'prompt') ? (
+            <MarkdownEditor
+              value={detail.content ?? ''}
+              readOnly
+            />
           ) : (
             <pre className="text-xs rounded-md bg-muted px-4 py-3 overflow-x-auto whitespace-pre-wrap break-words max-h-64">
               <code>{detail.content}</code>
@@ -558,6 +565,7 @@ function ActionButton({
 }) {
   return (
     <button
+      type="button"
       onClick={onClick}
       className="flex items-center gap-1.5 rounded px-2 py-1.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
     >
