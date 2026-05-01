@@ -9,6 +9,19 @@ Complete
 
 ## History
 
+### 2026-05-01 — Code Editor + Type-Specific New Item Button
+- Installed `@monaco-editor/react`
+- Created `src/components/ui/CodeEditor.tsx` — Monaco Editor with `vs-dark` theme, macOS window dots (red/yellow/green), language label and copy button in header, fluid height (min 120px, max 400px) via `onDidContentSizeChange`, 6px styled scrollbar
+- Updated `src/components/items/ItemDrawer.tsx` — `ViewBody` renders `<CodeEditor readOnly />` for snippet/command content instead of `<pre><code>`; `EditForm` renders `<CodeEditor>` for editable content when `showLanguage` is true (snippet/command), plain textarea for other text types
+- Updated `src/components/items/CreateItemDialog.tsx` — content field uses `<CodeEditor>` for snippet/command types, plain textarea for prompt/note
+- Created `src/components/dashboard/DashboardContext.tsx` — React context exposing `openCreate(typeId?)`, provided by `DashboardShell`
+- Updated `src/components/dashboard/DashboardShell.tsx` — added `createTypeId` state, `openCreate()` function, wraps layout in `DashboardContext`, passes `initialTypeId` to `CreateItemDialog`
+- Updated `src/components/items/CreateItemDialog.tsx` — accepts `initialTypeId` prop; `useEffect` syncs selected type when dialog opens
+- Created `src/components/items/NewItemButton.tsx` — client component using `useDashboard()` context to call `openCreate(typeId)`, styled with type color
+- Updated `src/app/items/[type]/page.tsx` — renders `<NewItemButton>` in the page heading; destructures new `typeId` from `getItemsByType` result
+- Updated `getItemsByType` in `src/lib/db/items.ts` — return type now includes `typeId` alongside `typeName` and `typeColor`
+- Added 5 unit tests in `src/lib/db/items.test.ts` for `getItemsByType` covering null return, slug stripping, typeId/typeName/typeColor in result, userId scoping, and item mapping
+
 ### 2026-04-30 — Item Create
 - Installed shadcn `Dialog` component (`src/components/ui/dialog.tsx`)
 - Added `createItem(userId, data)` to `src/lib/db/items.ts` — creates item with tag connect-or-create, returns `ItemDetail`
