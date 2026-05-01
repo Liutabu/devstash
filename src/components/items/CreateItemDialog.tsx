@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import {
@@ -13,6 +13,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { ITEM_TYPE_ICON_MAP } from '@/lib/item-type-icons';
+import { CodeEditor } from '@/components/ui/CodeEditor';
 import { createItemAction } from '@/actions/items';
 import type { ItemTypeWithCount } from '@/lib/db/items';
 
@@ -20,6 +21,7 @@ interface CreateItemDialogProps {
   open: boolean;
   onClose: () => void;
   itemTypes: ItemTypeWithCount[];
+  initialTypeId?: string;
 }
 
 const EXCLUDED_SLUGS = ['files', 'images'];
@@ -41,11 +43,17 @@ function shouldShowUrl(typeName: string): boolean {
   return typeName.toLowerCase() === 'link';
 }
 
-export function CreateItemDialog({ open, onClose, itemTypes }: CreateItemDialogProps) {
+export function CreateItemDialog({ open, onClose, itemTypes, initialTypeId }: CreateItemDialogProps) {
   const router = useRouter();
   const availableTypes = itemTypes.filter((t) => !EXCLUDED_SLUGS.includes(t.slug));
 
   const [selectedTypeId, setSelectedTypeId] = useState<string>(availableTypes[0]?.id ?? '');
+
+  useEffect(() => {
+    if (!open) return;
+    const valid = initialTypeId && availableTypes.find((t) => t.id === initialTypeId);
+    setSelectedTypeId(valid ? initialTypeId : (availableTypes[0]?.id ?? ''));
+  }, [open, initialTypeId]); // eslint-disable-line react-hooks/exhaustive-deps
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [content, setContent] = useState('');
@@ -191,13 +199,23 @@ export function CreateItemDialog({ open, onClose, itemTypes }: CreateItemDialogP
               <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                 Content
               </label>
-              <textarea
-                className="mt-1 w-full bg-muted rounded px-3 py-2 text-xs font-mono outline-none focus:ring-1 focus:ring-ring resize-none"
-                rows={6}
-                placeholder="Enter content"
-                value={content}
-                onChange={(e) => setContent(e.target.value)}
-              />
+              {isLanguage ? (
+                <div className="mt-1">
+                  <CodeEditor
+                    value={content}
+                    onChange={setContent}
+                    language={language || undefined}
+                  />
+                </div>
+              ) : (
+                <textarea
+                  className="mt-1 w-full bg-muted rounded px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-ring resize-none"
+                  rows={6}
+                  placeholder="Enter content"
+                  value={content}
+                  onChange={(e) => setContent(e.target.value)}
+                />
+              )}
             </div>
           )}
 

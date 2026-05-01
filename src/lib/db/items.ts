@@ -102,7 +102,7 @@ export async function getItemTypesWithCounts(userId: string): Promise<ItemTypeWi
   }));
 }
 
-export async function getItemsByType(slug: string, userId: string): Promise<{ items: ItemRowData[]; typeName: string; typeColor: string } | null> {
+export async function getItemsByType(slug: string, userId: string): Promise<{ items: ItemRowData[]; typeName: string; typeColor: string; typeId: string } | null> {
   const typeName = slug.slice(0, -1); // "snippets" → "snippet"
   const itemType = await prisma.itemType.findFirst({
     where: { isSystem: true, name: { equals: typeName, mode: 'insensitive' } },
@@ -115,7 +115,7 @@ export async function getItemsByType(slug: string, userId: string): Promise<{ it
     ...itemWithTypeAndTags,
   });
 
-  return { items: items.map(mapItem), typeName: itemType.name, typeColor: itemType.color };
+  return { items: items.map(mapItem), typeName: itemType.name, typeColor: itemType.color, typeId: itemType.id };
 }
 
 export interface ItemDetail {

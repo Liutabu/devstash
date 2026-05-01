@@ -17,6 +17,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { ITEM_TYPE_ICON_MAP } from '@/lib/item-type-icons';
+import { CodeEditor } from '@/components/ui/CodeEditor';
 import { updateItemAction, deleteItemAction } from '@/actions/items';
 
 export interface ItemDetailResponse {
@@ -362,13 +363,21 @@ function EditForm({
       {showContent && (
         <section>
           <SectionHeading>Content</SectionHeading>
-          <textarea
-            className="w-full bg-muted rounded px-3 py-2 text-xs font-mono outline-none focus:ring-1 focus:ring-ring resize-none"
-            rows={8}
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            placeholder="Content"
-          />
+          {showLanguage ? (
+            <CodeEditor
+              value={content}
+              onChange={setContent}
+              language={language || undefined}
+            />
+          ) : (
+            <textarea
+              className="w-full bg-muted rounded px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-ring resize-none"
+              rows={8}
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              placeholder="Content"
+            />
+          )}
         </section>
       )}
 
@@ -452,6 +461,7 @@ function EditForm({
 }
 
 function ViewBody({ detail, createdAt, updatedAt }: { detail: ItemDetailResponse; createdAt: string; updatedAt: string }) {
+  const typeName = detail.itemType.name.toLowerCase();
   return (
     <>
       {detail.description && (
@@ -473,6 +483,12 @@ function ViewBody({ detail, createdAt, updatedAt }: { detail: ItemDetailResponse
             >
               {detail.url}
             </a>
+          ) : (typeName === 'snippet' || typeName === 'command') ? (
+            <CodeEditor
+              value={detail.content ?? ''}
+              language={detail.language ?? undefined}
+              readOnly
+            />
           ) : (
             <pre className="text-xs rounded-md bg-muted px-4 py-3 overflow-x-auto whitespace-pre-wrap break-words max-h-64">
               <code>{detail.content}</code>

@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { TopBar } from './TopBar';
 import { Sidebar } from './Sidebar';
+import { DashboardContext } from './DashboardContext';
 import { cn } from '@/lib/utils';
 import type { ItemTypeWithCount } from '@/lib/db/items';
 import type { SidebarCollectionData } from '@/lib/db/collections';
@@ -26,18 +27,26 @@ export function DashboardShell({ children, itemTypes, sidebarCollections, user }
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
+  const [createTypeId, setCreateTypeId] = useState<string | undefined>(undefined);
+
+  function openCreate(typeId?: string) {
+    setCreateTypeId(typeId);
+    setCreateOpen(true);
+  }
 
   return (
+    <DashboardContext value={{ openCreate }}>
     <div className="flex h-full flex-col" suppressHydrationWarning>
       <TopBar
         onToggleSidebar={() => setCollapsed((c) => !c)}
         onMobileMenuClick={() => setMobileOpen(true)}
-        onNewItem={() => setCreateOpen(true)}
+        onNewItem={() => openCreate()}
       />
       <CreateItemDialog
         open={createOpen}
         onClose={() => setCreateOpen(false)}
         itemTypes={itemTypes}
+        initialTypeId={createTypeId}
       />
 
       <div className="relative flex flex-1 overflow-hidden" suppressHydrationWarning>
@@ -70,5 +79,6 @@ export function DashboardShell({ children, itemTypes, sidebarCollections, user }
         </main>
       </div>
     </div>
+    </DashboardContext>
   );
 }
