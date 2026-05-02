@@ -5,6 +5,7 @@ vi.mock('@/lib/prisma', () => ({
     item: {
       findFirst: vi.fn(),
       findMany: vi.fn(),
+      delete: vi.fn(),
     },
     itemType: {
       findFirst: vi.fn(),
@@ -12,11 +13,18 @@ vi.mock('@/lib/prisma', () => ({
   },
 }));
 
-const { getItemById, getItemsByType } = await import('./items');
+vi.mock('@/lib/r2', () => ({
+  deleteFromR2: vi.fn(() => Promise.resolve()),
+}));
+
+const { getItemById, getItemsByType, deleteItem } = await import('./items');
 const { prisma } = await import('@/lib/prisma');
+const { deleteFromR2 } = await import('@/lib/r2');
 const findFirst = vi.mocked(prisma.item.findFirst);
 const findMany = vi.mocked(prisma.item.findMany);
+const itemDelete = vi.mocked(prisma.item.delete);
 const itemTypeFindFirst = vi.mocked(prisma.itemType.findFirst);
+const mockDeleteFromR2 = vi.mocked(deleteFromR2);
 
 const baseItem = {
   id: 'item-1',
@@ -160,5 +168,39 @@ describe('getItemsByType', () => {
     const result = await getItemsByType('snippets', 'user-1');
     expect(result?.items).toHaveLength(1);
     expect(result?.items[0]).toMatchObject({ id: 'item-1', title: 'My Snippet' });
+  });
+});
+
+describe('deleteItem', () => {
+  it('returns false when item is not found', async () => {
+    findFirst.mockResolvedValue(null);
+    const result = await deleteItem('missing-id', 'user-1');
+    expect(result).toBe(false);
+    expect(itemDelete).not.toHaveBeenCalled();
+    expect(mockDeleteFromR2).not.toHaveBeenCalled();
+  });
+
+  it('deletes item and calls deleteFromR2 when item has a fileUrl', async () => {
+    const itemWithFile = { id: 'item-1', userId: 'user-1', fileUrl: 'uploads/user-1/abc.pdf' };
+    findFirst.mockResolvedValue(itemWithFile as never);
+    itemDelete.mockResolvedValue(undefined as never);
+
+    const result = await deleteItem('item-1', 'user-1');
+
+    expect(result).toBe(true);
+    expect(itemDelete).toHaveBeenCalledWith({ where: { id: 'item-1' } });
+    expect(mockDeleteFromR2).toHaveBeenCalledWith('uploads/user-1/abc.pdf');
+  });
+
+  it('deletes item without calling deleteFromR2 when fileUrl is null', async () => {
+    const itemNoFile = { id: 'item-1', userId: 'user-1', fileUrl: null };
+    findFirst.mockResolvedValue(itemNoFile as never);
+    itemDelete.mockResolvedValue(undefined as never);
+
+    const result = await deleteItem('item-1', 'user-1');
+
+    expect(result).toBe(true);
+    expect(itemDelete).toHaveBeenCalledWith({ where: { id: 'item-1' } });
+    expect(mockDeleteFromR2).not.toHaveBeenCalled();
   });
 });

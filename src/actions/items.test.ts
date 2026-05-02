@@ -34,6 +34,9 @@ const mockDetail = {
   description: 'A description',
   content: 'console.log("hi")',
   url: null,
+  fileUrl: null,
+  fileName: null,
+  fileSize: null,
   language: 'typescript',
   contentType: 'text',
   isFavorite: false,
@@ -54,6 +57,9 @@ const validCreateInput = {
   description: null,
   content: 'console.log("hello")',
   url: null,
+  fileUrl: null,
+  fileName: null,
+  fileSize: null,
   language: 'typescript',
   tags: ['js'],
   itemTypeId: 'type-1',
@@ -114,6 +120,36 @@ describe('createItemAction', () => {
       url: 'https://example.com',
     });
     expect(result.success).toBe(true);
+  });
+
+  it('returns validation error when file type has no fileUrl', async () => {
+    mockAuth.mockResolvedValue({ user: { id: 'user-1' } } as never);
+    const result = await createItemAction({
+      ...validCreateInput,
+      contentType: 'file',
+      fileUrl: null,
+    });
+    expect(result.success).toBe(false);
+    expect(mockCreateItem).not.toHaveBeenCalled();
+  });
+
+  it('accepts file type with valid fileUrl', async () => {
+    mockAuth.mockResolvedValue({ user: { id: 'user-1' } } as never);
+    mockCreateItem.mockResolvedValue(mockDetail);
+    const result = await createItemAction({
+      ...validCreateInput,
+      contentType: 'file',
+      fileUrl: 'uploads/user-1/abc123.pdf',
+      fileName: 'notes.pdf',
+      fileSize: 12345,
+    });
+    expect(result.success).toBe(true);
+    expect(mockCreateItem).toHaveBeenCalledWith('user-1', expect.objectContaining({
+      contentType: 'file',
+      fileUrl: 'uploads/user-1/abc123.pdf',
+      fileName: 'notes.pdf',
+      fileSize: 12345,
+    }));
   });
 });
 

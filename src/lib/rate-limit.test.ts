@@ -1,5 +1,17 @@
-import { describe, it, expect } from 'vitest';
-import { getIP } from './rate-limit';
+import { describe, it, expect, vi } from 'vitest';
+
+vi.mock('@upstash/redis', () => ({
+  Redis: vi.fn().mockImplementation(function () { return {}; }),
+}));
+
+vi.mock('@upstash/ratelimit', () => ({
+  Ratelimit: Object.assign(
+    vi.fn().mockImplementation(function () { return {}; }),
+    { slidingWindow: vi.fn(() => ({})) },
+  ),
+}));
+
+const { getIP } = await import('./rate-limit');
 
 describe('getIP', () => {
   it('returns the first IP from x-forwarded-for', () => {

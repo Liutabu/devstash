@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/prisma';
+import { deleteFromR2 } from '@/lib/r2';
 
 export interface ItemRowData {
   id: string;
@@ -124,6 +125,9 @@ export interface ItemDetail {
   description: string | null;
   content: string | null;
   url: string | null;
+  fileUrl: string | null;
+  fileName: string | null;
+  fileSize: number | null;
   language: string | null;
   contentType: string;
   isFavorite: boolean;
@@ -151,6 +155,9 @@ export async function getItemById(id: string, userId: string): Promise<ItemDetai
     description: item.description,
     content: item.content,
     url: item.url,
+    fileUrl: item.fileUrl,
+    fileName: item.fileName,
+    fileSize: item.fileSize,
     language: item.language,
     contentType: item.contentType,
     isFavorite: item.isFavorite,
@@ -211,6 +218,9 @@ export async function updateItem(
     description: item.description,
     content: item.content,
     url: item.url,
+    fileUrl: item.fileUrl,
+    fileName: item.fileName,
+    fileSize: item.fileSize,
     language: item.language,
     contentType: item.contentType,
     isFavorite: item.isFavorite,
@@ -230,10 +240,13 @@ export async function createItem(
     description?: string | null;
     content?: string | null;
     url?: string | null;
+    fileUrl?: string | null;
+    fileName?: string | null;
+    fileSize?: number | null;
     language?: string | null;
     tags: string[];
     itemTypeId: string;
-    contentType: 'text' | 'url';
+    contentType: 'text' | 'url' | 'file';
   },
 ): Promise<ItemDetail> {
   const item = await prisma.item.create({
@@ -242,6 +255,9 @@ export async function createItem(
       description: data.description ?? null,
       content: data.content ?? null,
       url: data.url ?? null,
+      fileUrl: data.fileUrl ?? null,
+      fileName: data.fileName ?? null,
+      fileSize: data.fileSize ?? null,
       language: data.language ?? null,
       contentType: data.contentType,
       userId,
@@ -270,6 +286,9 @@ export async function createItem(
     description: item.description,
     content: item.content,
     url: item.url,
+    fileUrl: item.fileUrl,
+    fileName: item.fileName,
+    fileSize: item.fileSize,
     language: item.language,
     contentType: item.contentType,
     isFavorite: item.isFavorite,
@@ -286,6 +305,9 @@ export async function deleteItem(id: string, userId: string): Promise<boolean> {
   const existing = await prisma.item.findFirst({ where: { id, userId } });
   if (!existing) return false;
   await prisma.item.delete({ where: { id } });
+  if (existing.fileUrl) {
+    await deleteFromR2(existing.fileUrl).catch(() => {});
+  }
   return true;
 }
 

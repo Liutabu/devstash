@@ -15,6 +15,8 @@ import { cn } from '@/lib/utils';
 import { ITEM_TYPE_ICON_MAP } from '@/lib/item-type-icons';
 import { CodeEditor } from '@/components/ui/CodeEditor';
 import { MarkdownEditor } from '@/components/ui/MarkdownEditor';
+import { FileUpload } from '@/components/ui/FileUpload';
+import type { UploadResult } from '@/components/ui/FileUpload';
 import { createItemAction } from '@/actions/items';
 import type { ItemTypeWithCount } from '@/lib/db/items';
 
@@ -25,10 +27,11 @@ interface CreateItemDialogProps {
   initialTypeId?: string;
 }
 
-const EXCLUDED_SLUGS = ['files', 'images'];
-
-function getContentType(typeName: string): 'text' | 'url' {
-  return typeName.toLowerCase() === 'link' ? 'url' : 'text';
+function getContentType(typeName: string): 'text' | 'url' | 'file' {
+  const n = typeName.toLowerCase();
+  if (n === 'link') return 'url';
+  if (n === 'file' || n === 'image') return 'file';
+  return 'text';
 }
 
 function shouldShowContent(typeName: string): boolean {
@@ -44,31 +47,41 @@ function shouldShowUrl(typeName: string): boolean {
   return typeName.toLowerCase() === 'link';
 }
 
+function shouldShowUpload(typeName: string): boolean {
+  const n = typeName.toLowerCase();
+  return n === 'file' || n === 'image';
+}
+
 export function CreateItemDialog({ open, onClose, itemTypes, initialTypeId }: CreateItemDialogProps) {
   const router = useRouter();
-  const availableTypes = itemTypes.filter((t) => !EXCLUDED_SLUGS.includes(t.slug));
 
-  const [selectedTypeId, setSelectedTypeId] = useState<string>(availableTypes[0]?.id ?? '');
+  const [selectedTypeId, setSelectedTypeId] = useState<string>(itemTypes[0]?.id ?? '');
 
   useEffect(() => {
     if (!open) return;
-    const valid = initialTypeId && availableTypes.find((t) => t.id === initialTypeId);
-    setSelectedTypeId(valid ? initialTypeId : (availableTypes[0]?.id ?? ''));
+    const valid = initialTypeId && itemTypes.find((t) => t.id === initialTypeId);
+    setSelectedTypeId(valid ? initialTypeId : (itemTypes[0]?.id ?? ''));
   }, [open, initialTypeId]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [content, setContent] = useState('');
   const [url, setUrl] = useState('');
   const [language, setLanguage] = useState('');
   const [tagsInput, setTagsInput] = useState('');
+  const [uploadResult, setUploadResult] = useState<UploadResult | null>(null);
   const [saving, setSaving] = useState(false);
 
-  const selectedType = availableTypes.find((t) => t.id === selectedTypeId) ?? availableTypes[0];
+  const selectedType = itemTypes.find((t) => t.id === selectedTypeId) ?? itemTypes[0];
   const typeName = selectedType?.name ?? '';
   const isUrl = shouldShowUrl(typeName);
   const isContent = shouldShowContent(typeName);
   const isLanguage = shouldShowLanguage(typeName);
-  const isValid = title.trim().length > 0 && (!isUrl || url.trim().length > 0);
+  const isUpload = shouldShowUpload(typeName);
+  const isValid =
+    title.trim().length > 0 &&
+    (!isUrl || url.trim().length > 0) &&
+    (!isUpload || uploadResult !== null);
 
   function resetForm() {
     setTitle('');
@@ -77,8 +90,9 @@ export function CreateItemDialog({ open, onClose, itemTypes, initialTypeId }: Cr
     setUrl('');
     setLanguage('');
     setTagsInput('');
+    setUploadResult(null);
     setSaving(false);
-    setSelectedTypeId(availableTypes[0]?.id ?? '');
+    setSelectedTypeId(itemTypes[0]?.id ?? '');
   }
 
   function handleClose() {
@@ -96,6 +110,9 @@ export function CreateItemDialog({ open, onClose, itemTypes, initialTypeId }: Cr
         description: description || null,
         content: isContent ? (content || null) : null,
         url: isUrl ? (url || null) : null,
+        fileUrl: isUpload ? (uploadResult?.key ?? null) : null,
+        fileName: isUpload ? (uploadResult?.fileName ?? null) : null,
+        fileSize: isUpload ? (uploadResult?.fileSize ?? null) : null,
         language: isLanguage ? (language || null) : null,
         tags,
         itemTypeId: selectedType.id,
@@ -127,14 +144,14 @@ export function CreateItemDialog({ open, onClose, itemTypes, initialTypeId }: Cr
         <div className="space-y-4 py-2">
           {/* Type selector */}
           <div className="flex flex-wrap gap-1.5">
-            {availableTypes.map((type) => {
+            {itemTypes.map((type) => {
               const Icon = ITEM_TYPE_ICON_MAP[type.icon];
               const isSelected = type.id === selectedType?.id;
               return (
                 <button
                   key={type.id}
                   type="button"
-                  onClick={() => setSelectedTypeId(type.id)}
+                  onClick={() => { setSelectedTypeId(type.id); setUploadResult(null); }}
                   className={cn(
                     'flex items-center gap-1.5 rounded px-2.5 py-1.5 text-xs font-medium transition-colors',
                     isSelected
@@ -191,6 +208,23 @@ export function CreateItemDialog({ open, onClose, itemTypes, initialTypeId }: Cr
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
               />
+            </div>
+          )}
+
+          {/* File / Image upload */}
+          {isUpload && (
+            <div>
+              <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                {typeName} <span className="text-destructive">*</span>
+              </label>
+              <div className="mt-1">
+                <FileUpload
+                  accept={typeName.toLowerCase() === 'image' ? 'image' : 'file'}
+                  uploaded={uploadResult}
+                  onUpload={setUploadResult}
+                  onClear={() => setUploadResult(null)}
+                />
+              </div>
             </div>
           )}
 

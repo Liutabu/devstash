@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Star, Pin, Copy, Pencil, Trash2, FolderOpen, X, Check } from 'lucide-react';
+import { Star, Pin, Copy, Pencil, Trash2, FolderOpen, X, Check, Download, FileText } from 'lucide-react';
 import { toast } from 'sonner';
 import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet';
 import {
@@ -27,6 +27,9 @@ export interface ItemDetailResponse {
   description: string | null;
   content: string | null;
   url: string | null;
+  fileUrl: string | null;
+  fileName: string | null;
+  fileSize: number | null;
   language: string | null;
   contentType: string;
   isFavorite: boolean;
@@ -462,14 +465,62 @@ function EditForm({
   );
 }
 
+function formatBytes(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+}
+
 function ViewBody({ detail, createdAt, updatedAt }: { detail: ItemDetailResponse; createdAt: string; updatedAt: string }) {
   const typeName = detail.itemType.name.toLowerCase();
+  const isImage = typeName === 'image';
+  const isFile = typeName === 'file';
+
   return (
     <>
       {detail.description && (
         <section>
           <SectionHeading>Description</SectionHeading>
           <p className="text-sm">{detail.description}</p>
+        </section>
+      )}
+
+      {/* Image preview */}
+      {isImage && detail.fileUrl && (
+        <section>
+          <SectionHeading>Preview</SectionHeading>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={`/api/download/${detail.id}`}
+            alt={detail.title}
+            className="max-w-full rounded-md border border-border"
+          />
+        </section>
+      )}
+
+      {/* File info + download */}
+      {(isFile || isImage) && detail.fileUrl && (
+        <section>
+          <SectionHeading>File</SectionHeading>
+          <div className="flex items-center justify-between gap-3 rounded-md border border-border bg-muted/50 px-3 py-2.5">
+            <div className="flex items-center gap-2 min-w-0">
+              <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
+              <div className="min-w-0">
+                <p className="text-sm font-medium truncate">{detail.fileName ?? 'File'}</p>
+                {detail.fileSize != null && (
+                  <p className="text-xs text-muted-foreground">{formatBytes(detail.fileSize)}</p>
+                )}
+              </div>
+            </div>
+            <a
+              href={`/api/download/${detail.id}?download=1`}
+              download={detail.fileName ?? undefined}
+              className="shrink-0 flex items-center gap-1.5 rounded px-2 py-1.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+            >
+              <Download className="h-3.5 w-3.5" />
+              Download
+            </a>
+          </div>
         </section>
       )}
 

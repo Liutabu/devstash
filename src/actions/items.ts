@@ -30,13 +30,19 @@ const CreateItemSchema = z.object({
     (v) => (v === '' ? null : v),
     z.string().nullable().optional(),
   ),
+  fileUrl: z.preprocess((v) => (v === '' ? null : v), z.string().nullable().optional()),
+  fileName: z.preprocess((v) => (v === '' ? null : v), z.string().nullable().optional()),
+  fileSize: z.number().nullable().optional(),
   language: z.preprocess((v) => (v === '' ? null : v), z.string().nullable().optional()),
   tags: z.array(z.string().trim().min(1)),
   itemTypeId: z.string().min(1, 'Item type is required'),
-  contentType: z.enum(['text', 'url']),
+  contentType: z.enum(['text', 'url', 'file']),
 }).refine(
   (data) => data.contentType !== 'url' || !!data.url,
   { message: 'URL is required', path: ['url'] },
+).refine(
+  (data) => data.contentType !== 'file' || !!data.fileUrl,
+  { message: 'File is required', path: ['fileUrl'] },
 );
 
 type CreateItemInput = z.infer<typeof CreateItemSchema>;
@@ -54,7 +60,7 @@ export async function createItemAction(data: CreateItemInput): Promise<CreateIte
 
   const created = await createItem(session.user.id, {
     ...parsed.data,
-    contentType: parsed.data.contentType as 'text' | 'url',
+    contentType: parsed.data.contentType as 'text' | 'url' | 'file',
   });
 
   return { success: true, data: created };
