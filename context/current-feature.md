@@ -1,28 +1,26 @@
-# Current Feature: File Upload with Cloudflare R2
+# Current Feature
 
 ## Status
-In Progress
+Complete
 
 ## Goals
 
-- Create upload API route (`/api/upload`) that handles file/image uploads to Cloudflare R2
-- Create `FileUpload` component with drag-and-drop support and upload progress indicator
-- Update `CreateItemDialog` to use `FileUpload` for file/image types
-- Display image preview for images and file info (name, size) for file types in the drawer
-- Add download button in `ItemDrawer` for file types via a proxy download API route
-- Delete files from R2 when items are deleted (cleanup on `deleteItem`)
-- Enforce file constraints: images ≤ 5 MB, files ≤ 10 MB, allowed extensions/MIME types only
-
 ## Notes
 
-- Stick to `src/lib/db/items.ts` for all Prisma/DB functions
-- Download proxy route avoids CORS issues with direct R2 URLs
-- File constraints:
-  - Images (5 MB max): `.png`, `.jpg`, `.jpeg`, `.gif`, `.webp`, `.svg`
-  - Files (10 MB max): `.pdf`, `.txt`, `.md`, `.json`, `.yaml`, `.yml`, `.xml`, `.csv`, `.toml`, `.ini`
-- MIME types to validate server-side (images: `image/*`; files: `application/pdf`, `text/plain`, `text/markdown`, `application/json`, `application/x-yaml`, `text/yaml`, `application/xml`, `text/xml`, `text/csv`, `application/toml`)
-
 ## History
+
+### 2026-05-01 — File Upload with Cloudflare R2
+- Installed `@aws-sdk/client-s3` for S3-compatible R2 access
+- Created `src/lib/r2.ts` — `S3Client` configured for R2, `uploadToR2`, `deleteFromR2`, `getFromR2` helpers
+- Created `POST /api/upload` — auth check, server-side MIME type and file size validation, buffers and uploads to R2; returns `{ key, fileName, fileSize, mimeType }`
+- Created `GET /api/download/[id]` — ownership-checked proxy that streams files from R2; `?download=1` sets `Content-Disposition: attachment`
+- Created `src/components/ui/FileUpload.tsx` — drag-and-drop zone with XHR-based upload progress bar, file/image info display after upload, clear button
+- Updated `ItemDetail` interface + `getItemById`, `createItem`, `deleteItem` in `src/lib/db/items.ts` — `ItemDetail` now includes `fileUrl/fileName/fileSize`; `createItem` accepts file fields; `deleteItem` calls `deleteFromR2` on items with a `fileUrl`
+- Updated `CreateItemSchema` in `src/actions/items.ts` — supports `contentType: 'file'` with `fileUrl`-required refinement
+- Updated `CreateItemDialog` — file/image types now selectable (no longer excluded); shows `<FileUpload>` for those types; passes file fields to `createItemAction`
+- Updated `ItemDrawer` — image preview via `/api/download/[id]` for image items; file info row + download button for file/image items
+- Fixed pre-existing test infrastructure: added explicit `@` alias to `vitest.config.ts` (mocks were silently broken in Vitest 4 on Windows); fixed Upstash class mocks in `rate-limit.test.ts` to use `mockImplementation` (Vitest 4 requirement)
+- Added 8 new unit tests: `createItemAction` file-without-fileUrl validation, file-with-fileUrl success; `deleteItem` R2 cleanup when fileUrl present, no-op when null, false when not found
 
 ### 2026-05-01 — Code Editor + Type-Specific New Item Button
 - Installed `@monaco-editor/react`
