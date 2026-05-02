@@ -4,22 +4,20 @@ description: Recurring issues and clean areas found in the April 2026 audit
 type: project
 ---
 
-**Recurring issues found in first audit (2026-04-10):**
+**Status as of 2026-05-01:** All four issues from the April 2026 audit have been resolved in subsequent features. userId isolation was added to all DB queries, iconMap was extracted to `src/lib/item-type-icons.ts`, mockUser was replaced with real session data, and the composite index concern remains noted but no new index was added.
 
-1. **Missing user isolation in all DB queries** — `getPinnedItems`, `getRecentItems`, `getRecentCollections`, `getSidebarCollections`, `getDashboardStats`, `getItemTypesWithCounts` all query without `where: { userId }`. This is the single most important thing to fix when auth is wired up.
+**Markdown Editor feature audit (2026-05-01):**
 
-2. **`iconMap` duplication** — The same `Record<string, LucideIcon>` constant is defined identically in three files: `Sidebar.tsx`, `CollectionCard.tsx`, `ItemRow.tsx`. Should live in `src/lib/item-types.ts` or similar.
+1. **`ViewBody` content routing is implicit** — `ItemDrawer.tsx:485` routes to `MarkdownEditor` for note/prompt via `detail.url` being null rather than explicitly checking `typeName`. Works correctly now because link types always have a URL, but if a custom type ever has both content and url set, the branch would render the URL path and skip the markdown content. Low-severity design fragility.
 
-3. **`isFavorite` sort without index** — `getSidebarCollections` orders by `[{ isFavorite: 'desc' }, { updatedAt: 'desc' }]` but there is no composite index on `(userId, isFavorite, updatedAt)` in `collections`.
+2. **`MarkdownEditor` textarea has no fluid auto-grow** — The textarea uses a fixed `minHeight` via CSS rows (8 * 1.5rem = 12rem). It scrolls within that fixed height rather than growing like `CodeEditor` does via `onDidContentSizeChange`. The spec says "fluid height with max 400px matching CodeEditor behavior" — the textarea does not match this; it only enforces max height on the preview div. The write tab textarea is static height.
 
-4. **`mockUser` still used in production render path** — `Sidebar.tsx` imports and renders `mockUser.name` and `mockUser.email` in the user area. This hardcodes "John Doe / demo@devstash.io" for all users.
-
-**Clean areas confirmed:**
+**Clean areas confirmed (May 2026 full feature set):**
 - No raw SQL / no SQL injection risk
-- No XSS vectors (no `dangerouslySetInnerHTML`)
+- No XSS vectors — `react-markdown` renders safely by default (no `dangerouslySetInnerHTML`)
 - No secrets exposed in client components
 - No `any` types in application code
 - TypeScript strict mode respected throughout
-- DB query parallelization with `Promise.all` used correctly
-- Prisma singleton pattern correct for Next.js
-- `.env` properly gitignored
+- All DB queries properly scoped with userId
+- Auth enforced via middleware on all protected routes
+- React Compiler pattern respected (no useMemo/useCallback)

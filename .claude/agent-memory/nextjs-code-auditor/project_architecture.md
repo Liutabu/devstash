@@ -4,8 +4,10 @@ description: Established architectural patterns and decisions in DevStash — se
 type: project
 ---
 
-Server components fetch via Prisma directly (no API routes yet). Client components receive data as props from server component parents. No Server Actions exist yet. No API routes exist yet. Auth (NextAuth v5) is configured but not yet enforced — all DB queries are unauthenticated (no userId filter) and the dashboard is publicly accessible. The Sidebar uses `mockUser` for display; real session data is not wired in yet.
+Server components fetch via Prisma directly. Client components use Server Actions for mutations (`src/actions/`). Auth is fully wired: NextAuth v5 with GitHub OAuth + email/password, email verification toggle, forgot/reset password, rate limiting via Upstash. All DB queries in `src/lib/db/` are scoped by userId. Middleware (`src/proxy.ts`) protects `/dashboard`, `/items`, `/profile`. Server Actions verify session and ownership before mutations.
 
-**Why:** Project is in early UI/data wiring phase. Auth scaffolding (schema, bcrypt in seed) exists but the NextAuth session layer has not been connected to route guards or DB query filters.
+**Data flow:** Server component pages fetch data and pass as props → `DashboardShell` (client, manages sidebar collapse + create dialog state) → child components. Item creation/edit/delete uses Server Actions returning `{ success, data?, error? }`. `ItemDrawerProvider` manages drawer open state client-side, fetches item detail via `GET /api/items/[id]`.
 
-**How to apply:** When reviewing data fetch functions, note the absence of `userId` filters as a known pre-auth state, not a missed bug. When auth is implemented, ALL db queries in `src/lib/db/` will need `where: { userId: session.user.id }` guards added.
+**Component conventions:** `CodeEditor` (Monaco, snippet/command), `MarkdownEditor` (react-markdown + remark-gfm, note/prompt), `ItemDrawer` (Sheet), `CreateItemDialog` (Dialog), `AlertDialog` for destructive confirms, Sonner toasts for feedback.
+
+**Why updated 2026-05-01:** Auth, rate limiting, profile page, item CRUD with drawer all implemented since initial audit.
