@@ -1,6 +1,8 @@
 'use client';
 
-import { Star, Pin } from 'lucide-react';
+import { useState } from 'react';
+import { Star, Pin, Copy, Check } from 'lucide-react';
+import { toast } from 'sonner';
 import { ITEM_TYPE_ICON_MAP } from '@/lib/item-type-icons';
 import { useItemDrawer } from '@/components/items/ItemDrawerProvider';
 
@@ -15,6 +17,9 @@ interface Item {
   id: string;
   title: string;
   description?: string | null;
+  content?: string | null;
+  url?: string | null;
+  contentType?: string;
   isFavorite: boolean;
   isPinned: boolean;
   tags: readonly string[];
@@ -30,6 +35,19 @@ export function ItemRow({ item }: ItemRowProps) {
   const drawer = useItemDrawer();
   const Icon = ITEM_TYPE_ICON_MAP[item.itemType.icon];
   const date = item.createdAt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  const [copied, setCopied] = useState(false);
+
+  const copyValue = item.contentType === 'url' ? item.url : item.content;
+  const canCopy = item.contentType !== 'file' && !!copyValue;
+
+  function handleCopy(e: React.MouseEvent) {
+    e.stopPropagation();
+    if (!copyValue) return;
+    navigator.clipboard.writeText(copyValue);
+    setCopied(true);
+    toast.success('Copied to clipboard');
+    setTimeout(() => setCopied(false), 2000);
+  }
 
   return (
     <div
@@ -64,8 +82,20 @@ export function ItemRow({ item }: ItemRowProps) {
         </div>
       </div>
 
-      {/* Date */}
-      <span className="shrink-0 text-xs text-muted-foreground">{date}</span>
+      {/* Date + copy */}
+      <div className="flex items-center gap-1 shrink-0">
+        <span className="text-xs text-muted-foreground">{date}</span>
+        {canCopy && (
+          <button
+            type="button"
+            onClick={handleCopy}
+            className="p-1 rounded hover:bg-accent text-muted-foreground hover:text-foreground transition-colors opacity-0 group-hover:opacity-100"
+            title="Copy to clipboard"
+          >
+            {copied ? <Check className="h-3.5 w-3.5 text-green-500" /> : <Copy className="h-3.5 w-3.5" />}
+          </button>
+        )}
+      </div>
     </div>
   );
 }

@@ -5,6 +5,9 @@ export interface ItemRowData {
   id: string;
   title: string;
   description: string | null;
+  content: string | null;
+  url: string | null;
+  contentType: string;
   isFavorite: boolean;
   isPinned: boolean;
   fileName: string | null;
@@ -43,6 +46,9 @@ function mapItem(item: {
   id: string;
   title: string;
   description: string | null;
+  content: string | null;
+  url: string | null;
+  contentType: string;
   isFavorite: boolean;
   isPinned: boolean;
   fileName: string | null;
@@ -55,6 +61,9 @@ function mapItem(item: {
     id: item.id,
     title: item.title,
     description: item.description,
+    content: item.content,
+    url: item.url,
+    contentType: item.contentType,
     isFavorite: item.isFavorite,
     isPinned: item.isPinned,
     fileName: item.fileName,
