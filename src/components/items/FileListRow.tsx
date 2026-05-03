@@ -14,6 +14,7 @@ import {
   Pin,
 } from 'lucide-react';
 import { useItemDrawer } from './ItemDrawerProvider';
+import { formatBytes } from '@/lib/format';
 
 interface FileItem {
   id: string;
@@ -42,13 +43,6 @@ function renderFileIcon(fileName: string | null) {
   return <File className={cls} />;
 }
 
-function formatFileSize(bytes: number | null): string {
-  if (bytes == null) return '—';
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-}
-
 export function FileListRow({ item }: FileListRowProps) {
   const drawer = useItemDrawer();
 
@@ -72,12 +66,12 @@ export function FileListRow({ item }: FileListRowProps) {
       </div>
 
       <div className="hidden sm:flex items-center gap-6 shrink-0 text-xs text-muted-foreground">
-        <span>{formatFileSize(item.fileSize)}</span>
+        <span>{item.fileSize != null ? formatBytes(item.fileSize) : '—'}</span>
         <span>{new Date(item.createdAt).toLocaleDateString()}</span>
       </div>
 
       <div className="flex sm:hidden flex-col items-end shrink-0 text-xs text-muted-foreground gap-0.5">
-        <span>{formatFileSize(item.fileSize)}</span>
+        <span>{item.fileSize != null ? formatBytes(item.fileSize) : '—'}</span>
         <span>{new Date(item.createdAt).toLocaleDateString()}</span>
       </div>
 

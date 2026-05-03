@@ -2,6 +2,7 @@
 
 import { z } from 'zod';
 import { auth } from '@/auth';
+import { prisma } from '@/lib/prisma';
 import { createItem, updateItem, deleteItem } from '@/lib/db/items';
 import type { ItemDetail } from '@/lib/db/items';
 
@@ -57,6 +58,15 @@ export async function createItemAction(data: CreateItemInput): Promise<CreateIte
 
   const parsed = CreateItemSchema.safeParse(data);
   if (!parsed.success) return { success: false, error: parsed.error.flatten().fieldErrors };
+
+  if (parsed.data.fileUrl && !parsed.data.fileUrl.startsWith(`uploads/${session.user.id}/`)) {
+    return { success: false, error: 'Invalid file reference' };
+  }
+
+  const itemType = await prisma.itemType.findFirst({
+    where: { id: parsed.data.itemTypeId, OR: [{ isSystem: true }, { userId: session.user.id }] },
+  });
+  if (!itemType) return { success: false, error: 'Invalid item type' };
 
   const created = await createItem(session.user.id, {
     ...parsed.data,

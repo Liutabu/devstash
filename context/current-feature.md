@@ -268,3 +268,12 @@ Complete
 - Added hover-reveal copy button to `ItemCard` (`src/components/items/ItemCard.tsx`) and `ItemRow` (`src/components/dashboard/ItemRow.tsx`)
 - Button copies `content` for text types, `url` for link type; hidden for file/image types (nothing useful to copy)
 - Uses `Copy` → `Check` icon swap (2s) + Sonner toast on success; `stopPropagation` prevents opening the drawer
+
+### 2026-05-03 — Code Audit Quick Wins
+- Added `fileUrl` prefix validation in `createItemAction` (`src/actions/items.ts`) — rejects any `fileUrl` that doesn't start with `uploads/{userId}/` to prevent linking another user's R2 objects
+- Added `itemTypeId` ownership check in `createItemAction` — Prisma pre-flight verifies the type is a system type or owned by the current user before creating the item
+- Added `take: 50` cap to `getPinnedItems` in `src/lib/db/items.ts` — was the only unbounded list query on the dashboard
+- Extracted `formatBytes` to `src/lib/format.ts` — was duplicated verbatim in `FileUpload`, `ItemDrawer`, and `FileListRow`
+- Fixed `Content-Disposition` header in `GET /api/download/[id]` to use RFC 5987 `filename*=UTF-8''...` encoding for correct non-ASCII filename handling
+- Added `loading="lazy"` to `ImageThumbnailCard` img tag to defer off-screen image loads
+- Added `disabled` prop to `ActionButton` in `ItemDrawer`; Favorite and Pin buttons now render as visually dimmed with `title="Coming soon"` while unimplemented

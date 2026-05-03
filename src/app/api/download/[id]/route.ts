@@ -21,8 +21,9 @@ export async function GET(
   const { body, contentType, contentLength } = await getFromR2(item.fileUrl);
 
   const forceDownload = req.nextUrl.searchParams.get('download') === '1';
+  const encoded = encodeURIComponent(item.fileName ?? 'file');
   const disposition = forceDownload
-    ? `attachment; filename="${encodeURIComponent(item.fileName ?? 'file')}"`
+    ? `attachment; filename*=UTF-8''${encoded}`
     : 'inline';
 
   const headers = new Headers();

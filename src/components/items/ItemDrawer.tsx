@@ -20,6 +20,7 @@ import { ITEM_TYPE_ICON_MAP } from '@/lib/item-type-icons';
 import { CodeEditor } from '@/components/ui/CodeEditor';
 import { MarkdownEditor } from '@/components/ui/MarkdownEditor';
 import { updateItemAction, deleteItemAction } from '@/actions/items';
+import { formatBytes } from '@/lib/format';
 
 export interface ItemDetailResponse {
   id: string;
@@ -251,11 +252,11 @@ function DrawerBody({ detail, onUpdate, onDelete }: DrawerBodyProps) {
           </div>
         ) : (
           <div className="flex items-center gap-0.5">
-            <ActionButton onClick={undefined}>
+            <ActionButton onClick={undefined} disabled title="Coming soon">
               <Star className={`h-3.5 w-3.5 ${detail.isFavorite ? 'fill-yellow-400 text-yellow-400' : ''}`} />
               Favorite
             </ActionButton>
-            <ActionButton onClick={undefined}>
+            <ActionButton onClick={undefined} disabled title="Coming soon">
               <Pin className={`h-3.5 w-3.5 ${detail.isPinned ? 'fill-foreground text-foreground' : ''}`} />
               Pin
             </ActionButton>
@@ -465,12 +466,6 @@ function EditForm({
   );
 }
 
-function formatBytes(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
-}
-
 function ViewBody({ detail, createdAt, updatedAt }: { detail: ItemDetailResponse; createdAt: string; updatedAt: string }) {
   const typeName = detail.itemType.name.toLowerCase();
   const isImage = typeName === 'image';
@@ -610,15 +605,21 @@ function SectionHeading({ children }: { children: React.ReactNode }) {
 function ActionButton({
   children,
   onClick,
+  disabled,
+  title,
 }: {
   children: React.ReactNode;
   onClick: (() => void) | undefined;
+  disabled?: boolean;
+  title?: string;
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className="flex items-center gap-1.5 rounded px-2 py-1.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+      disabled={disabled}
+      title={title}
+      className="flex items-center gap-1.5 rounded px-2 py-1.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-muted-foreground"
     >
       {children}
     </button>

@@ -76,6 +76,7 @@ function mapItem(item: {
 
 export async function getPinnedItems(userId: string): Promise<ItemRowData[]> {
   const items = await prisma.item.findMany({
+    take: 50,
     where: { isPinned: true, userId },
     orderBy: { updatedAt: 'desc' },
     ...itemWithTypeAndTags,
