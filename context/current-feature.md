@@ -1,23 +1,11 @@
-# Current Feature: File List View
+# Current Feature
 
 ## Status
-In Progress
+Complete
 
 ## Goals
 
-- Update `/items/files` to display as a single-column list instead of a grid
-- Each row shows: file icon (by extension), file name, file size, upload date, download button
-- Row hover highlight
-- Click row opens ItemDrawer (existing drawer)
-- Download button triggers direct download without opening the drawer
-- Responsive: stack info vertically on mobile
-
 ## Notes
-
-- Layout style: Google Drive / Dropbox-style single-column list
-- Similar branching pattern as image gallery (`type === 'images'`) already exists in `src/app/items/[type]/page.tsx`
-- Download endpoint already exists at `GET /api/download/[id]?download=1`
-- ItemDrawer already handles file items
 
 ## History
 
@@ -269,3 +257,8 @@ In Progress
 ### 2026-05-03 — Image Gallery View
 - Created `src/components/items/ImageThumbnailCard.tsx` — `aspect-video` thumbnail card with `object-cover`, hover zoom (scale 105%, 300ms), title + pin/favorite footer; image served via `/api/download/[id]` (ownership-checked R2 proxy)
 - Updated `src/app/items/[type]/page.tsx` — branches on `type === 'images'` to render `ImageThumbnailCard` grid instead of `ItemCard`; all other types unchanged
+
+### 2026-05-03 — File List View
+- Extended `ItemRowData` in `src/lib/db/items.ts` with `fileName` and `fileSize` fields; updated `mapItem` to populate them
+- Created `src/components/items/FileListRow.tsx` — single-column list row with file-type icon (by extension), title, original filename, file size, upload date, pin/favorite indicators, and a hover-reveal download button that stops propagation to prevent drawer opening
+- Updated `src/app/items/[type]/page.tsx` — added `type === 'files'` branch rendering `<FileListRow>` in a `flex-col` list; responsive (size/date stack vertically on mobile via `sm:` breakpoint)
