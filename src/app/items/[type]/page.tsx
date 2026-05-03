@@ -3,6 +3,7 @@ import { auth } from '@/auth';
 import { DashboardShell } from '@/components/dashboard/DashboardShell';
 import { ItemCard } from '@/components/items/ItemCard';
 import { ImageThumbnailCard } from '@/components/items/ImageThumbnailCard';
+import { FileListRow } from '@/components/items/FileListRow';
 import { NewItemButton } from '@/components/items/NewItemButton';
 import { getItemsByType, getItemTypesWithCounts } from '@/lib/db/items';
 import { getSidebarCollections } from '@/lib/db/collections';
@@ -47,6 +48,12 @@ export default async function ItemsPage({ params }: ItemsPageProps) {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
             {items.map((item) => (
               <ImageThumbnailCard key={item.id} item={item} />
+            ))}
+          </div>
+        ) : type === 'files' ? (
+          <div className="flex flex-col gap-2">
+            {items.map((item) => (
+              <FileListRow key={item.id} item={item} />
             ))}
           </div>
         ) : (

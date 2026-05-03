@@ -7,6 +7,8 @@ export interface ItemRowData {
   description: string | null;
   isFavorite: boolean;
   isPinned: boolean;
+  fileName: string | null;
+  fileSize: number | null;
   tags: string[];
   itemType: {
     id: string;
@@ -43,6 +45,8 @@ function mapItem(item: {
   description: string | null;
   isFavorite: boolean;
   isPinned: boolean;
+  fileName: string | null;
+  fileSize: number | null;
   createdAt: Date;
   itemType: { id: string; name: string; color: string; icon: string };
   tags: { tag: { name: string } }[];
@@ -53,6 +57,8 @@ function mapItem(item: {
     description: item.description,
     isFavorite: item.isFavorite,
     isPinned: item.isPinned,
+    fileName: item.fileName,
+    fileSize: item.fileSize,
     tags: item.tags.map((t) => t.tag.name),
     itemType: item.itemType,
     createdAt: item.createdAt,

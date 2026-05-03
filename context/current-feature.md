@@ -1,11 +1,23 @@
-# Current Feature
+# Current Feature: File List View
 
 ## Status
-Complete
+In Progress
 
 ## Goals
 
+- Update `/items/files` to display as a single-column list instead of a grid
+- Each row shows: file icon (by extension), file name, file size, upload date, download button
+- Row hover highlight
+- Click row opens ItemDrawer (existing drawer)
+- Download button triggers direct download without opening the drawer
+- Responsive: stack info vertically on mobile
+
 ## Notes
+
+- Layout style: Google Drive / Dropbox-style single-column list
+- Similar branching pattern as image gallery (`type === 'images'`) already exists in `src/app/items/[type]/page.tsx`
+- Download endpoint already exists at `GET /api/download/[id]?download=1`
+- ItemDrawer already handles file items
 
 ## History
 
