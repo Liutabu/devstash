@@ -1,87 +1,13 @@
-# Current Feature: Image Gallery View
+# Current Feature
 
 ## Status
-In Progress
+Complete
 
 ## Goals
 
-- Create an image thumbnail card to replace the current item card on the images list page
-- Show an image grid/gallery with 3 columns
-- Display image thumbnail with 16:9 aspect ratio (`aspect-video`)
-- Use `object-cover` to fill the card (may crop edges)
-- Add subtle hover zoom effect (5% scale with 300ms transition)
-
 ## Notes
 
-- Only applies to the `/items/images` page — other item type pages keep the existing `ItemCard`
-- Images are served via `GET /api/download/[id]` (ownership-checked proxy to R2)
-
 ## History
-
-### 2026-05-01 — File Upload with Cloudflare R2
-- Installed `@aws-sdk/client-s3` for S3-compatible R2 access
-- Created `src/lib/r2.ts` — `S3Client` configured for R2, `uploadToR2`, `deleteFromR2`, `getFromR2` helpers
-- Created `POST /api/upload` — auth check, server-side MIME type and file size validation, buffers and uploads to R2; returns `{ key, fileName, fileSize, mimeType }`
-- Created `GET /api/download/[id]` — ownership-checked proxy that streams files from R2; `?download=1` sets `Content-Disposition: attachment`
-- Created `src/components/ui/FileUpload.tsx` — drag-and-drop zone with XHR-based upload progress bar, file/image info display after upload, clear button
-- Updated `ItemDetail` interface + `getItemById`, `createItem`, `deleteItem` in `src/lib/db/items.ts` — `ItemDetail` now includes `fileUrl/fileName/fileSize`; `createItem` accepts file fields; `deleteItem` calls `deleteFromR2` on items with a `fileUrl`
-- Updated `CreateItemSchema` in `src/actions/items.ts` — supports `contentType: 'file'` with `fileUrl`-required refinement
-- Updated `CreateItemDialog` — file/image types now selectable (no longer excluded); shows `<FileUpload>` for those types; passes file fields to `createItemAction`
-- Updated `ItemDrawer` — image preview via `/api/download/[id]` for image items; file info row + download button for file/image items
-- Fixed pre-existing test infrastructure: added explicit `@` alias to `vitest.config.ts` (mocks were silently broken in Vitest 4 on Windows); fixed Upstash class mocks in `rate-limit.test.ts` to use `mockImplementation` (Vitest 4 requirement)
-- Added 8 new unit tests: `createItemAction` file-without-fileUrl validation, file-with-fileUrl success; `deleteItem` R2 cleanup when fileUrl present, no-op when null, false when not found
-
-### 2026-05-01 — Code Editor + Type-Specific New Item Button
-- Installed `@monaco-editor/react`
-- Created `src/components/ui/CodeEditor.tsx` — Monaco Editor with `vs-dark` theme, macOS window dots (red/yellow/green), language label and copy button in header, fluid height (min 120px, max 400px) via `onDidContentSizeChange`, 6px styled scrollbar
-- Updated `src/components/items/ItemDrawer.tsx` — `ViewBody` renders `<CodeEditor readOnly />` for snippet/command content instead of `<pre><code>`; `EditForm` renders `<CodeEditor>` for editable content when `showLanguage` is true (snippet/command), plain textarea for other text types
-- Updated `src/components/items/CreateItemDialog.tsx` — content field uses `<CodeEditor>` for snippet/command types, plain textarea for prompt/note
-- Created `src/components/dashboard/DashboardContext.tsx` — React context exposing `openCreate(typeId?)`, provided by `DashboardShell`
-- Updated `src/components/dashboard/DashboardShell.tsx` — added `createTypeId` state, `openCreate()` function, wraps layout in `DashboardContext`, passes `initialTypeId` to `CreateItemDialog`
-- Updated `src/components/items/CreateItemDialog.tsx` — accepts `initialTypeId` prop; `useEffect` syncs selected type when dialog opens
-- Created `src/components/items/NewItemButton.tsx` — client component using `useDashboard()` context to call `openCreate(typeId)`, styled with type color
-- Updated `src/app/items/[type]/page.tsx` — renders `<NewItemButton>` in the page heading; destructures new `typeId` from `getItemsByType` result
-- Updated `getItemsByType` in `src/lib/db/items.ts` — return type now includes `typeId` alongside `typeName` and `typeColor`
-- Added 5 unit tests in `src/lib/db/items.test.ts` for `getItemsByType` covering null return, slug stripping, typeId/typeName/typeColor in result, userId scoping, and item mapping
-
-### 2026-04-30 — Item Create
-- Installed shadcn `Dialog` component (`src/components/ui/dialog.tsx`)
-- Added `createItem(userId, data)` to `src/lib/db/items.ts` — creates item with tag connect-or-create, returns `ItemDetail`
-- Added `createItemAction` to `src/actions/items.ts` — Zod-validated server action with URL-required refinement for link type, `{ success, data, error }` return pattern
-- Created `src/components/items/CreateItemDialog.tsx` — Dialog with type selector (snippet, prompt, command, note, link; file/image excluded), conditional fields per type (content+language for snippet/command, content for prompt/note, URL for link), comma-separated tags, form reset on close
-- Updated `src/components/dashboard/TopBar.tsx` — added `onNewItem` prop, wired to "New Item" button
-- Updated `src/components/dashboard/DashboardShell.tsx` — added `createOpen` state, renders `<CreateItemDialog>` with `itemTypes` prop, passes `onNewItem` to `TopBar`
-- Added 6 unit tests in `src/actions/items.test.ts` for `createItemAction` covering unauthorized, empty title, link-without-url, empty typeId, success, and url-type-with-valid-url paths
-
-### 2026-04-30 — Item Drawer Edit Mode
-- Installed `zod` and `sonner`; added `<Toaster richColors position="bottom-right" />` to root layout
-- Added `updateItem(id, userId, data)` to `src/lib/db/items.ts` — checks ownership, disconnects all tag links, connect-or-creates new ones, returns updated `ItemDetail`
-- Created `src/actions/items.ts` with `updateItemAction` — Zod-validated server action, auth + ownership check, `{ success, data, error }` return pattern
-- Updated `src/components/items/ItemDrawer.tsx` — Edit button toggles inline edit mode; action bar replaced with Save/Cancel; `EditForm` component with title input, description textarea, type-specific fields (content, language, url), comma-separated tags input; non-editable fields (type, collections, dates) shown as display-only; accessibility fix: `SheetTitle` rendered `sr-only` in edit mode
-- Updated `src/components/items/ItemDrawerProvider.tsx` — passes `onUpdate={setDetail}` so saved data refreshes the drawer in-place without a second fetch
-- Added 8 unit tests in `src/actions/items.test.ts` covering auth, Zod validation, not-found, success path, and empty-string-to-null coercion for url and language
-- Fixed pre-existing bug: all list queries (`getPinnedItems`, `getRecentItems`, `getDashboardStats`, `getItemTypesWithCounts`, `getItemsByType`, `getSidebarCollections`, `getRecentCollections`) were unscoped — added `userId` parameter to all and updated callers in `DashboardPage`, `ItemsPage`, `DashboardMain`, and `StatsCards`
-
-### 2026-04-30 — Item Drawer
-- Installed shadcn `Sheet` component (`src/components/ui/sheet.tsx`)
-- Added `getItemById(id, userId)` to `src/lib/db/items.ts` — fetches full item detail (content, url, language, collections, tags) scoped to the requesting user
-- Created `GET /api/items/[id]/route.ts` — auth-checked API route that calls `getItemById`
-- Created `src/components/items/ItemDrawer.tsx` — Sheet-based drawer with header (title, type badge, language badge), action bar (Favorite, Pin, Copy, Edit, Delete), scrollable body (description, content/code block, tags, collections, created/updated dates), and skeleton loading state
-- Created `src/components/items/ItemDrawerProvider.tsx` — client context managing `open(itemId)`, fetches detail on click, renders the `ItemDrawer`
-- Updated `ItemCard` and `ItemRow` to be `'use client'` components using `useItemDrawer()` to open the drawer on click
-- Updated `DashboardShell` to wrap `<main>` with `ItemDrawerProvider` — drawer available on all pages (dashboard + items list)
-- Added 6 unit tests for `getItemById` in `src/lib/db/items.test.ts` covering null-return, userId scoping, tag/collection mapping, and scalar field mapping
-
-### 2026-04-30 — Vitest Unit Testing Setup
-- Installed `vitest` and configured `vitest.config.ts` with Node environment and native tsconfig path resolution
-- Created `src/__tests__/setup.ts` — global mocks for `next/headers`, `next/navigation`, `next/cache`
-- Added `src/lib/rate-limit.test.ts` — 4 smoke tests for `getIP` utility
-- Added `npm run test` (watch) and `npm run test:run` (CI) scripts
-- Updated `CLAUDE.md` and `context/ai-interaction.md` to document test scope and workflow step
-
-### 2026-04-30 — Items List 3-Column Layout
-- Updated grid in `src/app/items/[type]/page.tsx` from `md:grid-cols-2` to `md:grid-cols-2 lg:grid-cols-3`
-- Items now show 1 column on mobile, 2 on `md` (768px+), 3 on `lg` (1024px+)
 
 ### 2026-04-04 — Initial Next.js Setup
 - Bootstrapped Next.js 16 with App Router, React 19, TypeScript, and Tailwind CSS v4
@@ -241,11 +167,50 @@ In Progress
 - Updated register, forgot-password, reset-password pages — added `rate_limited` error messages
 - Added `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` to `.env.example`
 
+### 2026-04-30 — Vitest Unit Testing Setup
+- Installed `vitest` and configured `vitest.config.ts` with Node environment and native tsconfig path resolution
+- Created `src/__tests__/setup.ts` — global mocks for `next/headers`, `next/navigation`, `next/cache`
+- Added `src/lib/rate-limit.test.ts` — 4 smoke tests for `getIP` utility
+- Added `npm run test` (watch) and `npm run test:run` (CI) scripts
+- Updated `CLAUDE.md` and `context/ai-interaction.md` to document test scope and workflow step
+
+### 2026-04-30 — Items List 3-Column Layout
+- Updated grid in `src/app/items/[type]/page.tsx` from `md:grid-cols-2` to `md:grid-cols-2 lg:grid-cols-3`
+- Items now show 1 column on mobile, 2 on `md` (768px+), 3 on `lg` (1024px+)
+
 ### 2026-04-30 — Items List View
 - Added `getItemsByType(slug)` to `src/lib/db/items.ts` — looks up system ItemType by slug (strips trailing 's', case-insensitive), returns null for unknown slugs, fetches items with type+tags joined via existing `itemWithTypeAndTags` pattern
 - Created `src/components/items/ItemCard.tsx` — card with colored left border, icon, title, description excerpt (2-line clamp), type badge, tags (up to 3), and date
 - Created `src/app/items/[type]/page.tsx` — async server component; reuses `DashboardShell` for layout; parallel data fetching; 404 on unknown type; 1-column mobile / 2-column md+ grid; empty state message
 - Updated `src/proxy.ts` — added `/items` to `PROTECTED_PREFIXES` and `/items/:path*` to middleware matcher
+
+### 2026-04-30 — Item Drawer
+- Installed shadcn `Sheet` component (`src/components/ui/sheet.tsx`)
+- Added `getItemById(id, userId)` to `src/lib/db/items.ts` — fetches full item detail (content, url, language, collections, tags) scoped to the requesting user
+- Created `GET /api/items/[id]/route.ts` — auth-checked API route that calls `getItemById`
+- Created `src/components/items/ItemDrawer.tsx` — Sheet-based drawer with header (title, type badge, language badge), action bar (Favorite, Pin, Copy, Edit, Delete), scrollable body (description, content/code block, tags, collections, created/updated dates), and skeleton loading state
+- Created `src/components/items/ItemDrawerProvider.tsx` — client context managing `open(itemId)`, fetches detail on click, renders the `ItemDrawer`
+- Updated `ItemCard` and `ItemRow` to be `'use client'` components using `useItemDrawer()` to open the drawer on click
+- Updated `DashboardShell` to wrap `<main>` with `ItemDrawerProvider` — drawer available on all pages (dashboard + items list)
+- Added 6 unit tests for `getItemById` in `src/lib/db/items.test.ts` covering null-return, userId scoping, tag/collection mapping, and scalar field mapping
+
+### 2026-04-30 — Item Drawer Edit Mode
+- Installed `zod` and `sonner`; added `<Toaster richColors position="bottom-right" />` to root layout
+- Added `updateItem(id, userId, data)` to `src/lib/db/items.ts` — checks ownership, disconnects all tag links, connect-or-creates new ones, returns updated `ItemDetail`
+- Created `src/actions/items.ts` with `updateItemAction` — Zod-validated server action, auth + ownership check, `{ success, data, error }` return pattern
+- Updated `src/components/items/ItemDrawer.tsx` — Edit button toggles inline edit mode; action bar replaced with Save/Cancel; `EditForm` component with title input, description textarea, type-specific fields (content, language, url), comma-separated tags input; non-editable fields (type, collections, dates) shown as display-only; accessibility fix: `SheetTitle` rendered `sr-only` in edit mode
+- Updated `src/components/items/ItemDrawerProvider.tsx` — passes `onUpdate={setDetail}` so saved data refreshes the drawer in-place without a second fetch
+- Added 8 unit tests in `src/actions/items.test.ts` covering auth, Zod validation, not-found, success path, and empty-string-to-null coercion for url and language
+- Fixed pre-existing bug: all list queries (`getPinnedItems`, `getRecentItems`, `getDashboardStats`, `getItemTypesWithCounts`, `getItemsByType`, `getSidebarCollections`, `getRecentCollections`) were unscoped — added `userId` parameter to all and updated callers in `DashboardPage`, `ItemsPage`, `DashboardMain`, and `StatsCards`
+
+### 2026-04-30 — Item Create
+- Installed shadcn `Dialog` component (`src/components/ui/dialog.tsx`)
+- Added `createItem(userId, data)` to `src/lib/db/items.ts` — creates item with tag connect-or-create, returns `ItemDetail`
+- Added `createItemAction` to `src/actions/items.ts` — Zod-validated server action with URL-required refinement for link type, `{ success, data, error }` return pattern
+- Created `src/components/items/CreateItemDialog.tsx` — Dialog with type selector (snippet, prompt, command, note, link; file/image excluded), conditional fields per type (content+language for snippet/command, content for prompt/note, URL for link), comma-separated tags, form reset on close
+- Updated `src/components/dashboard/TopBar.tsx` — added `onNewItem` prop, wired to "New Item" button
+- Updated `src/components/dashboard/DashboardShell.tsx` — added `createOpen` state, renders `<CreateItemDialog>` with `itemTypes` prop, passes `onNewItem` to `TopBar`
+- Added 6 unit tests in `src/actions/items.test.ts` for `createItemAction` covering unauthorized, empty title, link-without-url, empty typeId, success, and url-type-with-valid-url paths
 
 ### 2026-04-30 — Delete Item
 - Installed shadcn `AlertDialog` component (`src/components/ui/alert-dialog.tsx`)
@@ -255,6 +220,19 @@ In Progress
 - Updated `src/components/items/ItemDrawerProvider.tsx` — passes `onDelete={close}` to `ItemDrawer` so drawer closes on deletion
 - Added 3 unit tests in `src/actions/items.test.ts` for `deleteItemAction` covering unauthorized, not-found, and success paths
 
+### 2026-05-01 — Code Editor + Type-Specific New Item Button
+- Installed `@monaco-editor/react`
+- Created `src/components/ui/CodeEditor.tsx` — Monaco Editor with `vs-dark` theme, macOS window dots (red/yellow/green), language label and copy button in header, fluid height (min 120px, max 400px) via `onDidContentSizeChange`, 6px styled scrollbar
+- Updated `src/components/items/ItemDrawer.tsx` — `ViewBody` renders `<CodeEditor readOnly />` for snippet/command content instead of `<pre><code>`; `EditForm` renders `<CodeEditor>` for editable content when `showLanguage` is true (snippet/command), plain textarea for other text types
+- Updated `src/components/items/CreateItemDialog.tsx` — content field uses `<CodeEditor>` for snippet/command types, plain textarea for prompt/note
+- Created `src/components/dashboard/DashboardContext.tsx` — React context exposing `openCreate(typeId?)`, provided by `DashboardShell`
+- Updated `src/components/dashboard/DashboardShell.tsx` — added `createTypeId` state, `openCreate()` function, wraps layout in `DashboardContext`, passes `initialTypeId` to `CreateItemDialog`
+- Updated `src/components/items/CreateItemDialog.tsx` — accepts `initialTypeId` prop; `useEffect` syncs selected type when dialog opens
+- Created `src/components/items/NewItemButton.tsx` — client component using `useDashboard()` context to call `openCreate(typeId)`, styled with type color
+- Updated `src/app/items/[type]/page.tsx` — renders `<NewItemButton>` in the page heading; destructures new `typeId` from `getItemsByType` result
+- Updated `getItemsByType` in `src/lib/db/items.ts` — return type now includes `typeId` alongside `typeName` and `typeColor`
+- Added 5 unit tests in `src/lib/db/items.test.ts` for `getItemsByType` covering null return, slug stripping, typeId/typeName/typeColor in result, userId scoping, and item mapping
+
 ### 2026-05-01 — Markdown Editor
 - Installed `react-markdown` and `remark-gfm`
 - Created `src/components/ui/MarkdownEditor.tsx` — Write/Preview tabs, copy button, auto-growing textarea (min 192px, max 400px via `scrollHeight` on input), readonly mode shows Preview tab only with "Markdown" label; dark theme (`bg-[#1e1e1e]`/`bg-[#2d2d2d]`) matches `CodeEditor`
@@ -262,3 +240,20 @@ In Progress
 - Updated `src/components/items/CreateItemDialog.tsx` — note/prompt content field uses `<MarkdownEditor>`; snippet/command still uses `<CodeEditor>`
 - Updated `src/components/items/ItemDrawer.tsx` — edit mode uses `<MarkdownEditor>` for note/prompt content; view mode uses `<MarkdownEditor readOnly>` for note/prompt, routing now explicit by type name (not implicit fallthrough)
 - Fixed pre-existing issues in `ItemDrawer`: `handleCopy` was missing `toast.success`, Save/Cancel/ActionButton buttons were missing `type="button"`
+
+### 2026-05-01 — File Upload with Cloudflare R2
+- Installed `@aws-sdk/client-s3` for S3-compatible R2 access
+- Created `src/lib/r2.ts` — `S3Client` configured for R2, `uploadToR2`, `deleteFromR2`, `getFromR2` helpers
+- Created `POST /api/upload` — auth check, server-side MIME type and file size validation, buffers and uploads to R2; returns `{ key, fileName, fileSize, mimeType }`
+- Created `GET /api/download/[id]` — ownership-checked proxy that streams files from R2; `?download=1` sets `Content-Disposition: attachment`
+- Created `src/components/ui/FileUpload.tsx` — drag-and-drop zone with XHR-based upload progress bar, file/image info display after upload, clear button
+- Updated `ItemDetail` interface + `getItemById`, `createItem`, `deleteItem` in `src/lib/db/items.ts` — `ItemDetail` now includes `fileUrl/fileName/fileSize`; `createItem` accepts file fields; `deleteItem` calls `deleteFromR2` on items with a `fileUrl`
+- Updated `CreateItemSchema` in `src/actions/items.ts` — supports `contentType: 'file'` with `fileUrl`-required refinement
+- Updated `CreateItemDialog` — file/image types now selectable (no longer excluded); shows `<FileUpload>` for those types; passes file fields to `createItemAction`
+- Updated `ItemDrawer` — image preview via `/api/download/[id]` for image items; file info row + download button for file/image items
+- Fixed pre-existing test infrastructure: added explicit `@` alias to `vitest.config.ts` (mocks were silently broken in Vitest 4 on Windows); fixed Upstash class mocks in `rate-limit.test.ts` to use `mockImplementation` (Vitest 4 requirement)
+- Added 8 new unit tests: `createItemAction` file-without-fileUrl validation, file-with-fileUrl success; `deleteItem` R2 cleanup when fileUrl present, no-op when null, false when not found
+
+### 2026-05-03 — Image Gallery View
+- Created `src/components/items/ImageThumbnailCard.tsx` — `aspect-video` thumbnail card with `object-cover`, hover zoom (scale 105%, 300ms), title + pin/favorite footer; image served via `/api/download/[id]` (ownership-checked R2 proxy)
+- Updated `src/app/items/[type]/page.tsx` — branches on `type === 'images'` to render `ImageThumbnailCard` grid instead of `ItemCard`; all other types unchanged
