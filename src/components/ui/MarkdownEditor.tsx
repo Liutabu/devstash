@@ -29,7 +29,7 @@ export function MarkdownEditor({ value, onChange, readOnly = false, placeholder 
 
   useEffect(() => {
     if (tab === 'write') syncHeight();
-  }, [tab]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [tab]);
 
   function handleCopy() {
     navigator.clipboard.writeText(value);

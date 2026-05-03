@@ -262,3 +262,9 @@ Complete
 - Extended `ItemRowData` in `src/lib/db/items.ts` with `fileName` and `fileSize` fields; updated `mapItem` to populate them
 - Created `src/components/items/FileListRow.tsx` — single-column list row with file-type icon (by extension), title, original filename, file size, upload date, pin/favorite indicators, and a hover-reveal download button that stops propagation to prevent drawer opening
 - Updated `src/app/items/[type]/page.tsx` — added `type === 'files'` branch rendering `<FileListRow>` in a `flex-col` list; responsive (size/date stack vertically on mobile via `sm:` breakpoint)
+
+### 2026-05-03 — Quick Copy Button on Item Cards
+- Extended `ItemRowData` in `src/lib/db/items.ts` with `content`, `url`, and `contentType` fields; updated `mapItem` to populate them
+- Added hover-reveal copy button to `ItemCard` (`src/components/items/ItemCard.tsx`) and `ItemRow` (`src/components/dashboard/ItemRow.tsx`)
+- Button copies `content` for text types, `url` for link type; hidden for file/image types (nothing useful to copy)
+- Uses `Copy` → `Check` icon swap (2s) + Sonner toast on success; `stopPropagation` prevents opening the drawer

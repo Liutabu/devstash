@@ -32,12 +32,18 @@ const baseItem = {
   description: 'A description',
   content: 'console.log("hello")',
   url: null,
+  fileUrl: null,
+  fileName: null,
+  fileSize: null,
   language: 'typescript',
   contentType: 'text' as const,
   isFavorite: false,
   isPinned: true,
+  lastUsedAt: null,
   createdAt: new Date('2026-04-01'),
   updatedAt: new Date('2026-04-02'),
+  userId: 'user-1',
+  itemTypeId: 'type-1',
   itemType: { id: 'type-1', name: 'Snippet', color: '#3b82f6', icon: 'Code' },
   tags: [
     { tag: { name: 'react' } },
@@ -51,18 +57,31 @@ const baseItem = {
 const baseItemType = {
   id: 'type-snippet',
   name: 'Snippet',
+  slug: 'snippet',
   color: '#3b82f6',
   icon: 'Code',
   isSystem: true,
+  userId: null,
 };
 
 const baseRowItem = {
   id: 'item-1',
   title: 'My Snippet',
   description: null,
+  content: null,
+  url: null,
+  fileUrl: null,
+  fileName: null,
+  fileSize: null,
+  language: null,
+  contentType: 'text' as const,
   isFavorite: false,
   isPinned: false,
+  lastUsedAt: null,
   createdAt: new Date('2026-04-01'),
+  updatedAt: new Date('2026-04-01'),
+  userId: 'user-1',
+  itemTypeId: 'type-snippet',
   itemType: { id: 'type-snippet', name: 'Snippet', color: '#3b82f6', icon: 'Code' },
   tags: [],
 };
@@ -99,7 +118,7 @@ describe('getItemById', () => {
   });
 
   it('returns empty arrays when item has no tags or collections', async () => {
-    findFirst.mockResolvedValue({ ...baseItem, tags: [], collections: [] });
+    findFirst.mockResolvedValue({ ...baseItem, tags: [], collections: [] } as never);
     const result = await getItemById('item-1', 'user-1');
     expect(result?.tags).toEqual([]);
     expect(result?.collections).toEqual([]);

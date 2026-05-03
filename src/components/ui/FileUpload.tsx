@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef, useState } from 'react';
-import { Upload, X, FileText, Image } from 'lucide-react';
+import { Upload, X, FileText, Image as ImageIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export interface UploadResult {
@@ -99,7 +99,7 @@ export function FileUpload({ accept, onUpload, onClear, uploaded }: FileUploadPr
         </button>
         {isImage ? (
           <div className="flex items-center gap-3">
-            <Image className="h-5 w-5 shrink-0 text-pink-400" />
+            <ImageIcon className="h-5 w-5 shrink-0 text-pink-400" />
             <div className="min-w-0">
               <p className="text-sm font-medium truncate">{uploaded.fileName}</p>
               <p className="text-xs text-muted-foreground">{formatBytes(uploaded.fileSize)}</p>
