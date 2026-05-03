@@ -2,6 +2,7 @@ import { notFound, redirect } from 'next/navigation';
 import { auth } from '@/auth';
 import { DashboardShell } from '@/components/dashboard/DashboardShell';
 import { ItemCard } from '@/components/items/ItemCard';
+import { ImageThumbnailCard } from '@/components/items/ImageThumbnailCard';
 import { NewItemButton } from '@/components/items/NewItemButton';
 import { getItemsByType, getItemTypesWithCounts } from '@/lib/db/items';
 import { getSidebarCollections } from '@/lib/db/collections';
@@ -42,6 +43,12 @@ export default async function ItemsPage({ params }: ItemsPageProps) {
 
         {items.length === 0 ? (
           <p className="text-sm text-muted-foreground">No {typeName.toLowerCase()}s yet.</p>
+        ) : type === 'images' ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            {items.map((item) => (
+              <ImageThumbnailCard key={item.id} item={item} />
+            ))}
+          </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
             {items.map((item) => (
