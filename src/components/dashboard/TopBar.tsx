@@ -6,9 +6,10 @@ interface TopBarProps {
   onToggleSidebar?: () => void;
   onMobileMenuClick?: () => void;
   onNewItem?: () => void;
+  onNewCollection?: () => void;
 }
 
-export function TopBar({ onToggleSidebar, onMobileMenuClick, onNewItem }: TopBarProps) {
+export function TopBar({ onToggleSidebar, onMobileMenuClick, onNewItem, onNewCollection }: TopBarProps) {
   return (
     <header className="flex h-14 shrink-0 items-center gap-3 border-b border-border bg-background px-4">
       {/* Logo */}
@@ -50,7 +51,7 @@ export function TopBar({ onToggleSidebar, onMobileMenuClick, onNewItem }: TopBar
 
       {/* Actions */}
       <div className="ml-auto flex items-center gap-2">
-        <Button variant="outline" size="sm" className="hidden sm:flex">
+        <Button variant="outline" size="sm" className="hidden sm:flex" onClick={onNewCollection}>
           New Collection
         </Button>
         <Button size="sm" onClick={onNewItem}>
