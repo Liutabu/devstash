@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
-import { randomBytes } from "crypto";
 import { prisma } from "@/lib/prisma";
 import { sendVerificationEmail } from "@/lib/email";
+import { createVerificationToken } from "@/lib/auth-tokens";
 import { checkRateLimit, getIP, limiters } from "@/lib/rate-limit";
 
 export async function POST(req: NextRequest) {
@@ -59,15 +59,7 @@ export async function POST(req: NextRequest) {
   });
 
   if (process.env.REQUIRE_EMAIL_VERIFICATION !== 'false') {
-    const token = randomBytes(32).toString('hex');
-    await prisma.verificationToken.create({
-      data: {
-        identifier: email,
-        token,
-        expires: new Date(Date.now() + 24 * 60 * 60 * 1000),
-      },
-    });
-
+    const token = await createVerificationToken(email, 24 * 60 * 60 * 1000);
     await sendVerificationEmail(email, token);
   }
 

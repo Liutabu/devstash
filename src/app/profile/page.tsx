@@ -5,10 +5,8 @@ import { auth } from '@/auth';
 import { getProfileData } from '@/lib/db/profile';
 import { ITEM_TYPE_ICON_MAP } from '@/lib/item-type-icons';
 import { UserAvatar } from '@/components/ui/UserAvatar';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
 import { DeleteAccountButton } from '@/components/profile/DeleteAccountButton';
-import { changePasswordAction } from '@/actions/profile';
+import { ChangePasswordSection } from '@/components/profile/ChangePasswordSection';
 
 const PASSWORD_ERRORS: Record<string, string> = {
   required: 'All fields are required.',
@@ -101,58 +99,7 @@ export default async function ProfilePage({
 
         {/* Change password — email users only */}
         {profile.hasPassword && (
-          <section className="rounded-lg border border-border bg-card p-6 space-y-4">
-            <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Change Password</h2>
-
-            {passwordChanged && (
-              <div className="rounded-md border border-green-500/30 bg-green-500/10 px-4 py-3 text-sm text-green-400">
-                Password updated successfully.
-              </div>
-            )}
-
-            {errorMsg && (
-              <div className="rounded-md border border-destructive/50 bg-destructive/10 px-4 py-3 text-sm text-destructive">
-                {errorMsg}
-              </div>
-            )}
-
-            <form action={changePasswordAction} className="space-y-3">
-              <div className="space-y-1.5">
-                <label htmlFor="currentPassword" className="text-sm font-medium">Current password</label>
-                <Input
-                  id="currentPassword"
-                  name="currentPassword"
-                  type="password"
-                  placeholder="••••••••"
-                  required
-                  autoComplete="current-password"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <label htmlFor="newPassword" className="text-sm font-medium">New password</label>
-                <Input
-                  id="newPassword"
-                  name="newPassword"
-                  type="password"
-                  placeholder="••••••••"
-                  required
-                  autoComplete="new-password"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <label htmlFor="confirmPassword" className="text-sm font-medium">Confirm new password</label>
-                <Input
-                  id="confirmPassword"
-                  name="confirmPassword"
-                  type="password"
-                  placeholder="••••••••"
-                  required
-                  autoComplete="new-password"
-                />
-              </div>
-              <Button type="submit">Update password</Button>
-            </form>
-          </section>
+          <ChangePasswordSection errorMsg={errorMsg} passwordChanged={passwordChanged} />
         )}
 
         {/* Danger zone */}

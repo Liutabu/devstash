@@ -4,8 +4,20 @@
 Complete
 
 ## Goals
+Decompose large blocks of code into smaller, focused functions, components, and utilities identified in the code audit.
 
 ## Notes
+Branch: `refactor/code-decomposition`
+
+Changes:
+1. Extract `createVerificationToken(identifier, ttlMs)` to `src/lib/auth-tokens.ts` — used in 3 places in `auth.ts` and the register API route
+2. Extract `mapItemDetail` helper to `src/lib/db/items.ts` — 20-line mapping block duplicated in `createItem` and `updateItem`
+3. Extract `computeTypeStats` helper to `src/lib/db/collections.ts` — dominant-color logic duplicated in both query functions
+4. Extract `CollectionChips` sub-component in `ItemDrawer.tsx` — chip list duplicated in `EditForm` and `ViewBody`
+5. Extract `SuccessBanner` / `ErrorBanner` to `src/components/ui/banners.tsx` — green/red banner markup repeated across auth pages and profile
+6. Consolidate 6 `useState` calls in `DrawerBody` into one `editState` object
+7. Add `ItemsByTypeResult` named interface to `src/lib/db/items.ts`
+8. Extract `ChangePasswordSection` to `src/components/profile/ChangePasswordSection.tsx`
 
 ## History
 
@@ -277,3 +289,13 @@ Complete
 - Fixed `Content-Disposition` header in `GET /api/download/[id]` to use RFC 5987 `filename*=UTF-8''...` encoding for correct non-ASCII filename handling
 - Added `loading="lazy"` to `ImageThumbnailCard` img tag to defer off-screen image loads
 - Added `disabled` prop to `ActionButton` in `ItemDrawer`; Favorite and Pin buttons now render as visually dimmed with `title="Coming soon"` while unimplemented
+
+### 2026-05-04 — Code Decomposition Refactor
+- Extracted `createVerificationToken(identifier, ttlMs)` to `src/lib/auth-tokens.ts` — token creation block was repeated verbatim in `registerAction`, `forgotPasswordAction`, `resendVerificationAction`, and the register API route
+- Extracted `mapItemDetail` helper in `src/lib/db/items.ts` — 20-line Prisma→`ItemDetail` mapping duplicated in `createItem` and `updateItem`
+- Added `ItemsByTypeResult` named interface to `src/lib/db/items.ts` — `getItemsByType` was the only query function without a named return type
+- Extracted `computeTypeStats(items)` helper in `src/lib/db/collections.ts` — dominant-color computation duplicated in `getSidebarCollections` and `getRecentCollections`; added `icon` to sidebar query select so both share the helper
+- Extracted `CollectionChips` sub-component in `ItemDrawer.tsx` — collection chip JSX was duplicated in `EditForm` and `ViewBody`
+- Consolidated 6 separate `useState` calls in `DrawerBody` into a single `editState` object with a `patchEdit` helper; updated `EditFormProps` to accept `editState`/`onEditStateChange` instead of individual value/setter pairs
+- Created `src/components/ui/banners.tsx` with `SuccessBanner` and `ErrorBanner` — replaced 4 repeated green-banner divs in `sign-in/page.tsx` and error/success banners in `profile/page.tsx`
+- Extracted `ChangePasswordSection` to `src/components/profile/ChangePasswordSection.tsx` — removed 50-line inline form from `profile/page.tsx`
