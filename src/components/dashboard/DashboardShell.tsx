@@ -6,7 +6,7 @@ import { Sidebar } from './Sidebar';
 import { DashboardContext } from './DashboardContext';
 import { cn } from '@/lib/utils';
 import type { ItemTypeWithCount } from '@/lib/db/items';
-import type { SidebarCollectionData } from '@/lib/db/collections';
+import type { SidebarCollectionData, UserCollectionOption } from '@/lib/db/collections';
 import { ItemDrawerProvider } from '@/components/items/ItemDrawerProvider';
 import { CreateItemDialog } from '@/components/items/CreateItemDialog';
 import { CreateCollectionDialog } from '@/components/collections/CreateCollectionDialog';
@@ -21,10 +21,11 @@ interface DashboardShellProps {
   children: React.ReactNode;
   itemTypes: ItemTypeWithCount[];
   sidebarCollections: SidebarCollectionData[];
+  userCollections: UserCollectionOption[];
   user: SidebarUser;
 }
 
-export function DashboardShell({ children, itemTypes, sidebarCollections, user }: DashboardShellProps) {
+export function DashboardShell({ children, itemTypes, sidebarCollections, userCollections, user }: DashboardShellProps) {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
@@ -53,6 +54,7 @@ export function DashboardShell({ children, itemTypes, sidebarCollections, user }
         open={createOpen}
         onClose={() => setCreateOpen(false)}
         itemTypes={itemTypes}
+        userCollections={userCollections}
         initialTypeId={createTypeId}
       />
 
@@ -82,7 +84,7 @@ export function DashboardShell({ children, itemTypes, sidebarCollections, user }
 
         {/* Main content */}
         <main className="flex-1 overflow-auto bg-background p-6">
-          <ItemDrawerProvider>{children}</ItemDrawerProvider>
+          <ItemDrawerProvider userCollections={userCollections}>{children}</ItemDrawerProvider>
         </main>
       </div>
     </div>

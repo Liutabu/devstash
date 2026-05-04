@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState } from 'react';
 import { ItemDrawer, type ItemDetailResponse } from './ItemDrawer';
+import type { UserCollectionOption } from '@/lib/db/collections';
 
 interface DrawerContextValue {
   open: (itemId: string) => void;
@@ -13,7 +14,12 @@ export function useItemDrawer() {
   return useContext(DrawerContext);
 }
 
-export function ItemDrawerProvider({ children }: { children: React.ReactNode }) {
+interface ItemDrawerProviderProps {
+  children: React.ReactNode;
+  userCollections: UserCollectionOption[];
+}
+
+export function ItemDrawerProvider({ children, userCollections }: ItemDrawerProviderProps) {
   const [itemId, setItemId] = useState<string | null>(null);
   const [detail, setDetail] = useState<ItemDetailResponse | null>(null);
   const [loading, setLoading] = useState(false);
@@ -47,6 +53,7 @@ export function ItemDrawerProvider({ children }: { children: React.ReactNode }) 
         loading={loading}
         onUpdate={setDetail}
         onDelete={close}
+        userCollections={userCollections}
       />
     </DrawerContext.Provider>
   );

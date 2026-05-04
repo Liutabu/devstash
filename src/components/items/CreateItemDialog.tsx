@@ -19,11 +19,14 @@ import { FileUpload } from '@/components/ui/FileUpload';
 import type { UploadResult } from '@/components/ui/FileUpload';
 import { createItemAction } from '@/actions/items';
 import type { ItemTypeWithCount } from '@/lib/db/items';
+import { CollectionPicker } from '@/components/ui/CollectionPicker';
+import type { UserCollectionOption } from '@/lib/db/collections';
 
 interface CreateItemDialogProps {
   open: boolean;
   onClose: () => void;
   itemTypes: ItemTypeWithCount[];
+  userCollections: UserCollectionOption[];
   initialTypeId?: string;
 }
 
@@ -52,7 +55,7 @@ function shouldShowUpload(typeName: string): boolean {
   return n === 'file' || n === 'image';
 }
 
-export function CreateItemDialog({ open, onClose, itemTypes, initialTypeId }: CreateItemDialogProps) {
+export function CreateItemDialog({ open, onClose, itemTypes, userCollections, initialTypeId }: CreateItemDialogProps) {
   const router = useRouter();
 
   const [selectedTypeId, setSelectedTypeId] = useState<string>(itemTypes[0]?.id ?? '');
@@ -69,6 +72,7 @@ export function CreateItemDialog({ open, onClose, itemTypes, initialTypeId }: Cr
   const [url, setUrl] = useState('');
   const [language, setLanguage] = useState('');
   const [tagsInput, setTagsInput] = useState('');
+  const [selectedCollectionIds, setSelectedCollectionIds] = useState<string[]>([]);
   const [uploadResult, setUploadResult] = useState<UploadResult | null>(null);
   const [saving, setSaving] = useState(false);
 
@@ -90,6 +94,7 @@ export function CreateItemDialog({ open, onClose, itemTypes, initialTypeId }: Cr
     setUrl('');
     setLanguage('');
     setTagsInput('');
+    setSelectedCollectionIds([]);
     setUploadResult(null);
     setSaving(false);
     setSelectedTypeId(itemTypes[0]?.id ?? '');
@@ -117,6 +122,7 @@ export function CreateItemDialog({ open, onClose, itemTypes, initialTypeId }: Cr
         tags,
         itemTypeId: selectedType.id,
         contentType: getContentType(typeName),
+        collectionIds: selectedCollectionIds,
       });
 
       if (!result.success) {
@@ -281,6 +287,20 @@ export function CreateItemDialog({ open, onClose, itemTypes, initialTypeId }: Cr
               onChange={(e) => setTagsInput(e.target.value)}
             />
             <p className="text-xs text-muted-foreground mt-1">Comma-separated</p>
+          </div>
+
+          {/* Collections */}
+          <div>
+            <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+              Collections
+            </label>
+            <div className="mt-1.5">
+              <CollectionPicker
+                collections={userCollections}
+                selectedIds={selectedCollectionIds}
+                onChange={setSelectedCollectionIds}
+              />
+            </div>
           </div>
         </div>
 

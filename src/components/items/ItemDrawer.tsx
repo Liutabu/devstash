@@ -21,6 +21,8 @@ import { CodeEditor } from '@/components/ui/CodeEditor';
 import { MarkdownEditor } from '@/components/ui/MarkdownEditor';
 import { updateItemAction, deleteItemAction } from '@/actions/items';
 import { formatBytes } from '@/lib/format';
+import { CollectionPicker } from '@/components/ui/CollectionPicker';
+import type { UserCollectionOption } from '@/lib/db/collections';
 
 export interface ItemDetailResponse {
   id: string;
@@ -49,14 +51,15 @@ interface ItemDrawerProps {
   loading: boolean;
   onUpdate: (detail: ItemDetailResponse) => void;
   onDelete: () => void;
+  userCollections: UserCollectionOption[];
 }
 
-export function ItemDrawer({ isOpen, onClose, detail, loading, onUpdate, onDelete }: ItemDrawerProps) {
+export function ItemDrawer({ isOpen, onClose, detail, loading, onUpdate, onDelete, userCollections }: ItemDrawerProps) {
   return (
     <Sheet open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
       <SheetContent side="right" className="sm:max-w-[480px] p-0 flex flex-col overflow-hidden gap-0">
         {loading && <DrawerSkeleton />}
-        {!loading && detail && <DrawerBody detail={detail} onUpdate={onUpdate} onDelete={onDelete} />}
+        {!loading && detail && <DrawerBody detail={detail} onUpdate={onUpdate} onDelete={onDelete} userCollections={userCollections} />}
         {!loading && !detail && isOpen && (
           <>
             <SheetTitle className="sr-only">Item</SheetTitle>
@@ -93,22 +96,24 @@ interface EditState {
   url: string;
   language: string;
   tagsInput: string;
+  collectionIds: string[];
 }
 
 interface DrawerBodyProps {
   detail: ItemDetailResponse;
   onUpdate: (detail: ItemDetailResponse) => void;
   onDelete: () => void;
+  userCollections: UserCollectionOption[];
 }
 
-function DrawerBody({ detail, onUpdate, onDelete }: DrawerBodyProps) {
+function DrawerBody({ detail, onUpdate, onDelete, userCollections }: DrawerBodyProps) {
   const router = useRouter();
   const Icon = ITEM_TYPE_ICON_MAP[detail.itemType.icon];
 
   const [isEditing, setIsEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [editState, setEditState] = useState<EditState>({
-    title: '', description: '', content: '', url: '', language: '', tagsInput: '',
+    title: '', description: '', content: '', url: '', language: '', tagsInput: '', collectionIds: [],
   });
 
   function patchEdit(patch: Partial<EditState>) {
@@ -141,6 +146,7 @@ function DrawerBody({ detail, onUpdate, onDelete }: DrawerBodyProps) {
       url: detail.url ?? '',
       language: detail.language ?? '',
       tagsInput: detail.tags.join(', '),
+      collectionIds: detail.collections.map((c) => c.id),
     });
     setIsEditing(true);
   }
@@ -175,6 +181,7 @@ function DrawerBody({ detail, onUpdate, onDelete }: DrawerBodyProps) {
         url: showUrl ? (editState.url || null) : null,
         language: showLanguage ? (editState.language || null) : null,
         tags,
+        collectionIds: editState.collectionIds,
       });
 
       if (!result.success) {
@@ -321,6 +328,7 @@ function DrawerBody({ detail, onUpdate, onDelete }: DrawerBodyProps) {
             detail={detail}
             createdAt={createdAt}
             updatedAt={updatedAt}
+            userCollections={userCollections}
           />
         ) : (
           <ViewBody detail={detail} createdAt={createdAt} updatedAt={updatedAt} />
@@ -339,12 +347,13 @@ interface EditFormProps {
   detail: ItemDetailResponse;
   createdAt: string;
   updatedAt: string;
+  userCollections: UserCollectionOption[];
 }
 
 function EditForm({
   editState, onEditStateChange,
   showContent, showLanguage, showUrl,
-  detail, createdAt, updatedAt,
+  detail, createdAt, updatedAt, userCollections,
 }: EditFormProps) {
   return (
     <>
@@ -426,12 +435,14 @@ function EditForm({
         </span>
       </section>
 
-      {detail.collections.length > 0 && (
-        <section>
-          <SectionHeading>Collections</SectionHeading>
-          <CollectionChips collections={detail.collections} />
-        </section>
-      )}
+      <section>
+        <SectionHeading>Collections</SectionHeading>
+        <CollectionPicker
+          collections={userCollections}
+          selectedIds={editState.collectionIds}
+          onChange={(ids) => onEditStateChange({ collectionIds: ids })}
+        />
+      </section>
 
       <section>
         <SectionHeading>Details</SectionHeading>
