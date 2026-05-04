@@ -4,20 +4,8 @@
 Complete
 
 ## Goals
-Decompose large blocks of code into smaller, focused functions, components, and utilities identified in the code audit.
 
 ## Notes
-Branch: `refactor/code-decomposition`
-
-Changes:
-1. Extract `createVerificationToken(identifier, ttlMs)` to `src/lib/auth-tokens.ts` — used in 3 places in `auth.ts` and the register API route
-2. Extract `mapItemDetail` helper to `src/lib/db/items.ts` — 20-line mapping block duplicated in `createItem` and `updateItem`
-3. Extract `computeTypeStats` helper to `src/lib/db/collections.ts` — dominant-color logic duplicated in both query functions
-4. Extract `CollectionChips` sub-component in `ItemDrawer.tsx` — chip list duplicated in `EditForm` and `ViewBody`
-5. Extract `SuccessBanner` / `ErrorBanner` to `src/components/ui/banners.tsx` — green/red banner markup repeated across auth pages and profile
-6. Consolidate 6 `useState` calls in `DrawerBody` into one `editState` object
-7. Add `ItemsByTypeResult` named interface to `src/lib/db/items.ts`
-8. Extract `ChangePasswordSection` to `src/components/profile/ChangePasswordSection.tsx`
 
 ## History
 
@@ -299,3 +287,12 @@ Changes:
 - Consolidated 6 separate `useState` calls in `DrawerBody` into a single `editState` object with a `patchEdit` helper; updated `EditFormProps` to accept `editState`/`onEditStateChange` instead of individual value/setter pairs
 - Created `src/components/ui/banners.tsx` with `SuccessBanner` and `ErrorBanner` — replaced 4 repeated green-banner divs in `sign-in/page.tsx` and error/success banners in `profile/page.tsx`
 - Extracted `ChangePasswordSection` to `src/components/profile/ChangePasswordSection.tsx` — removed 50-line inline form from `profile/page.tsx`
+
+### 2026-05-04 — Collection Create
+- Added `createCollection(userId, data)` to `src/lib/db/collections.ts` — returns `CollectionDetail` with id, name, description, isFavorite, and timestamps
+- Created `src/actions/collections.ts` with `createCollectionAction` — Zod-validated, `{ success, data, error }` return pattern; coerces empty/null description to null
+- Created `src/components/collections/CreateCollectionDialog.tsx` — Dialog with name (required) and description (optional) fields; toast on success/failure; `router.refresh()` updates sidebar + dashboard grid on success
+- Updated `TopBar` — added `onNewCollection` prop, wired "New Collection" button (was display-only)
+- Updated `DashboardShell` — added `collectionCreateOpen` state, renders `<CreateCollectionDialog>`, passes `onNewCollection` to `TopBar`
+- Added 5 unit tests in `src/actions/collections.test.ts` covering unauthorized, empty name, success, empty-string-to-null coercion, and DB error paths
+- Fixed Zod v4 schema bug: `z.preprocess` skips absent keys in Zod v4 objects — description must use `.optional()` at the outer level
