@@ -10,14 +10,22 @@ vi.mock('@/lib/db/items', () => ({
   deleteItem: vi.fn(),
 }));
 
+vi.mock('@/lib/prisma', () => ({
+  prisma: {
+    itemType: { findFirst: vi.fn() },
+  },
+}));
+
 import { createItemAction, updateItemAction, deleteItemAction } from './items';
 import { auth } from '@/auth';
 import { createItem, updateItem, deleteItem } from '@/lib/db/items';
+import { prisma } from '@/lib/prisma';
 
 const mockAuth = vi.mocked(auth);
 const mockCreateItem = vi.mocked(createItem);
 const mockUpdateItem = vi.mocked(updateItem);
 const mockDeleteItem = vi.mocked(deleteItem);
+const mockFindFirstItemType = vi.mocked(prisma.itemType.findFirst);
 
 const validInput = {
   title: 'Test Title',
@@ -101,6 +109,7 @@ describe('createItemAction', () => {
 
   it('returns created item on success', async () => {
     mockAuth.mockResolvedValue({ user: { id: 'user-1' } } as never);
+    mockFindFirstItemType.mockResolvedValue({ id: 'type-1' } as never);
     mockCreateItem.mockResolvedValue(mockDetail);
     const result = await createItemAction(validCreateInput);
     expect(result).toEqual({ success: true, data: mockDetail });
@@ -113,6 +122,7 @@ describe('createItemAction', () => {
 
   it('accepts url type with valid url', async () => {
     mockAuth.mockResolvedValue({ user: { id: 'user-1' } } as never);
+    mockFindFirstItemType.mockResolvedValue({ id: 'type-1' } as never);
     mockCreateItem.mockResolvedValue(mockDetail);
     const result = await createItemAction({
       ...validCreateInput,
@@ -135,6 +145,7 @@ describe('createItemAction', () => {
 
   it('accepts file type with valid fileUrl', async () => {
     mockAuth.mockResolvedValue({ user: { id: 'user-1' } } as never);
+    mockFindFirstItemType.mockResolvedValue({ id: 'type-1' } as never);
     mockCreateItem.mockResolvedValue(mockDetail);
     const result = await createItemAction({
       ...validCreateInput,
@@ -149,6 +160,26 @@ describe('createItemAction', () => {
       fileUrl: 'uploads/user-1/abc123.pdf',
       fileName: 'notes.pdf',
       fileSize: 12345,
+    }));
+  });
+
+  it('defaults collectionIds to [] when omitted', async () => {
+    mockAuth.mockResolvedValue({ user: { id: 'user-1' } } as never);
+    mockFindFirstItemType.mockResolvedValue({ id: 'type-1' } as never);
+    mockCreateItem.mockResolvedValue(mockDetail);
+    await createItemAction(validCreateInput);
+    expect(mockCreateItem).toHaveBeenCalledWith('user-1', expect.objectContaining({
+      collectionIds: [],
+    }));
+  });
+
+  it('forwards collectionIds to createItem when provided', async () => {
+    mockAuth.mockResolvedValue({ user: { id: 'user-1' } } as never);
+    mockFindFirstItemType.mockResolvedValue({ id: 'type-1' } as never);
+    mockCreateItem.mockResolvedValue(mockDetail);
+    await createItemAction({ ...validCreateInput, collectionIds: ['col-1', 'col-2'] });
+    expect(mockCreateItem).toHaveBeenCalledWith('user-1', expect.objectContaining({
+      collectionIds: ['col-1', 'col-2'],
     }));
   });
 });
@@ -212,6 +243,24 @@ describe('updateItemAction', () => {
     mockUpdateItem.mockResolvedValue(mockDetail);
     await updateItemAction('item-1', { ...validInput, language: '' });
     expect(mockUpdateItem).toHaveBeenCalledWith('item-1', 'user-1', expect.objectContaining({ language: null }));
+  });
+
+  it('defaults collectionIds to [] when omitted', async () => {
+    mockAuth.mockResolvedValue({ user: { id: 'user-1' } } as never);
+    mockUpdateItem.mockResolvedValue(mockDetail);
+    await updateItemAction('item-1', validInput);
+    expect(mockUpdateItem).toHaveBeenCalledWith('item-1', 'user-1', expect.objectContaining({
+      collectionIds: [],
+    }));
+  });
+
+  it('forwards collectionIds to updateItem when provided', async () => {
+    mockAuth.mockResolvedValue({ user: { id: 'user-1' } } as never);
+    mockUpdateItem.mockResolvedValue(mockDetail);
+    await updateItemAction('item-1', { ...validInput, collectionIds: ['col-1'] });
+    expect(mockUpdateItem).toHaveBeenCalledWith('item-1', 'user-1', expect.objectContaining({
+      collectionIds: ['col-1'],
+    }));
   });
 });
 

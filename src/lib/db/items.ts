@@ -233,10 +233,18 @@ export async function updateItem(
     url?: string | null;
     language?: string | null;
     tags: string[];
+    collectionIds?: string[];
   },
 ): Promise<ItemDetail | null> {
   const existing = await prisma.item.findFirst({ where: { id, userId } });
   if (!existing) return null;
+
+  const validCollectionIds = data.collectionIds?.length
+    ? (await prisma.collection.findMany({
+        where: { id: { in: data.collectionIds }, userId },
+        select: { id: true },
+      })).map((c) => c.id)
+    : [];
 
   const item = await prisma.item.update({
     where: { id },
@@ -256,6 +264,10 @@ export async function updateItem(
             },
           },
         })),
+      },
+      collections: {
+        deleteMany: {},
+        create: validCollectionIds.map((collectionId) => ({ collectionId })),
       },
     },
     include: {
@@ -282,8 +294,16 @@ export async function createItem(
     tags: string[];
     itemTypeId: string;
     contentType: 'text' | 'url' | 'file';
+    collectionIds?: string[];
   },
 ): Promise<ItemDetail> {
+  const validCollectionIds = data.collectionIds?.length
+    ? (await prisma.collection.findMany({
+        where: { id: { in: data.collectionIds }, userId },
+        select: { id: true },
+      })).map((c) => c.id)
+    : [];
+
   const item = await prisma.item.create({
     data: {
       title: data.title,
@@ -306,6 +326,9 @@ export async function createItem(
             },
           },
         })),
+      },
+      collections: {
+        create: validCollectionIds.map((collectionId) => ({ collectionId })),
       },
     },
     include: {

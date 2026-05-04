@@ -19,6 +19,7 @@ const UpdateItemSchema = z.object({
     z.string().nullable().optional(),
   ),
   tags: z.array(z.string().trim().min(1)),
+  collectionIds: z.array(z.string()).optional().default([]),
 });
 
 type UpdateItemInput = z.infer<typeof UpdateItemSchema>;
@@ -38,6 +39,7 @@ const CreateItemSchema = z.object({
   tags: z.array(z.string().trim().min(1)),
   itemTypeId: z.string().min(1, 'Item type is required'),
   contentType: z.enum(['text', 'url', 'file']),
+  collectionIds: z.array(z.string()).optional().default([]),
 }).refine(
   (data) => data.contentType !== 'url' || !!data.url,
   { message: 'URL is required', path: ['url'] },
@@ -71,6 +73,7 @@ export async function createItemAction(data: CreateItemInput): Promise<CreateIte
   const created = await createItem(session.user.id, {
     ...parsed.data,
     contentType: parsed.data.contentType as 'text' | 'url' | 'file',
+    collectionIds: parsed.data.collectionIds,
   });
 
   return { success: true, data: created };
@@ -90,7 +93,10 @@ export async function updateItemAction(
   const parsed = UpdateItemSchema.safeParse(data);
   if (!parsed.success) return { success: false, error: parsed.error.flatten().fieldErrors };
 
-  const updated = await updateItem(itemId, session.user.id, parsed.data);
+  const updated = await updateItem(itemId, session.user.id, {
+    ...parsed.data,
+    collectionIds: parsed.data.collectionIds,
+  });
   if (!updated) return { success: false, error: 'Item not found' };
 
   return { success: true, data: updated };

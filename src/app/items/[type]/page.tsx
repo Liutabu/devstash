@@ -6,7 +6,7 @@ import { ImageThumbnailCard } from '@/components/items/ImageThumbnailCard';
 import { FileListRow } from '@/components/items/FileListRow';
 import { NewItemButton } from '@/components/items/NewItemButton';
 import { getItemsByType, getItemTypesWithCounts } from '@/lib/db/items';
-import { getSidebarCollections } from '@/lib/db/collections';
+import { getSidebarCollections, getUserCollections } from '@/lib/db/collections';
 
 interface ItemsPageProps {
   params: Promise<{ type: string }>;
@@ -19,9 +19,10 @@ export default async function ItemsPage({ params }: ItemsPageProps) {
   if (!session?.user?.id) redirect('/sign-in');
 
   const userId = session.user.id;
-  const [itemTypes, sidebarCollections, result] = await Promise.all([
+  const [itemTypes, sidebarCollections, userCollections, result] = await Promise.all([
     getItemTypesWithCounts(userId),
     getSidebarCollections(userId),
+    getUserCollections(userId),
     getItemsByType(type, userId),
   ]);
 
@@ -31,7 +32,7 @@ export default async function ItemsPage({ params }: ItemsPageProps) {
   const { items, typeName, typeColor, typeId } = result;
 
   return (
-    <DashboardShell itemTypes={itemTypes} sidebarCollections={sidebarCollections} user={user}>
+    <DashboardShell itemTypes={itemTypes} sidebarCollections={sidebarCollections} userCollections={userCollections} user={user}>
       <div className="p-6 space-y-6">
         <div className="flex items-center gap-3">
           <div className="h-5 w-1 rounded-full" style={{ backgroundColor: typeColor }} />
