@@ -86,6 +86,15 @@ function DrawerSkeleton() {
   );
 }
 
+interface EditState {
+  title: string;
+  description: string;
+  content: string;
+  url: string;
+  language: string;
+  tagsInput: string;
+}
+
 interface DrawerBodyProps {
   detail: ItemDetailResponse;
   onUpdate: (detail: ItemDetailResponse) => void;
@@ -98,13 +107,13 @@ function DrawerBody({ detail, onUpdate, onDelete }: DrawerBodyProps) {
 
   const [isEditing, setIsEditing] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [editState, setEditState] = useState<EditState>({
+    title: '', description: '', content: '', url: '', language: '', tagsInput: '',
+  });
 
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [content, setContent] = useState('');
-  const [url, setUrl] = useState('');
-  const [language, setLanguage] = useState('');
-  const [tagsInput, setTagsInput] = useState('');
+  function patchEdit(patch: Partial<EditState>) {
+    setEditState((prev) => ({ ...prev, ...patch }));
+  }
 
   const typeName = detail.itemType.name.toLowerCase();
   const showContent = detail.contentType === 'text';
@@ -125,12 +134,14 @@ function DrawerBody({ detail, onUpdate, onDelete }: DrawerBodyProps) {
   }
 
   function handleEdit() {
-    setTitle(detail.title);
-    setDescription(detail.description ?? '');
-    setContent(detail.content ?? '');
-    setUrl(detail.url ?? '');
-    setLanguage(detail.language ?? '');
-    setTagsInput(detail.tags.join(', '));
+    setEditState({
+      title: detail.title,
+      description: detail.description ?? '',
+      content: detail.content ?? '',
+      url: detail.url ?? '',
+      language: detail.language ?? '',
+      tagsInput: detail.tags.join(', '),
+    });
     setIsEditing(true);
   }
 
@@ -152,17 +163,17 @@ function DrawerBody({ detail, onUpdate, onDelete }: DrawerBodyProps) {
   async function handleSave() {
     setSaving(true);
     try {
-      const tags = tagsInput
+      const tags = editState.tagsInput
         .split(',')
-        .map((t) => t.trim())
+        .map((t: string) => t.trim())
         .filter(Boolean);
 
       const result = await updateItemAction(detail.id, {
-        title: title.trim(),
-        description: description || null,
-        content: showContent ? (content || null) : null,
-        url: showUrl ? (url || null) : null,
-        language: showLanguage ? (language || null) : null,
+        title: editState.title.trim(),
+        description: editState.description || null,
+        content: showContent ? (editState.content || null) : null,
+        url: showUrl ? (editState.url || null) : null,
+        language: showLanguage ? (editState.language || null) : null,
         tags,
       });
 
@@ -201,8 +212,8 @@ function DrawerBody({ detail, onUpdate, onDelete }: DrawerBodyProps) {
                 <SheetTitle className="sr-only">{detail.title}</SheetTitle>
                 <input
                   className="w-full bg-muted rounded px-2 py-1 text-base font-semibold leading-snug mb-1.5 outline-none focus:ring-1 focus:ring-ring"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
+                  value={editState.title}
+                  onChange={(e) => patchEdit({ title: e.target.value })}
                   placeholder="Title"
                   autoFocus
                 />
@@ -234,7 +245,7 @@ function DrawerBody({ detail, onUpdate, onDelete }: DrawerBodyProps) {
             <button
               type="button"
               onClick={handleSave}
-              disabled={saving || !title.trim()}
+              disabled={saving || !editState.title.trim()}
               className="flex items-center gap-1.5 rounded px-3 py-1.5 text-xs font-medium bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               <Check className="h-3.5 w-3.5" />
@@ -302,16 +313,8 @@ function DrawerBody({ detail, onUpdate, onDelete }: DrawerBodyProps) {
       <div className="flex-1 overflow-y-auto px-6 py-5 space-y-6">
         {isEditing ? (
           <EditForm
-            description={description}
-            setDescription={setDescription}
-            content={content}
-            setContent={setContent}
-            url={url}
-            setUrl={setUrl}
-            language={language}
-            setLanguage={setLanguage}
-            tagsInput={tagsInput}
-            setTagsInput={setTagsInput}
+            editState={editState}
+            onEditStateChange={patchEdit}
             showContent={showContent}
             showLanguage={showLanguage}
             showUrl={showUrl}
@@ -328,16 +331,8 @@ function DrawerBody({ detail, onUpdate, onDelete }: DrawerBodyProps) {
 }
 
 interface EditFormProps {
-  description: string;
-  setDescription: (v: string) => void;
-  content: string;
-  setContent: (v: string) => void;
-  url: string;
-  setUrl: (v: string) => void;
-  language: string;
-  setLanguage: (v: string) => void;
-  tagsInput: string;
-  setTagsInput: (v: string) => void;
+  editState: EditState;
+  onEditStateChange: (patch: Partial<EditState>) => void;
   showContent: boolean;
   showLanguage: boolean;
   showUrl: boolean;
@@ -347,11 +342,7 @@ interface EditFormProps {
 }
 
 function EditForm({
-  description, setDescription,
-  content, setContent,
-  url, setUrl,
-  language, setLanguage,
-  tagsInput, setTagsInput,
+  editState, onEditStateChange,
   showContent, showLanguage, showUrl,
   detail, createdAt, updatedAt,
 }: EditFormProps) {
@@ -362,8 +353,8 @@ function EditForm({
         <textarea
           className="w-full bg-muted rounded px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-ring resize-none"
           rows={3}
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
+          value={editState.description}
+          onChange={(e) => onEditStateChange({ description: e.target.value })}
           placeholder="Description (optional)"
         />
       </section>
@@ -373,14 +364,14 @@ function EditForm({
           <SectionHeading>Content</SectionHeading>
           {showLanguage ? (
             <CodeEditor
-              value={content}
-              onChange={setContent}
-              language={language || undefined}
+              value={editState.content}
+              onChange={(v) => onEditStateChange({ content: v })}
+              language={editState.language || undefined}
             />
           ) : (
             <MarkdownEditor
-              value={content}
-              onChange={setContent}
+              value={editState.content}
+              onChange={(v) => onEditStateChange({ content: v })}
               placeholder="Content"
             />
           )}
@@ -393,8 +384,8 @@ function EditForm({
           <input
             type="url"
             className="w-full bg-muted rounded px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-ring"
-            value={url}
-            onChange={(e) => setUrl(e.target.value)}
+            value={editState.url}
+            onChange={(e) => onEditStateChange({ url: e.target.value })}
             placeholder="https://…"
           />
         </section>
@@ -406,8 +397,8 @@ function EditForm({
           <input
             type="text"
             className="w-full bg-muted rounded px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-ring"
-            value={language}
-            onChange={(e) => setLanguage(e.target.value)}
+            value={editState.language}
+            onChange={(e) => onEditStateChange({ language: e.target.value })}
             placeholder="e.g. typescript"
           />
         </section>
@@ -418,8 +409,8 @@ function EditForm({
         <input
           type="text"
           className="w-full bg-muted rounded px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-ring"
-          value={tagsInput}
-          onChange={(e) => setTagsInput(e.target.value)}
+          value={editState.tagsInput}
+          onChange={(e) => onEditStateChange({ tagsInput: e.target.value })}
           placeholder="react, hooks, typescript"
         />
         <p className="text-xs text-muted-foreground mt-1">Comma-separated</p>
@@ -438,14 +429,7 @@ function EditForm({
       {detail.collections.length > 0 && (
         <section>
           <SectionHeading>Collections</SectionHeading>
-          <div className="flex flex-wrap gap-1.5">
-            {detail.collections.map((col) => (
-              <span key={col.id} className="flex items-center gap-1 text-xs bg-muted text-muted-foreground px-2 py-0.5 rounded">
-                <FolderOpen className="h-3 w-3 shrink-0" />
-                {col.name}
-              </span>
-            ))}
-          </div>
+          <CollectionChips collections={detail.collections} />
         </section>
       )}
 
@@ -463,6 +447,19 @@ function EditForm({
         </div>
       </section>
     </>
+  );
+}
+
+function CollectionChips({ collections }: { collections: { id: string; name: string }[] }) {
+  return (
+    <div className="flex flex-wrap gap-1.5">
+      {collections.map((col) => (
+        <span key={col.id} className="flex items-center gap-1 text-xs bg-muted text-muted-foreground px-2 py-0.5 rounded">
+          <FolderOpen className="h-3 w-3 shrink-0" />
+          {col.name}
+        </span>
+      ))}
+    </div>
   );
 }
 
@@ -566,14 +563,7 @@ function ViewBody({ detail, createdAt, updatedAt }: { detail: ItemDetailResponse
       {detail.collections.length > 0 && (
         <section>
           <SectionHeading>Collections</SectionHeading>
-          <div className="flex flex-wrap gap-1.5">
-            {detail.collections.map((col) => (
-              <span key={col.id} className="flex items-center gap-1 text-xs bg-muted text-muted-foreground px-2 py-0.5 rounded">
-                <FolderOpen className="h-3 w-3 shrink-0" />
-                {col.name}
-              </span>
-            ))}
-          </div>
+          <CollectionChips collections={detail.collections} />
         </section>
       )}
 

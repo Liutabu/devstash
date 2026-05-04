@@ -119,7 +119,14 @@ export async function getItemTypesWithCounts(userId: string): Promise<ItemTypeWi
   }));
 }
 
-export async function getItemsByType(slug: string, userId: string): Promise<{ items: ItemRowData[]; typeName: string; typeColor: string; typeId: string } | null> {
+export interface ItemsByTypeResult {
+  items: ItemRowData[];
+  typeName: string;
+  typeColor: string;
+  typeId: string;
+}
+
+export async function getItemsByType(slug: string, userId: string): Promise<ItemsByTypeResult | null> {
   const typeName = slug.slice(0, -1); // "snippets" → "snippet"
   const itemType = await prisma.itemType.findFirst({
     where: { isSystem: true, name: { equals: typeName, mode: 'insensitive' } },
@@ -186,6 +193,36 @@ export async function getItemById(id: string, userId: string): Promise<ItemDetai
   };
 }
 
+function mapItemDetail(item: {
+  id: string; title: string; description: string | null; content: string | null;
+  url: string | null; fileUrl: string | null; fileName: string | null; fileSize: number | null;
+  language: string | null; contentType: string; isFavorite: boolean; isPinned: boolean;
+  createdAt: Date; updatedAt: Date;
+  itemType: { id: string; name: string; color: string; icon: string };
+  tags: { tag: { name: string } }[];
+  collections: { collection: { id: string; name: string } }[];
+}): ItemDetail {
+  return {
+    id: item.id,
+    title: item.title,
+    description: item.description,
+    content: item.content,
+    url: item.url,
+    fileUrl: item.fileUrl,
+    fileName: item.fileName,
+    fileSize: item.fileSize,
+    language: item.language,
+    contentType: item.contentType,
+    isFavorite: item.isFavorite,
+    isPinned: item.isPinned,
+    tags: item.tags.map((t) => t.tag.name),
+    itemType: item.itemType,
+    collections: item.collections.map((ic) => ic.collection),
+    createdAt: item.createdAt,
+    updatedAt: item.updatedAt,
+  };
+}
+
 export async function updateItem(
   id: string,
   userId: string,
@@ -228,25 +265,7 @@ export async function updateItem(
     },
   });
 
-  return {
-    id: item.id,
-    title: item.title,
-    description: item.description,
-    content: item.content,
-    url: item.url,
-    fileUrl: item.fileUrl,
-    fileName: item.fileName,
-    fileSize: item.fileSize,
-    language: item.language,
-    contentType: item.contentType,
-    isFavorite: item.isFavorite,
-    isPinned: item.isPinned,
-    tags: item.tags.map((t) => t.tag.name),
-    itemType: item.itemType,
-    collections: item.collections.map((ic) => ic.collection),
-    createdAt: item.createdAt,
-    updatedAt: item.updatedAt,
-  };
+  return mapItemDetail(item);
 }
 
 export async function createItem(
@@ -296,25 +315,7 @@ export async function createItem(
     },
   });
 
-  return {
-    id: item.id,
-    title: item.title,
-    description: item.description,
-    content: item.content,
-    url: item.url,
-    fileUrl: item.fileUrl,
-    fileName: item.fileName,
-    fileSize: item.fileSize,
-    language: item.language,
-    contentType: item.contentType,
-    isFavorite: item.isFavorite,
-    isPinned: item.isPinned,
-    tags: item.tags.map((t) => t.tag.name),
-    itemType: item.itemType,
-    collections: item.collections.map((ic) => ic.collection),
-    createdAt: item.createdAt,
-    updatedAt: item.updatedAt,
-  };
+  return mapItemDetail(item);
 }
 
 export async function deleteItem(id: string, userId: string): Promise<boolean> {

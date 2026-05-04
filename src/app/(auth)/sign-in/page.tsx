@@ -3,6 +3,7 @@ import { GitBranch } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { signInWithCredentials, signInWithGitHub, resendVerificationAction } from '@/actions/auth';
+import { SuccessBanner, ErrorBanner } from '@/components/ui/banners';
 
 const ERROR_MESSAGES: Record<string, string> = {
   invalid: 'Invalid email or password.',
@@ -38,40 +39,11 @@ export default async function SignInPage({
         <p className="text-sm text-muted-foreground">Enter your credentials to continue</p>
       </div>
 
-      {/* Registered success */}
-      {registered && (
-        <div className="rounded-md border border-green-500/30 bg-green-500/10 px-4 py-3 text-sm text-green-400">
-          Account created — check your email to verify before signing in.
-        </div>
-      )}
-
-      {/* Email verified success */}
-      {verified && (
-        <div className="rounded-md border border-green-500/30 bg-green-500/10 px-4 py-3 text-sm text-green-400">
-          Email verified — you can now sign in.
-        </div>
-      )}
-
-      {/* Password reset success */}
-      {reset && (
-        <div className="rounded-md border border-green-500/30 bg-green-500/10 px-4 py-3 text-sm text-green-400">
-          Password reset — sign in with your new password.
-        </div>
-      )}
-
-      {/* Verification email resent success */}
-      {resent && (
-        <div className="rounded-md border border-green-500/30 bg-green-500/10 px-4 py-3 text-sm text-green-400">
-          Verification email resent — check your inbox.
-        </div>
-      )}
-
-      {/* Error */}
-      {errorMsg && (
-        <div className="rounded-md border border-destructive/50 bg-destructive/10 px-4 py-3 text-sm text-destructive">
-          {errorMsg}
-        </div>
-      )}
+      {registered && <SuccessBanner message="Account created — check your email to verify before signing in." />}
+      {verified && <SuccessBanner message="Email verified — you can now sign in." />}
+      {reset && <SuccessBanner message="Password reset — sign in with your new password." />}
+      {resent && <SuccessBanner message="Verification email resent — check your inbox." />}
+      {errorMsg && <ErrorBanner message={errorMsg} />}
 
       {/* Resend verification form */}
       {(params.error === 'unverified' || params.error === 'resend_rate_limited') && (

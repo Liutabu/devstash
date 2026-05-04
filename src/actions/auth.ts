@@ -6,8 +6,8 @@ import { AuthError, CredentialsSignin } from 'next-auth';
 import { signIn, signOut } from '@/auth';
 import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
-import { randomBytes } from 'crypto';
 import { sendVerificationEmail, sendPasswordResetEmail } from '@/lib/email';
+import { createVerificationToken } from '@/lib/auth-tokens';
 import { checkRateLimit, getIP, limiters } from '@/lib/rate-limit';
 
 export async function signInWithGitHub() {
@@ -76,15 +76,7 @@ export async function registerAction(formData: FormData) {
     redirect('/sign-in');
   }
 
-  const token = randomBytes(32).toString('hex');
-  await prisma.verificationToken.create({
-    data: {
-      identifier: email,
-      token,
-      expires: new Date(Date.now() + 24 * 60 * 60 * 1000),
-    },
-  });
-
+  const token = await createVerificationToken(email, 24 * 60 * 60 * 1000);
   await sendVerificationEmail(email, token);
 
   redirect(`/check-email?email=${encodeURIComponent(email)}`);
@@ -109,15 +101,7 @@ export async function forgotPasswordAction(formData: FormData) {
   if (user) {
     await prisma.verificationToken.deleteMany({ where: { identifier: `reset:${email}` } });
 
-    const token = randomBytes(32).toString('hex');
-    await prisma.verificationToken.create({
-      data: {
-        identifier: `reset:${email}`,
-        token,
-        expires: new Date(Date.now() + 60 * 60 * 1000),
-      },
-    });
-
+    const token = await createVerificationToken(`reset:${email}`, 60 * 60 * 1000);
     await sendPasswordResetEmail(email, token);
   }
 
@@ -182,14 +166,7 @@ export async function resendVerificationAction(formData: FormData) {
   const user = await prisma.user.findUnique({ where: { email } });
   if (user && !user.emailVerified) {
     await prisma.verificationToken.deleteMany({ where: { identifier: email } });
-    const token = randomBytes(32).toString('hex');
-    await prisma.verificationToken.create({
-      data: {
-        identifier: email,
-        token,
-        expires: new Date(Date.now() + 24 * 60 * 60 * 1000),
-      },
-    });
+    const token = await createVerificationToken(email, 24 * 60 * 60 * 1000);
     await sendVerificationEmail(email, token);
   }
 
