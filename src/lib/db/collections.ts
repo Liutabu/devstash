@@ -1,5 +1,35 @@
 import { prisma } from '@/lib/prisma';
 
+export interface CollectionDetail {
+  id: string;
+  name: string;
+  description: string | null;
+  isFavorite: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export async function createCollection(
+  userId: string,
+  data: { name: string; description?: string | null },
+): Promise<CollectionDetail> {
+  return prisma.collection.create({
+    data: {
+      userId,
+      name: data.name,
+      description: data.description ?? null,
+    },
+    select: {
+      id: true,
+      name: true,
+      description: true,
+      isFavorite: true,
+      createdAt: true,
+      updatedAt: true,
+    },
+  });
+}
+
 function computeTypeStats(items: { item: { itemType: { color: string; icon: string } } }[]): {
   dominantColor: string;
   icons: string[];

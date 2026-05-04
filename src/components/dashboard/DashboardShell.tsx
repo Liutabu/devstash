@@ -9,6 +9,7 @@ import type { ItemTypeWithCount } from '@/lib/db/items';
 import type { SidebarCollectionData } from '@/lib/db/collections';
 import { ItemDrawerProvider } from '@/components/items/ItemDrawerProvider';
 import { CreateItemDialog } from '@/components/items/CreateItemDialog';
+import { CreateCollectionDialog } from '@/components/collections/CreateCollectionDialog';
 
 interface SidebarUser {
   name?: string | null;
@@ -28,6 +29,7 @@ export function DashboardShell({ children, itemTypes, sidebarCollections, user }
   const [mobileOpen, setMobileOpen] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
   const [createTypeId, setCreateTypeId] = useState<string | undefined>(undefined);
+  const [collectionCreateOpen, setCollectionCreateOpen] = useState(false);
 
   function openCreate(typeId?: string) {
     setCreateTypeId(typeId);
@@ -41,6 +43,11 @@ export function DashboardShell({ children, itemTypes, sidebarCollections, user }
         onToggleSidebar={() => setCollapsed((c) => !c)}
         onMobileMenuClick={() => setMobileOpen(true)}
         onNewItem={() => openCreate()}
+        onNewCollection={() => setCollectionCreateOpen(true)}
+      />
+      <CreateCollectionDialog
+        open={collectionCreateOpen}
+        onClose={() => setCollectionCreateOpen(false)}
       />
       <CreateItemDialog
         open={createOpen}
