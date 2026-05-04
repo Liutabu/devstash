@@ -1,11 +1,19 @@
 # Current Feature
 
 ## Status
-Complete
+Not Started
 
 ## Goals
 
+<!-- List goals here -->
+
 ## Notes
+
+- Collection pages/views do not need to be built — focus is only on the item create/edit forms
+- Use `getUserCollections(userId)` (to be added to `src/lib/db/collections.ts`) to fetch available collections
+- `createItem` already accepts collection linkage via Prisma relations — wire it up from the action
+- `updateItem` needs to sync collection memberships (disconnect all, reconnect selected) the same way tags work today
+- The multi-select input should be a simple controlled component — no need for a heavy library; a dropdown with checkboxes or a combobox-style picker is fine
 
 ## History
 
@@ -296,3 +304,14 @@ Complete
 - Updated `DashboardShell` — added `collectionCreateOpen` state, renders `<CreateCollectionDialog>`, passes `onNewCollection` to `TopBar`
 - Added 5 unit tests in `src/actions/collections.test.ts` covering unauthorized, empty name, success, empty-string-to-null coercion, and DB error paths
 - Fixed Zod v4 schema bug: `z.preprocess` skips absent keys in Zod v4 objects — description must use `.optional()` at the outer level
+
+### 2026-05-04 — Add Item to Collections
+- Added `getUserCollections(userId)` to `src/lib/db/collections.ts` — returns `{ id, name }[]` sorted alphabetically for the picker UI
+- Updated `createItem` in `src/lib/db/items.ts` — accepts `collectionIds?: string[]`; validates ownership against `userId` before writing `ItemCollection` rows
+- Updated `updateItem` in `src/lib/db/items.ts` — same ownership validation; syncs memberships via `deleteMany: {}` + `create:` array (same pattern as tags)
+- Added `collectionIds: z.array(z.string()).optional().default([])` to both `CreateItemSchema` and `UpdateItemSchema` in `src/actions/items.ts`; forwarded to DB calls
+- Created `src/components/ui/CollectionPicker.tsx` — toggle-chip UI; selected chips highlighted with `bg-primary/20` border, unselected in `bg-muted`; no external library
+- Updated `CreateItemDialog` — added `userCollections` prop, `selectedCollectionIds` state (reset on close), `CollectionPicker` below Tags field
+- Updated `ItemDrawer` / `ItemDrawerProvider` / `DashboardShell` — threaded `userCollections` prop down; edit mode initializes `collectionIds` from current detail and shows `CollectionPicker`; view mode retains static `CollectionChips`
+- Updated `dashboard/page.tsx` and `items/[type]/page.tsx` — added `getUserCollections(userId)` to parallel data fetches, passed to `DashboardShell`
+- Added 4 unit tests to `src/actions/items.test.ts` covering `collectionIds` defaulting to `[]` and being forwarded correctly in both create and update actions
