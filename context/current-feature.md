@@ -1,19 +1,24 @@
-# Current Feature
+# Current Feature: Collections Pages
 
 ## Status
-Not Started
+In Progress
 
 ## Goals
 
-<!-- List goals here -->
+- Create `/collections` page listing all user collections using existing `CollectionCard` component
+- Create `/collections/[id]` page showing items in a specific collection using existing `ItemCard`, `FileListRow`, and `ImageThumbnailCard` components
+- Link "View all collections" in the sidebar to `/collections`
+- Link all `CollectionCard` instances (dashboard + collections list) to `/collections/[id]`
 
 ## Notes
 
-- Collection pages/views do not need to be built — focus is only on the item create/edit forms
-- Use `getUserCollections(userId)` (to be added to `src/lib/db/collections.ts`) to fetch available collections
-- `createItem` already accepts collection linkage via Prisma relations — wire it up from the action
-- `updateItem` needs to sync collection memberships (disconnect all, reconnect selected) the same way tags work today
-- The multi-select input should be a simple controlled component — no need for a heavy library; a dropdown with checkboxes or a combobox-style picker is fine
+- Reuse `DashboardShell` for layout (same pattern as `/items/[type]`)
+- Reuse existing cards: `CollectionCard` for the grid, `ItemCard` / `FileListRow` / `ImageThumbnailCard` for items inside a collection
+- Data fetching: use existing `getRecentCollections` / `getSidebarCollections` patterns; add a `getCollectionById(id, userId)` and `getAllCollections(userId)` to `src/lib/db/collections.ts`
+- `CollectionCard` click currently does nothing — wire it to navigate to `/collections/[id]`
+- Sidebar "View all collections" link already points to `/collections` (href is present) — confirm it and make sure the route exists
+- Protect `/collections` in `src/proxy.ts` middleware matcher (same pattern as `/items`)
+- No new component types needed — branch only on `contentType` the same way `/items/[type]/page.tsx` does
 
 ## History
 

@@ -109,6 +109,79 @@ export async function getSidebarCollections(userId: string, limit = 8): Promise<
   });
 }
 
+export async function getAllCollections(userId: string): Promise<CollectionCardData[]> {
+  const collections = await prisma.collection.findMany({
+    where: { userId },
+    orderBy: [{ isFavorite: 'desc' }, { name: 'asc' }],
+    include: {
+      items: {
+        take: 100,
+        include: {
+          item: {
+            include: {
+              itemType: { select: { icon: true, color: true } },
+            },
+          },
+        },
+      },
+    },
+  });
+
+  return collections.map((col) => {
+    const { dominantColor, icons } = computeTypeStats(col.items);
+    return {
+      id: col.id,
+      name: col.name,
+      description: col.description ?? '',
+      isFavorite: col.isFavorite,
+      itemCount: col.items.length,
+      dominantColor,
+      icons,
+    };
+  });
+}
+
+export interface CollectionWithMetadata {
+  id: string;
+  name: string;
+  description: string | null;
+  isFavorite: boolean;
+  dominantColor: string;
+  icons: string[];
+  itemCount: number;
+}
+
+export async function getCollectionById(id: string, userId: string): Promise<CollectionWithMetadata | null> {
+  const col = await prisma.collection.findFirst({
+    where: { id, userId },
+    include: {
+      items: {
+        take: 100,
+        include: {
+          item: {
+            include: {
+              itemType: { select: { icon: true, color: true } },
+            },
+          },
+        },
+      },
+    },
+  });
+
+  if (!col) return null;
+
+  const { dominantColor, icons } = computeTypeStats(col.items);
+  return {
+    id: col.id,
+    name: col.name,
+    description: col.description,
+    isFavorite: col.isFavorite,
+    dominantColor,
+    icons,
+    itemCount: col.items.length,
+  };
+}
+
 export async function getRecentCollections(userId: string, limit = 6): Promise<CollectionCardData[]> {
   const collections = await prisma.collection.findMany({
     take: limit,

@@ -3,7 +3,7 @@ import authConfig from "./auth.config";
 
 const { auth } = NextAuth(authConfig);
 
-const PROTECTED_PREFIXES = ["/dashboard", "/profile", "/items"];
+const PROTECTED_PREFIXES = ["/dashboard", "/profile", "/items", "/collections"];
 
 export const proxy = auth(function proxy(req) {
   const isAuthenticated = !!req.auth;
@@ -17,5 +17,5 @@ export const proxy = auth(function proxy(req) {
 });
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/profile/:path*", "/profile", "/items/:path*"],
+  matcher: ["/dashboard/:path*", "/profile/:path*", "/profile", "/items/:path*", "/collections/:path*", "/collections"],
 };

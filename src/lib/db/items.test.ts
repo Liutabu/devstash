@@ -17,7 +17,7 @@ vi.mock('@/lib/r2', () => ({
   deleteFromR2: vi.fn(() => Promise.resolve()),
 }));
 
-const { getItemById, getItemsByType, deleteItem } = await import('./items');
+const { getItemById, getItemsByType, deleteItem, getItemsByCollectionId } = await import('./items');
 const { prisma } = await import('@/lib/prisma');
 const { deleteFromR2 } = await import('@/lib/r2');
 const findFirst = vi.mocked(prisma.item.findFirst);
@@ -221,5 +221,30 @@ describe('deleteItem', () => {
     expect(result).toBe(true);
     expect(itemDelete).toHaveBeenCalledWith({ where: { id: 'item-1' } });
     expect(mockDeleteFromR2).not.toHaveBeenCalled();
+  });
+});
+
+describe('getItemsByCollectionId', () => {
+  it('scopes query to userId and collectionId', async () => {
+    findMany.mockResolvedValue([]);
+    await getItemsByCollectionId('col-1', 'user-42');
+    expect(findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { userId: 'user-42', collections: { some: { collectionId: 'col-1' } } },
+      }),
+    );
+  });
+
+  it('maps returned items into ItemRowData', async () => {
+    findMany.mockResolvedValue([baseRowItem]);
+    const result = await getItemsByCollectionId('col-1', 'user-1');
+    expect(result).toHaveLength(1);
+    expect(result[0]).toMatchObject({ id: 'item-1', title: 'My Snippet' });
+  });
+
+  it('returns empty array when no items in collection', async () => {
+    findMany.mockResolvedValue([]);
+    const result = await getItemsByCollectionId('col-1', 'user-1');
+    expect(result).toEqual([]);
   });
 });

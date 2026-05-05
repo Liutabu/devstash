@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { Star, MoreHorizontal } from 'lucide-react';
 import { ITEM_TYPE_ICON_MAP } from '@/lib/item-type-icons';
 
@@ -17,7 +18,8 @@ interface CollectionCardProps {
 
 export function CollectionCard({ collection }: CollectionCardProps) {
   return (
-    <div
+    <Link
+      href={`/collections/${collection.id}`}
       className="group relative rounded-lg border border-border bg-card p-4 flex flex-col gap-3 hover:border-border/80 transition-colors cursor-pointer"
       style={{ borderTopColor: collection.dominantColor, borderTopWidth: 2 }}
     >
@@ -32,9 +34,9 @@ export function CollectionCard({ collection }: CollectionCardProps) {
           </div>
           <p className="text-xs text-muted-foreground line-clamp-1">{collection.description}</p>
         </div>
-        <button className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-foreground">
+        <div className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground">
           <MoreHorizontal className="h-4 w-4" />
-        </button>
+        </div>
       </div>
 
       {/* Footer */}
@@ -53,6 +55,6 @@ export function CollectionCard({ collection }: CollectionCardProps) {
           {collection.itemCount} items
         </span>
       </div>
-    </div>
+    </Link>
   );
 }
