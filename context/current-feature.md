@@ -1,24 +1,15 @@
-# Current Feature: Collections Pages
+# Current Feature
 
 ## Status
-In Progress
+Not Started
 
 ## Goals
 
-- Create `/collections` page listing all user collections using existing `CollectionCard` component
-- Create `/collections/[id]` page showing items in a specific collection using existing `ItemCard`, `FileListRow`, and `ImageThumbnailCard` components
-- Link "View all collections" in the sidebar to `/collections`
-- Link all `CollectionCard` instances (dashboard + collections list) to `/collections/[id]`
+<!-- List goals here -->
 
 ## Notes
 
-- Reuse `DashboardShell` for layout (same pattern as `/items/[type]`)
-- Reuse existing cards: `CollectionCard` for the grid, `ItemCard` / `FileListRow` / `ImageThumbnailCard` for items inside a collection
-- Data fetching: use existing `getRecentCollections` / `getSidebarCollections` patterns; add a `getCollectionById(id, userId)` and `getAllCollections(userId)` to `src/lib/db/collections.ts`
-- `CollectionCard` click currently does nothing — wire it to navigate to `/collections/[id]`
-- Sidebar "View all collections" link already points to `/collections` (href is present) — confirm it and make sure the route exists
-- Protect `/collections` in `src/proxy.ts` middleware matcher (same pattern as `/items`)
-- No new component types needed — branch only on `contentType` the same way `/items/[type]/page.tsx` does
+<!-- List notes here -->
 
 ## History
 
@@ -320,3 +311,13 @@ In Progress
 - Updated `ItemDrawer` / `ItemDrawerProvider` / `DashboardShell` — threaded `userCollections` prop down; edit mode initializes `collectionIds` from current detail and shows `CollectionPicker`; view mode retains static `CollectionChips`
 - Updated `dashboard/page.tsx` and `items/[type]/page.tsx` — added `getUserCollections(userId)` to parallel data fetches, passed to `DashboardShell`
 - Added 4 unit tests to `src/actions/items.test.ts` covering `collectionIds` defaulting to `[]` and being forwarded correctly in both create and update actions
+
+### 2026-05-05 — Collections Pages
+- Added `getAllCollections(userId)` to `src/lib/db/collections.ts` — returns all user collections as `CollectionCardData[]`, sorted favorites-first then alphabetically
+- Added `getCollectionById(id, userId)` to `src/lib/db/collections.ts` — returns collection metadata with computed `dominantColor`/`icons`; returns null for wrong userId (ownership scoping)
+- Added `getItemsByCollectionId(collectionId, userId)` to `src/lib/db/items.ts` — queries items scoped to user+collection via `collections: { some: { collectionId } }`
+- Created `src/app/collections/page.tsx` — lists all user collections in a `CollectionCard` grid; reuses `DashboardShell` layout
+- Created `src/app/collections/[id]/page.tsx` — shows collection header (name, description, favorite star, item count) and items grouped by content type: images in thumbnail grid, files in list, everything else in card grid; section headers shown only when multiple groups present; 404 on unknown/other-user collection
+- Updated `src/components/dashboard/CollectionCard.tsx` — wrapped in `<Link href="/collections/[id]">`; changed inert `<button>` wrapping MoreHorizontal to `<div>` to keep valid HTML
+- Updated `src/proxy.ts` — added `/collections` and `/collections/:path*` to both `PROTECTED_PREFIXES` and middleware matcher
+- Added 11 unit tests: `getCollectionById` (null on missing, ownership scoping, dominantColor, icons order, gray default, scalar fields), `getAllCollections` (userId scoping, mapping), `getItemsByCollectionId` (where clause, mapping, empty result)
