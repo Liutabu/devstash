@@ -1,10 +1,10 @@
 import { notFound, redirect } from 'next/navigation';
-import { Star } from 'lucide-react';
 import { auth } from '@/auth';
 import { DashboardShell } from '@/components/dashboard/DashboardShell';
 import { ItemCard } from '@/components/items/ItemCard';
 import { ImageThumbnailCard } from '@/components/items/ImageThumbnailCard';
 import { FileListRow } from '@/components/items/FileListRow';
+import { CollectionDetailActions } from '@/components/collections/CollectionDetailActions';
 import { getItemTypesWithCounts, getItemsByCollectionId } from '@/lib/db/items';
 import { getSidebarCollections, getUserCollections, getCollectionById } from '@/lib/db/collections';
 
@@ -45,20 +45,20 @@ export default async function CollectionPage({ params }: CollectionPageProps) {
     >
       <div className="p-6 space-y-6">
         {/* Header */}
-        <div className="flex items-start gap-3">
-          <div className="h-5 w-1 rounded-full mt-1 shrink-0" style={{ backgroundColor: collection.dominantColor }} />
-          <div className="min-w-0">
-            <div className="flex items-center gap-2">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-start gap-3 min-w-0">
+            <div className="h-5 w-1 rounded-full mt-1 shrink-0" style={{ backgroundColor: collection.dominantColor }} />
+            <div className="min-w-0">
               <h1 className="text-xl font-semibold">{collection.name}</h1>
-              {collection.isFavorite && <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />}
+              {collection.description && (
+                <p className="text-sm text-muted-foreground mt-0.5">{collection.description}</p>
+              )}
+              <span className="text-sm text-muted-foreground">
+                {items.length} item{items.length !== 1 ? 's' : ''}
+              </span>
             </div>
-            {collection.description && (
-              <p className="text-sm text-muted-foreground mt-0.5">{collection.description}</p>
-            )}
-            <span className="text-sm text-muted-foreground">
-              {items.length} item{items.length !== 1 ? 's' : ''}
-            </span>
           </div>
+          <CollectionDetailActions collection={collection} />
         </div>
 
         {/* Items */}

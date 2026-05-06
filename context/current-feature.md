@@ -1,15 +1,29 @@
-# Current Feature
+# Current Feature: Collection Management Actions
 
 ## Status
-Not Started
+In Progress
 
 ## Goals
 
-<!-- List goals here -->
+- Add Edit, Delete, and Favorite buttons to the `/collections/[id]` detail page header
+- Favorite button is icon/button only — no implementation yet (coming soon placeholder)
+- Edit opens a modal to edit collection name and description
+- Delete shows a confirmation dialog; removes the collection but does NOT delete its items (items remain, just unlinked from the collection)
+- On `CollectionCard` (used on `/collections` list and dashboard), clicking the 3-dots icon shows a dropdown menu with Edit, Delete, and Favorite options
+- Clicking anywhere else on the `CollectionCard` navigates to the collection detail page
 
 ## Notes
 
-<!-- List notes here -->
+- Collection detail page is at `src/app/collections/[id]/page.tsx`
+- `CollectionCard` component is at `src/components/dashboard/CollectionCard.tsx`
+- Use existing shadcn `Dialog` for edit modal and `AlertDialog` for delete confirmation
+- Need `updateCollection(id, userId, data)` and `deleteCollection(id, userId)` in `src/lib/db/collections.ts`
+- Need `updateCollectionAction` and `deleteCollectionAction` in `src/actions/collections.ts`
+- Delete should call `prisma.collection.delete()` — cascade on `ItemCollection` handles the unlinking
+- After edit/delete on collection detail page, redirect back to `/collections` on delete; refresh in-place on edit
+- After edit/delete from card dropdown, use `router.refresh()` to update the list
+- The 3-dots dropdown on `CollectionCard` currently renders as a `<div>` (was changed from `<button>` to avoid invalid HTML); use shadcn `DropdownMenu` here
+- Favorite on collection detail page: render a star icon button, visually toggle-able, but no DB write yet
 
 ## History
 
