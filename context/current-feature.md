@@ -1,29 +1,15 @@
-# Current Feature: Collection Management Actions
+# Current Feature
 
 ## Status
-In Progress
+Not Started
 
 ## Goals
 
-- Add Edit, Delete, and Favorite buttons to the `/collections/[id]` detail page header
-- Favorite button is icon/button only — no implementation yet (coming soon placeholder)
-- Edit opens a modal to edit collection name and description
-- Delete shows a confirmation dialog; removes the collection but does NOT delete its items (items remain, just unlinked from the collection)
-- On `CollectionCard` (used on `/collections` list and dashboard), clicking the 3-dots icon shows a dropdown menu with Edit, Delete, and Favorite options
-- Clicking anywhere else on the `CollectionCard` navigates to the collection detail page
+<!-- List goals here -->
 
 ## Notes
 
-- Collection detail page is at `src/app/collections/[id]/page.tsx`
-- `CollectionCard` component is at `src/components/dashboard/CollectionCard.tsx`
-- Use existing shadcn `Dialog` for edit modal and `AlertDialog` for delete confirmation
-- Need `updateCollection(id, userId, data)` and `deleteCollection(id, userId)` in `src/lib/db/collections.ts`
-- Need `updateCollectionAction` and `deleteCollectionAction` in `src/actions/collections.ts`
-- Delete should call `prisma.collection.delete()` — cascade on `ItemCollection` handles the unlinking
-- After edit/delete on collection detail page, redirect back to `/collections` on delete; refresh in-place on edit
-- After edit/delete from card dropdown, use `router.refresh()` to update the list
-- The 3-dots dropdown on `CollectionCard` currently renders as a `<div>` (was changed from `<button>` to avoid invalid HTML); use shadcn `DropdownMenu` here
-- Favorite on collection detail page: render a star icon button, visually toggle-able, but no DB write yet
+<!-- List notes here -->
 
 ## History
 
@@ -335,3 +321,13 @@ In Progress
 - Updated `src/components/dashboard/CollectionCard.tsx` — wrapped in `<Link href="/collections/[id]">`; changed inert `<button>` wrapping MoreHorizontal to `<div>` to keep valid HTML
 - Updated `src/proxy.ts` — added `/collections` and `/collections/:path*` to both `PROTECTED_PREFIXES` and middleware matcher
 - Added 11 unit tests: `getCollectionById` (null on missing, ownership scoping, dominantColor, icons order, gray default, scalar fields), `getAllCollections` (userId scoping, mapping), `getItemsByCollectionId` (where clause, mapping, empty result)
+
+### 2026-05-06 — Collection Management Actions
+- Installed shadcn `DropdownMenu` component (`src/components/ui/dropdown-menu.tsx`)
+- Added `updateCollection(id, userId, data)` and `deleteCollection(id, userId)` to `src/lib/db/collections.ts` — both ownership-scoped; delete relies on cascade to remove `ItemCollection` rows (items preserved)
+- Added `updateCollectionAction` and `deleteCollectionAction` to `src/actions/collections.ts` — Zod-validated, `{ success, data/error }` return pattern; empty description coerced to null
+- Created `src/components/collections/EditCollectionDialog.tsx` — pre-filled Dialog modal for editing collection name and description; calls `updateCollectionAction`, toasts on success/error, `router.refresh()` to sync server data
+- Created `src/components/collections/CollectionDetailActions.tsx` — client component rendering Edit (pencil), Delete (trash), and Favorite (star, disabled placeholder) icon buttons in the collection detail page header; delete redirects to `/collections` after success
+- Updated `src/app/collections/[id]/page.tsx` — removed static Star icon from header, added `<CollectionDetailActions>` alongside collection name
+- Updated `src/components/dashboard/CollectionCard.tsx` — converted from `<Link>` wrapper to `'use client'` component with `onClick={router.push(...)}` on the card body; DropdownMenu on hover-reveal 3-dots with Edit, Delete, Favorite (disabled) items; Edit and Delete self-contained with inline dialog/alert state; `e.stopPropagation()` prevents card navigation when menu is opened
+- Added 8 unit tests to `src/actions/collections.test.ts`: `updateCollectionAction` (unauthorized, empty name, not found, success, empty description → null) and `deleteCollectionAction` (unauthorized, not found, success)
