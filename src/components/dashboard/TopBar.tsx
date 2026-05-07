@@ -1,4 +1,5 @@
 import { Search, Plus, PanelLeft, Menu } from "lucide-react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
 interface TopBarProps {
@@ -13,12 +14,12 @@ export function TopBar({ onToggleSidebar, onMobileMenuClick, onNewItem, onNewCol
   return (
     <header className="flex h-14 shrink-0 items-center gap-3 border-b border-border bg-background px-4">
       {/* Logo */}
-      <div className="flex items-center gap-2 font-semibold text-foreground shrink-0">
+      <Link href="/dashboard" className="flex items-center gap-2 font-semibold text-foreground shrink-0 hover:opacity-80 transition-opacity">
         <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary text-primary-foreground text-sm font-bold">
           S
         </div>
         <span className="text-base">DevStash</span>
-      </div>
+      </Link>
 
       {/* Desktop sidebar toggle */}
       <Button

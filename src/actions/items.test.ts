@@ -34,6 +34,7 @@ const validInput = {
   url: null,
   language: 'typescript',
   tags: ['react', 'hooks'],
+  collectionIds: [] as string[],
 };
 
 const mockDetail = {
@@ -72,6 +73,7 @@ const validCreateInput = {
   tags: ['js'],
   itemTypeId: 'type-1',
   contentType: 'text' as const,
+  collectionIds: [] as string[],
 };
 
 describe('createItemAction', () => {
