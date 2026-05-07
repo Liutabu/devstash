@@ -1,15 +1,15 @@
 import { Search, Plus, PanelLeft, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 
 interface TopBarProps {
   onToggleSidebar?: () => void;
   onMobileMenuClick?: () => void;
   onNewItem?: () => void;
   onNewCollection?: () => void;
+  onSearchClick?: () => void;
 }
 
-export function TopBar({ onToggleSidebar, onMobileMenuClick, onNewItem, onNewCollection }: TopBarProps) {
+export function TopBar({ onToggleSidebar, onMobileMenuClick, onNewItem, onNewCollection, onSearchClick }: TopBarProps) {
   return (
     <header className="flex h-14 shrink-0 items-center gap-3 border-b border-border bg-background px-4">
       {/* Logo */}
@@ -41,13 +41,17 @@ export function TopBar({ onToggleSidebar, onMobileMenuClick, onNewItem, onNewCol
       </Button>
 
       {/* Search */}
-      <div className="relative flex-1 max-w-sm">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input
-          placeholder="Search items..."
-          className="pl-9 bg-muted/50 border-border text-sm"
-        />
-      </div>
+      <button
+        type="button"
+        onClick={onSearchClick}
+        className="relative flex-1 max-w-sm flex items-center gap-2 h-9 rounded-md border border-border bg-muted/50 px-3 text-sm text-muted-foreground hover:bg-muted transition-colors cursor-pointer text-left"
+      >
+        <Search className="h-4 w-4 shrink-0" />
+        <span className="flex-1 truncate">Search items...</span>
+        <kbd className="hidden sm:inline-flex items-center gap-0.5 rounded border border-border bg-background px-1.5 py-0.5 text-xs font-mono text-muted-foreground">
+          <span>⌘</span><span>K</span>
+        </kbd>
+      </button>
 
       {/* Actions */}
       <div className="ml-auto flex items-center gap-2">

@@ -1,15 +1,17 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { TopBar } from './TopBar';
 import { Sidebar } from './Sidebar';
 import { DashboardContext } from './DashboardContext';
 import { cn } from '@/lib/utils';
 import type { ItemTypeWithCount } from '@/lib/db/items';
 import type { SidebarCollectionData, UserCollectionOption } from '@/lib/db/collections';
+import type { SearchData } from '@/lib/db/search';
 import { ItemDrawerProvider } from '@/components/items/ItemDrawerProvider';
 import { CreateItemDialog } from '@/components/items/CreateItemDialog';
 import { CreateCollectionDialog } from '@/components/collections/CreateCollectionDialog';
+import { CommandPalette } from '@/components/search/CommandPalette';
 
 interface SidebarUser {
   name?: string | null;
@@ -22,15 +24,28 @@ interface DashboardShellProps {
   itemTypes: ItemTypeWithCount[];
   sidebarCollections: SidebarCollectionData[];
   userCollections: UserCollectionOption[];
+  searchData: SearchData;
   user: SidebarUser;
 }
 
-export function DashboardShell({ children, itemTypes, sidebarCollections, userCollections, user }: DashboardShellProps) {
+export function DashboardShell({ children, itemTypes, sidebarCollections, userCollections, searchData, user }: DashboardShellProps) {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
   const [createTypeId, setCreateTypeId] = useState<string | undefined>(undefined);
   const [collectionCreateOpen, setCollectionCreateOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+
+  useEffect(() => {
+    function handleKey(e: KeyboardEvent) {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        setSearchOpen((o) => !o);
+      }
+    }
+    document.addEventListener('keydown', handleKey);
+    return () => document.removeEventListener('keydown', handleKey);
+  }, []);
 
   function openCreate(typeId?: string) {
     setCreateTypeId(typeId);
@@ -45,6 +60,7 @@ export function DashboardShell({ children, itemTypes, sidebarCollections, userCo
         onMobileMenuClick={() => setMobileOpen(true)}
         onNewItem={() => openCreate()}
         onNewCollection={() => setCollectionCreateOpen(true)}
+        onSearchClick={() => setSearchOpen(true)}
       />
       <CreateCollectionDialog
         open={collectionCreateOpen}
@@ -84,7 +100,14 @@ export function DashboardShell({ children, itemTypes, sidebarCollections, userCo
 
         {/* Main content */}
         <main className="flex-1 overflow-auto bg-background p-6">
-          <ItemDrawerProvider userCollections={userCollections}>{children}</ItemDrawerProvider>
+          <ItemDrawerProvider userCollections={userCollections}>
+            <CommandPalette
+              open={searchOpen}
+              onClose={() => setSearchOpen(false)}
+              searchData={searchData}
+            />
+            {children}
+          </ItemDrawerProvider>
         </main>
       </div>
     </div>

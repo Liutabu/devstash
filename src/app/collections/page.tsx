@@ -4,16 +4,18 @@ import { DashboardShell } from '@/components/dashboard/DashboardShell';
 import { CollectionCard } from '@/components/dashboard/CollectionCard';
 import { getAllCollections, getSidebarCollections, getUserCollections } from '@/lib/db/collections';
 import { getItemTypesWithCounts } from '@/lib/db/items';
+import { getSearchData } from '@/lib/db/search';
 
 export default async function CollectionsPage() {
   const session = await auth();
   if (!session?.user?.id) redirect('/sign-in');
 
   const userId = session.user.id;
-  const [itemTypes, sidebarCollections, userCollections, collections] = await Promise.all([
+  const [itemTypes, sidebarCollections, userCollections, searchData, collections] = await Promise.all([
     getItemTypesWithCounts(userId),
     getSidebarCollections(userId),
     getUserCollections(userId),
+    getSearchData(userId),
     getAllCollections(userId),
   ]);
 
@@ -22,6 +24,7 @@ export default async function CollectionsPage() {
       itemTypes={itemTypes}
       sidebarCollections={sidebarCollections}
       userCollections={userCollections}
+      searchData={searchData}
       user={session.user}
     >
       <div className="p-6 space-y-6">
