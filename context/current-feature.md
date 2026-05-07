@@ -1,27 +1,11 @@
-# Current Feature: Editor Preferences Settings
+# Current Feature
 
 ## Status
-In Progress
+Not Started
 
 ## Goals
 
-- Add font size dropdown to editor preferences
-- Add tab size dropdown to editor preferences
-- Add word wrap toggle (default: on)
-- Add minimap toggle (default: off)
-- Add theme dropdown: vs-dark, monokai, github-dark (default: vs-dark)
-- Store preferences in JSON column `editorPreferences` on User model (via migration)
-- Create server action to update preferences
-- Apply settings to Monaco editor (`CodeEditor` component)
-- Auto-save on change with success toast (no save button)
-- Create `EditorPreferencesContext` for client components
-
 ## Notes
-
-- Never use `prisma db push` — always `prisma migrate dev`
-- Settings live on the existing `/settings` page
-- The Monaco editor is at `src/components/ui/CodeEditor.tsx`
-- Supported themes: `vs-dark`, `monokai`, `github-dark`
 
 ## History
 
@@ -368,3 +352,17 @@ In Progress
 - Updated `src/components/dashboard/Sidebar.tsx` — added "Settings" link (with `Settings` icon) to the user dropdown between Profile and Sign out
 - Updated `src/proxy.ts` — added `/settings` to `PROTECTED_PREFIXES` and `/settings`/`/settings/:path*` to the middleware matcher
 - Updated `src/app/profile/page.tsx` — removed Change Password and Danger Zone sections; converted to use `DashboardShell` (was standalone layout, so sidebar was missing); added a link to `/settings` for account actions
+
+### 2026-05-07 — Editor Preferences Settings
+- Added `editorPreferences Json?` to `User` model; ran migration `20260507200555_add_editor_preferences`
+- Created `src/lib/editor-preferences.ts` — `EditorPreferences` type, defaults, and option constants (font sizes 12–16, tab sizes 2/4, themes vs-dark/monokai/github-dark)
+- Created `src/lib/monaco-themes.ts` — inline `monokai` and `github-dark` theme definitions for `monaco.editor.defineTheme`
+- Added `getEditorPreferences(userId)` to `src/lib/db/profile.ts` — reads JSON column, merges with defaults
+- Added `updateEditorPreferencesAction` to `src/actions/profile.ts` — Zod-validated, `{ success, error }` return pattern
+- Created `src/components/ui/EditorPreferencesContext.tsx` — `EditorPreferencesProvider` + `useEditorPreferences` hook
+- Created `src/components/settings/EditorPreferencesSection.tsx` — client component with Theme/Font Size/Tab Size selects and Word Wrap/Minimap toggles; auto-saves on every change via `useTransition` + server action; shows success toast
+- Updated `src/components/ui/CodeEditor.tsx` — reads `fontSize`, `tabSize`, `wordWrap`, `minimap`, `theme` from context; defines custom themes in `beforeMount`
+- Updated `DashboardShell` — accepts `editorPreferences?` prop, wraps tree in `EditorPreferencesProvider`
+- Updated all 6 `DashboardShell` pages (dashboard, items/[type], collections, collections/[id], profile, settings) — added `getEditorPreferences(userId)` to parallel fetches and passed to shell
+- Added `EditorPreferencesSection` to `/settings` page above Change Password
+- Added 6 unit tests in `src/actions/profile.test.ts` covering unauthorized, invalid fontSize, invalid theme, success, monokai, and github-dark paths
