@@ -1,25 +1,15 @@
-# Current Feature: Global Search / Command Palette
+# Current Feature
 
 ## Status
-In Progress
+Not Started
 
 ## Goals
 
-- Open command palette with Cmd+K (Mac) / Ctrl+K (Windows)
-- Fuzzy search across all user items and collections
-- Grouped results: Items section and Collections section
-- Keyboard navigation (arrow keys, Enter to select)
-- Show item type icon per result; show collection item count
-- Selecting an item opens its drawer; selecting a collection navigates to its page
-- TopBar search input opens palette on click
-- Search input placeholder shows ⌘K hint
+<!-- List goals here -->
 
 ## Notes
 
-- Use shadcn `cmdk` component (Command)
-- Client-side fuzzy search only — no server round-trips on each keystroke
-- Pre-fetch searchable data on app load (items: id, title, type, content preview; collections: id, name, itemCount)
-- Reuse existing data fetching functions where possible
+<!-- List notes here -->
 
 ## History
 
@@ -341,3 +331,12 @@ In Progress
 - Updated `src/app/collections/[id]/page.tsx` — removed static Star icon from header, added `<CollectionDetailActions>` alongside collection name
 - Updated `src/components/dashboard/CollectionCard.tsx` — converted from `<Link>` wrapper to `'use client'` component with `onClick={router.push(...)}` on the card body; DropdownMenu on hover-reveal 3-dots with Edit, Delete, Favorite (disabled) items; Edit and Delete self-contained with inline dialog/alert state; `e.stopPropagation()` prevents card navigation when menu is opened
 - Added 8 unit tests to `src/actions/collections.test.ts`: `updateCollectionAction` (unauthorized, empty name, not found, success, empty description → null) and `deleteCollectionAction` (unauthorized, not found, success)
+
+### 2026-05-07 — Global Search / Command Palette
+- Installed shadcn `Command` component (`src/components/ui/command.tsx`) — wraps `cmdk` library
+- Created `src/lib/db/search.ts` with `getSearchData(userId)` — fetches items (id, title, description, itemType) and collections (id, name, itemCount) in parallel via Prisma
+- Created `src/components/search/CommandPalette.tsx` — `CommandDialog` + explicit `<Command>` wrapper (required for cmdk store context); custom substring filter replacing cmdk's default subsequence filter; Items group with type icon + name badge; Collections group with item count; item selection opens `ItemDrawer`, collection selection navigates to `/collections/[id]`; Cmd/Ctrl+K closes palette
+- Updated `DashboardShell` — added `searchData` prop, `searchOpen` state, Cmd/Ctrl+K listener, `onSearchClick` forwarded to `TopBar`, `<CommandPalette>` rendered inside `ItemDrawerProvider` so it can call `useItemDrawer()`
+- Updated `TopBar` — replaced `<Input>` with a styled `<button>` element showing ⌘K shortcut hint; added `onSearchClick` prop
+- Added `getSearchData` to parallel data fetches in `dashboard/page.tsx`, `items/[type]/page.tsx`, `collections/page.tsx`, `collections/[id]/page.tsx`
+- Added 5 unit tests in `src/lib/db/search.test.ts`: userId scoping for items, userId scoping for collections, `_count.items → itemCount` mapping, full shape, empty arrays
