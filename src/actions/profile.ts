@@ -14,13 +14,13 @@ export async function changePasswordAction(formData: FormData) {
   const confirmPassword = formData.get('confirmPassword') as string;
 
   if (!currentPassword || !newPassword || !confirmPassword) {
-    redirect('/profile?error=required');
+    redirect('/settings?error=required');
   }
   if (newPassword !== confirmPassword) {
-    redirect('/profile?error=mismatch');
+    redirect('/settings?error=mismatch');
   }
   if (newPassword.length < 8) {
-    redirect('/profile?error=short');
+    redirect('/settings?error=short');
   }
 
   const user = await prisma.user.findUnique({
@@ -29,12 +29,12 @@ export async function changePasswordAction(formData: FormData) {
   });
 
   if (!user?.password) {
-    redirect('/profile?error=no_password');
+    redirect('/settings?error=no_password');
   }
 
   const valid = await bcrypt.compare(currentPassword, user.password);
   if (!valid) {
-    redirect('/profile?error=wrong_password');
+    redirect('/settings?error=wrong_password');
   }
 
   const hashed = await bcrypt.hash(newPassword, 12);
@@ -43,7 +43,7 @@ export async function changePasswordAction(formData: FormData) {
     data: { password: hashed },
   });
 
-  redirect('/profile?success=password');
+  redirect('/settings?success=password');
 }
 
 export async function deleteAccountAction() {
