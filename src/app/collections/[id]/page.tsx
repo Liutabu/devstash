@@ -7,6 +7,7 @@ import { FileListRow } from '@/components/items/FileListRow';
 import { CollectionDetailActions } from '@/components/collections/CollectionDetailActions';
 import { getItemTypesWithCounts, getItemsByCollectionId } from '@/lib/db/items';
 import { getSidebarCollections, getUserCollections, getCollectionById } from '@/lib/db/collections';
+import { getSearchData } from '@/lib/db/search';
 
 interface CollectionPageProps {
   params: Promise<{ id: string }>;
@@ -19,10 +20,11 @@ export default async function CollectionPage({ params }: CollectionPageProps) {
   if (!session?.user?.id) redirect('/sign-in');
 
   const userId = session.user.id;
-  const [itemTypes, sidebarCollections, userCollections, collection, items] = await Promise.all([
+  const [itemTypes, sidebarCollections, userCollections, searchData, collection, items] = await Promise.all([
     getItemTypesWithCounts(userId),
     getSidebarCollections(userId),
     getUserCollections(userId),
+    getSearchData(userId),
     getCollectionById(id, userId),
     getItemsByCollectionId(id, userId),
   ]);
@@ -41,6 +43,7 @@ export default async function CollectionPage({ params }: CollectionPageProps) {
       itemTypes={itemTypes}
       sidebarCollections={sidebarCollections}
       userCollections={userCollections}
+      searchData={searchData}
       user={session.user}
     >
       <div className="p-6 space-y-6">
