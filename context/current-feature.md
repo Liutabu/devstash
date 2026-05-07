@@ -5,11 +5,7 @@ Not Started
 
 ## Goals
 
-<!-- List goals here -->
-
 ## Notes
-
-<!-- List notes here -->
 
 ## History
 
@@ -340,3 +336,12 @@ Not Started
 - Updated `TopBar` — replaced `<Input>` with a styled `<button>` element showing ⌘K shortcut hint; added `onSearchClick` prop
 - Added `getSearchData` to parallel data fetches in `dashboard/page.tsx`, `items/[type]/page.tsx`, `collections/page.tsx`, `collections/[id]/page.tsx`
 - Added 5 unit tests in `src/lib/db/search.test.ts`: userId scoping for items, userId scoping for collections, `_count.items → itemCount` mapping, full shape, empty arrays
+
+### 2026-05-07 — Pagination
+- Created `src/lib/constants.ts` with `ITEMS_PER_PAGE = 21`, `COLLECTIONS_PER_PAGE = 21`, `DASHBOARD_COLLECTIONS_LIMIT = 6`, `DASHBOARD_RECENT_ITEMS_LIMIT = 10`
+- Created `src/components/ui/Pagination.tsx` — server component with numbered page links, prev/next arrows (greyed out at boundaries), and ellipsis for large page counts
+- Updated `getItemsByType` in `src/lib/db/items.ts` — accepts `page` param, uses `skip`/`take` with `ITEMS_PER_PAGE`, returns `total` alongside items; runs `findMany` + `count` in parallel
+- `getItemsByCollectionId` already supported pagination; updated callers to pass `page` from URL
+- Updated `src/app/items/[type]/page.tsx` — reads `?page=` from `searchParams`, passes to `getItemsByType`, shows total item count, renders `<Pagination>` below each grid/list
+- Updated `src/app/collections/[id]/page.tsx` — same pattern with `COLLECTIONS_PER_PAGE`; item count in header shows total across all pages
+- Updated tests: added `count` mock to Prisma item mock, updated `getItemsByType` tests to assert `total`, updated `getItemsByCollectionId` tests for new `{ items, total }` return shape
