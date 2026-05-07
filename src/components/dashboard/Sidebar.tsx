@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Star, ChevronDown, LogOut, User } from 'lucide-react';
+import { Star, ChevronDown, LogOut, User, Settings } from 'lucide-react';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { badgeVariants } from '@/components/ui/badge';
@@ -170,6 +170,14 @@ export function Sidebar({ collapsed, itemTypes, collections, user }: SidebarProp
               >
                 <User className="h-4 w-4" />
                 Profile
+              </Link>
+              <Link
+                href="/settings"
+                onClick={() => setUserMenuOpen(false)}
+                className="flex items-center gap-2 px-3 py-2 text-sm text-popover-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
+              >
+                <Settings className="h-4 w-4" />
+                Settings
               </Link>
               <div className="my-1 h-px bg-border" />
               <form action={signOutAction}>
