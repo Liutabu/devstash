@@ -2,13 +2,14 @@ import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import { auth } from '@/auth';
-import { getProfileData } from '@/lib/db/profile';
+import { getProfileData, getEditorPreferences } from '@/lib/db/profile';
 import { getSidebarCollections, getUserCollections } from '@/lib/db/collections';
 import { getItemTypesWithCounts } from '@/lib/db/items';
 import { getSearchData } from '@/lib/db/search';
 import { DashboardShell } from '@/components/dashboard/DashboardShell';
 import { ChangePasswordSection } from '@/components/profile/ChangePasswordSection';
 import { DeleteAccountButton } from '@/components/profile/DeleteAccountButton';
+import { EditorPreferencesSection } from '@/components/settings/EditorPreferencesSection';
 
 const PASSWORD_ERRORS: Record<string, string> = {
   required: 'All fields are required.',
@@ -27,11 +28,12 @@ export default async function SettingsPage({
   if (!session?.user?.id) redirect('/sign-in');
 
   const userId = session.user.id;
-  const [itemTypes, sidebarCollections, userCollections, searchData, profile, params] = await Promise.all([
+  const [itemTypes, sidebarCollections, userCollections, searchData, editorPreferences, profile, params] = await Promise.all([
     getItemTypesWithCounts(userId),
     getSidebarCollections(userId),
     getUserCollections(userId),
     getSearchData(userId),
+    getEditorPreferences(userId),
     getProfileData(userId),
     searchParams,
   ]);
@@ -48,6 +50,7 @@ export default async function SettingsPage({
       userCollections={userCollections}
       searchData={searchData}
       user={session.user}
+      editorPreferences={editorPreferences}
     >
       <div className="mx-auto max-w-2xl px-4 py-8 space-y-8">
         <div className="space-y-1">
@@ -60,6 +63,9 @@ export default async function SettingsPage({
           </Link>
           <h1 className="text-2xl font-semibold tracking-tight">Settings</h1>
         </div>
+
+        {/* Editor preferences */}
+        <EditorPreferencesSection />
 
         {/* Change password — email users only */}
         {profile.hasPassword && (

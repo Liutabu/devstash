@@ -5,17 +5,19 @@ import { CollectionCard } from '@/components/dashboard/CollectionCard';
 import { getAllCollections, getSidebarCollections, getUserCollections } from '@/lib/db/collections';
 import { getItemTypesWithCounts } from '@/lib/db/items';
 import { getSearchData } from '@/lib/db/search';
+import { getEditorPreferences } from '@/lib/db/profile';
 
 export default async function CollectionsPage() {
   const session = await auth();
   if (!session?.user?.id) redirect('/sign-in');
 
   const userId = session.user.id;
-  const [itemTypes, sidebarCollections, userCollections, searchData, collections] = await Promise.all([
+  const [itemTypes, sidebarCollections, userCollections, searchData, editorPreferences, collections] = await Promise.all([
     getItemTypesWithCounts(userId),
     getSidebarCollections(userId),
     getUserCollections(userId),
     getSearchData(userId),
+    getEditorPreferences(userId),
     getAllCollections(userId),
   ]);
 
@@ -26,6 +28,7 @@ export default async function CollectionsPage() {
       userCollections={userCollections}
       searchData={searchData}
       user={session.user}
+      editorPreferences={editorPreferences}
     >
       <div className="p-6 space-y-6">
         <div className="flex items-center gap-3">

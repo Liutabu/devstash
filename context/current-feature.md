@@ -1,11 +1,27 @@
-# Current Feature
+# Current Feature: Editor Preferences Settings
 
 ## Status
-Not Started
+In Progress
 
 ## Goals
 
+- Add font size dropdown to editor preferences
+- Add tab size dropdown to editor preferences
+- Add word wrap toggle (default: on)
+- Add minimap toggle (default: off)
+- Add theme dropdown: vs-dark, monokai, github-dark (default: vs-dark)
+- Store preferences in JSON column `editorPreferences` on User model (via migration)
+- Create server action to update preferences
+- Apply settings to Monaco editor (`CodeEditor` component)
+- Auto-save on change with success toast (no save button)
+- Create `EditorPreferencesContext` for client components
+
 ## Notes
+
+- Never use `prisma db push` — always `prisma migrate dev`
+- Settings live on the existing `/settings` page
+- The Monaco editor is at `src/components/ui/CodeEditor.tsx`
+- Supported themes: `vs-dark`, `monokai`, `github-dark`
 
 ## History
 

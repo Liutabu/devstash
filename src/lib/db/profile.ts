@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/prisma';
+import { DEFAULT_EDITOR_PREFERENCES, type EditorPreferences } from '@/lib/editor-preferences';
 
 export interface ItemTypeCount {
   name: string;
@@ -17,6 +18,17 @@ export interface ProfileData {
   totalItems: number;
   totalCollections: number;
   itemTypeCounts: ItemTypeCount[];
+}
+
+export async function getEditorPreferences(userId: string): Promise<EditorPreferences> {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { editorPreferences: true },
+  });
+  return {
+    ...DEFAULT_EDITOR_PREFERENCES,
+    ...((user?.editorPreferences as Partial<EditorPreferences> | null) ?? {}),
+  };
 }
 
 export async function getProfileData(userId: string): Promise<ProfileData | null> {

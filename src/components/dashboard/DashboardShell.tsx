@@ -12,6 +12,8 @@ import { ItemDrawerProvider } from '@/components/items/ItemDrawerProvider';
 import { CreateItemDialog } from '@/components/items/CreateItemDialog';
 import { CreateCollectionDialog } from '@/components/collections/CreateCollectionDialog';
 import { CommandPalette } from '@/components/search/CommandPalette';
+import { EditorPreferencesProvider } from '@/components/ui/EditorPreferencesContext';
+import { DEFAULT_EDITOR_PREFERENCES, type EditorPreferences } from '@/lib/editor-preferences';
 
 interface SidebarUser {
   name?: string | null;
@@ -26,9 +28,10 @@ interface DashboardShellProps {
   userCollections: UserCollectionOption[];
   searchData: SearchData;
   user: SidebarUser;
+  editorPreferences?: EditorPreferences;
 }
 
-export function DashboardShell({ children, itemTypes, sidebarCollections, userCollections, searchData, user }: DashboardShellProps) {
+export function DashboardShell({ children, itemTypes, sidebarCollections, userCollections, searchData, user, editorPreferences }: DashboardShellProps) {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
@@ -53,6 +56,7 @@ export function DashboardShell({ children, itemTypes, sidebarCollections, userCo
   }
 
   return (
+    <EditorPreferencesProvider initialPreferences={editorPreferences ?? DEFAULT_EDITOR_PREFERENCES}>
     <DashboardContext value={{ openCreate }}>
     <div className="flex h-full flex-col" suppressHydrationWarning>
       <TopBar
@@ -112,5 +116,6 @@ export function DashboardShell({ children, itemTypes, sidebarCollections, userCo
       </div>
     </div>
     </DashboardContext>
+    </EditorPreferencesProvider>
   );
 }

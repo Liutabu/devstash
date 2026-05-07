@@ -1,9 +1,11 @@
 'use client';
 
 import { useState, useRef } from 'react';
-import Editor, { type OnMount } from '@monaco-editor/react';
+import Editor, { type OnMount, type BeforeMount } from '@monaco-editor/react';
 import { Copy } from 'lucide-react';
 import { toast } from 'sonner';
+import { useEditorPreferences } from './EditorPreferencesContext';
+import { MONACO_THEMES } from '@/lib/monaco-themes';
 
 interface CodeEditorProps {
   value: string;
@@ -18,6 +20,13 @@ const MAX_HEIGHT = 400;
 export function CodeEditor({ value, onChange, language, readOnly = false }: CodeEditorProps) {
   const [editorHeight, setEditorHeight] = useState(MIN_HEIGHT);
   const editorRef = useRef<Parameters<OnMount>[0] | null>(null);
+  const { preferences } = useEditorPreferences();
+
+  const handleBeforeMount: BeforeMount = (monaco) => {
+    for (const [name, data] of Object.entries(MONACO_THEMES)) {
+      monaco.editor.defineTheme(name, data);
+    }
+  };
 
   const handleMount: OnMount = (editor) => {
     editorRef.current = editor;
@@ -74,17 +83,17 @@ export function CodeEditor({ value, onChange, language, readOnly = false }: Code
       <Editor
         value={value}
         language={displayLanguage}
-        theme="vs-dark"
+        theme={preferences.theme}
         height={editorHeight}
         options={{
           readOnly,
-          minimap: { enabled: false },
+          minimap: { enabled: preferences.minimap },
           lineNumbers: 'off',
           folding: false,
-          wordWrap: 'on',
+          wordWrap: preferences.wordWrap ? 'on' : 'off',
           scrollBeyondLastLine: false,
           automaticLayout: true,
-          fontSize: 13,
+          fontSize: preferences.fontSize,
           fontFamily: '"Geist Mono", Consolas, "Courier New", monospace',
           padding: { top: 12, bottom: 12 },
           overviewRulerBorder: false,
@@ -99,8 +108,9 @@ export function CodeEditor({ value, onChange, language, readOnly = false }: Code
             useShadows: false,
           },
           contextmenu: false,
-          tabSize: 2,
+          tabSize: preferences.tabSize,
         }}
+        beforeMount={handleBeforeMount}
         onMount={handleMount}
         onChange={(val) => onChange?.(val ?? '')}
       />

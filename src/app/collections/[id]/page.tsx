@@ -9,6 +9,7 @@ import { Pagination } from '@/components/ui/Pagination';
 import { getItemTypesWithCounts, getItemsByCollectionId } from '@/lib/db/items';
 import { getSidebarCollections, getUserCollections, getCollectionById } from '@/lib/db/collections';
 import { getSearchData } from '@/lib/db/search';
+import { getEditorPreferences } from '@/lib/db/profile';
 import { COLLECTIONS_PER_PAGE } from '@/lib/constants';
 
 interface CollectionPageProps {
@@ -25,11 +26,12 @@ export default async function CollectionPage({ params, searchParams }: Collectio
   if (!session?.user?.id) redirect('/sign-in');
 
   const userId = session.user.id;
-  const [itemTypes, sidebarCollections, userCollections, searchData, collection, collectionResult] = await Promise.all([
+  const [itemTypes, sidebarCollections, userCollections, searchData, editorPreferences, collection, collectionResult] = await Promise.all([
     getItemTypesWithCounts(userId),
     getSidebarCollections(userId),
     getUserCollections(userId),
     getSearchData(userId),
+    getEditorPreferences(userId),
     getCollectionById(id, userId),
     getItemsByCollectionId(id, userId, page),
   ]);
@@ -52,6 +54,7 @@ export default async function CollectionPage({ params, searchParams }: Collectio
       userCollections={userCollections}
       searchData={searchData}
       user={session.user}
+      editorPreferences={editorPreferences}
     >
       <div className="p-6 space-y-6">
         {/* Header */}

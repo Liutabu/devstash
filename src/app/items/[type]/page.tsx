@@ -9,6 +9,7 @@ import { Pagination } from '@/components/ui/Pagination';
 import { getItemsByType, getItemTypesWithCounts } from '@/lib/db/items';
 import { getSidebarCollections, getUserCollections } from '@/lib/db/collections';
 import { getSearchData } from '@/lib/db/search';
+import { getEditorPreferences } from '@/lib/db/profile';
 import { ITEMS_PER_PAGE } from '@/lib/constants';
 
 interface ItemsPageProps {
@@ -25,11 +26,12 @@ export default async function ItemsPage({ params, searchParams }: ItemsPageProps
   if (!session?.user?.id) redirect('/sign-in');
 
   const userId = session.user.id;
-  const [itemTypes, sidebarCollections, userCollections, searchData, result] = await Promise.all([
+  const [itemTypes, sidebarCollections, userCollections, searchData, editorPreferences, result] = await Promise.all([
     getItemTypesWithCounts(userId),
     getSidebarCollections(userId),
     getUserCollections(userId),
     getSearchData(userId),
+    getEditorPreferences(userId),
     getItemsByType(type, userId, page),
   ]);
 
@@ -40,7 +42,7 @@ export default async function ItemsPage({ params, searchParams }: ItemsPageProps
   const totalPages = Math.ceil(total / ITEMS_PER_PAGE);
 
   return (
-    <DashboardShell itemTypes={itemTypes} sidebarCollections={sidebarCollections} userCollections={userCollections} searchData={searchData} user={user}>
+    <DashboardShell itemTypes={itemTypes} sidebarCollections={sidebarCollections} userCollections={userCollections} searchData={searchData} user={user} editorPreferences={editorPreferences}>
       <div className="p-6 space-y-6">
         <div className="flex items-center gap-3">
           <div className="h-5 w-1 rounded-full" style={{ backgroundColor: typeColor }} />

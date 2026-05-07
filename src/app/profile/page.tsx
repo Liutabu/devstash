@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { auth } from '@/auth';
-import { getProfileData } from '@/lib/db/profile';
+import { getProfileData, getEditorPreferences } from '@/lib/db/profile';
 import { getSidebarCollections, getUserCollections } from '@/lib/db/collections';
 import { getItemTypesWithCounts } from '@/lib/db/items';
 import { getSearchData } from '@/lib/db/search';
@@ -14,11 +14,12 @@ export default async function ProfilePage() {
   if (!session?.user?.id) redirect('/sign-in');
 
   const userId = session.user.id;
-  const [itemTypes, sidebarCollections, userCollections, searchData, profile] = await Promise.all([
+  const [itemTypes, sidebarCollections, userCollections, searchData, editorPreferences, profile] = await Promise.all([
     getItemTypesWithCounts(userId),
     getSidebarCollections(userId),
     getUserCollections(userId),
     getSearchData(userId),
+    getEditorPreferences(userId),
     getProfileData(userId),
   ]);
 
@@ -37,6 +38,7 @@ export default async function ProfilePage() {
       userCollections={userCollections}
       searchData={searchData}
       user={session.user}
+      editorPreferences={editorPreferences}
     >
       <div className="mx-auto max-w-2xl px-4 py-8 space-y-8">
         <h1 className="text-2xl font-semibold tracking-tight">Profile</h1>
