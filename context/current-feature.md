@@ -345,3 +345,10 @@ Not Started
 - Updated `src/app/items/[type]/page.tsx` — reads `?page=` from `searchParams`, passes to `getItemsByType`, shows total item count, renders `<Pagination>` below each grid/list
 - Updated `src/app/collections/[id]/page.tsx` — same pattern with `COLLECTIONS_PER_PAGE`; item count in header shows total across all pages
 - Updated tests: added `count` mock to Prisma item mock, updated `getItemsByType` tests to assert `total`, updated `getItemsByCollectionId` tests for new `{ items, total }` return shape
+
+### 2026-05-07 — Settings Page
+- Created `src/app/settings/page.tsx` — protected page using `DashboardShell`; hosts Change Password (email users only) and Danger Zone (delete account) sections; reads `?error=` / `?success=` params for form feedback
+- Updated `src/actions/profile.ts` — all `changePasswordAction` redirects changed from `/profile?…` to `/settings?…` so feedback banners work correctly on the settings page
+- Updated `src/components/dashboard/Sidebar.tsx` — added "Settings" link (with `Settings` icon) to the user dropdown between Profile and Sign out
+- Updated `src/proxy.ts` — added `/settings` to `PROTECTED_PREFIXES` and `/settings`/`/settings/:path*` to the middleware matcher
+- Updated `src/app/profile/page.tsx` — removed Change Password and Danger Zone sections; converted to use `DashboardShell` (was standalone layout, so sidebar was missing); added a link to `/settings` for account actions
