@@ -5,6 +5,7 @@ vi.mock('@/lib/prisma', () => ({
     item: {
       findFirst: vi.fn(),
       findMany: vi.fn(),
+      count: vi.fn(),
       delete: vi.fn(),
     },
     itemType: {
@@ -22,6 +23,7 @@ const { prisma } = await import('@/lib/prisma');
 const { deleteFromR2 } = await import('@/lib/r2');
 const findFirst = vi.mocked(prisma.item.findFirst);
 const findMany = vi.mocked(prisma.item.findMany);
+const itemCount = vi.mocked(prisma.item.count);
 const itemDelete = vi.mocked(prisma.item.delete);
 const itemTypeFindFirst = vi.mocked(prisma.itemType.findFirst);
 const mockDeleteFromR2 = vi.mocked(deleteFromR2);
@@ -151,6 +153,7 @@ describe('getItemsByType', () => {
   it('strips trailing s from slug when querying item type', async () => {
     itemTypeFindFirst.mockResolvedValue(baseItemType);
     findMany.mockResolvedValue([]);
+    itemCount.mockResolvedValue(0);
     await getItemsByType('snippets', 'user-1');
     expect(itemTypeFindFirst).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -159,20 +162,23 @@ describe('getItemsByType', () => {
     );
   });
 
-  it('returns typeId, typeName, and typeColor from the item type', async () => {
+  it('returns typeId, typeName, typeColor, and total from the item type', async () => {
     itemTypeFindFirst.mockResolvedValue(baseItemType);
     findMany.mockResolvedValue([]);
+    itemCount.mockResolvedValue(42);
     const result = await getItemsByType('snippets', 'user-1');
     expect(result).toMatchObject({
       typeId: 'type-snippet',
       typeName: 'Snippet',
       typeColor: '#3b82f6',
+      total: 42,
     });
   });
 
   it('scopes item query to the resolved typeId and userId', async () => {
     itemTypeFindFirst.mockResolvedValue(baseItemType);
     findMany.mockResolvedValue([]);
+    itemCount.mockResolvedValue(0);
     await getItemsByType('snippets', 'user-42');
     expect(findMany).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -184,6 +190,7 @@ describe('getItemsByType', () => {
   it('maps returned items into the result', async () => {
     itemTypeFindFirst.mockResolvedValue(baseItemType);
     findMany.mockResolvedValue([baseRowItem]);
+    itemCount.mockResolvedValue(1);
     const result = await getItemsByType('snippets', 'user-1');
     expect(result?.items).toHaveLength(1);
     expect(result?.items[0]).toMatchObject({ id: 'item-1', title: 'My Snippet' });
@@ -227,6 +234,7 @@ describe('deleteItem', () => {
 describe('getItemsByCollectionId', () => {
   it('scopes query to userId and collectionId', async () => {
     findMany.mockResolvedValue([]);
+    itemCount.mockResolvedValue(0);
     await getItemsByCollectionId('col-1', 'user-42');
     expect(findMany).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -235,16 +243,20 @@ describe('getItemsByCollectionId', () => {
     );
   });
 
-  it('maps returned items into ItemRowData', async () => {
+  it('maps returned items into ItemRowData and returns total', async () => {
     findMany.mockResolvedValue([baseRowItem]);
+    itemCount.mockResolvedValue(5);
     const result = await getItemsByCollectionId('col-1', 'user-1');
-    expect(result).toHaveLength(1);
-    expect(result[0]).toMatchObject({ id: 'item-1', title: 'My Snippet' });
+    expect(result.items).toHaveLength(1);
+    expect(result.items[0]).toMatchObject({ id: 'item-1', title: 'My Snippet' });
+    expect(result.total).toBe(5);
   });
 
-  it('returns empty array when no items in collection', async () => {
+  it('returns empty items array when no items in collection', async () => {
     findMany.mockResolvedValue([]);
+    itemCount.mockResolvedValue(0);
     const result = await getItemsByCollectionId('col-1', 'user-1');
-    expect(result).toEqual([]);
+    expect(result.items).toEqual([]);
+    expect(result.total).toBe(0);
   });
 });
