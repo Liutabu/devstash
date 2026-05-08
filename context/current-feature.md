@@ -1,26 +1,11 @@
-# Current Feature: Favorites Page
+# Current Feature
 
 ## Status
-In Progress
+Not Started
 
 ## Goals
 
-- Add star icon button to TopBar linking to `/favorites`
-- Create `/favorites` route with auth protection
-- Fetch all user favorited items and collections from DB
-- Compact, high-density list view (VS Code/terminal style — no cards)
-- Each row: type icon, title, type badge, date
-- Separate sections for Items and Collections with counts
-- Click item opens ItemDrawer; click collection navigates to `/collections/[id]`
-- Empty state when no favorites exist
-- Sort by most recently favorited (`updatedAt`)
-
 ## Notes
-
-- UI style: monospace/semi-monospace font, minimal padding, subtle hover states, no heavy borders
-- Reuse `DashboardShell` for layout consistency
-- Reuse `ItemDrawerProvider` / `useItemDrawer()` for item click behavior
-- No new DB writes needed — items/collections already have `isFavorite` boolean
 
 ## History
 
@@ -381,3 +366,11 @@ In Progress
 - Updated all 6 `DashboardShell` pages (dashboard, items/[type], collections, collections/[id], profile, settings) — added `getEditorPreferences(userId)` to parallel fetches and passed to shell
 - Added `EditorPreferencesSection` to `/settings` page above Change Password
 - Added 6 unit tests in `src/actions/profile.test.ts` covering unauthorized, invalid fontSize, invalid theme, success, monokai, and github-dark paths
+
+### 2026-05-08 — Favorites Page
+- Added `getFavoriteItems(userId)` to `src/lib/db/items.ts` — fetches items where `isFavorite: true`, ordered by `updatedAt desc`
+- Added `FavoriteCollectionData` interface + `getFavoriteCollections(userId)` to `src/lib/db/collections.ts` — fetches favorite collections with dominant color computation, ordered by `updatedAt desc`
+- Updated `src/proxy.ts` — added `/favorites` to `PROTECTED_PREFIXES` and middleware matcher
+- Updated `src/components/dashboard/TopBar.tsx` — added `Star` icon link to `/favorites` in the actions bar
+- Created `src/components/favorites/FavoriteItemRow.tsx` — `'use client'` component using `drawer?.open(itemId)`; shows colored type icon, title, type badge, and date in monospace compact style
+- Created `src/app/favorites/page.tsx` — async server component with two sections (Items + Collections with counts), empty state with star icon, monospace/high-density list rows; collection rows are plain `<Link>` with colored dot, name, item count badge, and date
