@@ -1,4 +1,4 @@
-import { Search, Plus, PanelLeft, Menu } from "lucide-react";
+import { Search, Plus, PanelLeft, Menu, Star } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
@@ -56,6 +56,13 @@ export function TopBar({ onToggleSidebar, onMobileMenuClick, onNewItem, onNewCol
 
       {/* Actions */}
       <div className="ml-auto flex items-center gap-2">
+        <Link
+          href="/favorites"
+          className="inline-flex items-center justify-center h-8 w-8 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+          title="Favorites"
+        >
+          <Star className="h-4 w-4" />
+        </Link>
         <Button variant="outline" size="sm" className="hidden sm:flex" onClick={onNewCollection}>
           New Collection
         </Button>

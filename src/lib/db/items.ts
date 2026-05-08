@@ -75,6 +75,15 @@ function mapItem(item: {
   };
 }
 
+export async function getFavoriteItems(userId: string): Promise<ItemRowData[]> {
+  const items = await prisma.item.findMany({
+    where: { isFavorite: true, userId },
+    orderBy: { updatedAt: 'desc' },
+    ...itemWithTypeAndTags,
+  });
+  return items.map(mapItem);
+}
+
 export async function getPinnedItems(userId: string): Promise<ItemRowData[]> {
   const items = await prisma.item.findMany({
     take: 50,
