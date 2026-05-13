@@ -8,6 +8,7 @@ vi.mock('@/lib/db/items', () => ({
   createItem: vi.fn(),
   updateItem: vi.fn(),
   deleteItem: vi.fn(),
+  toggleItemFavorite: vi.fn(),
 }));
 
 vi.mock('@/lib/prisma', () => ({
@@ -16,15 +17,16 @@ vi.mock('@/lib/prisma', () => ({
   },
 }));
 
-import { createItemAction, updateItemAction, deleteItemAction } from './items';
+import { createItemAction, updateItemAction, deleteItemAction, toggleItemFavoriteAction } from './items';
 import { auth } from '@/auth';
-import { createItem, updateItem, deleteItem } from '@/lib/db/items';
+import { createItem, updateItem, deleteItem, toggleItemFavorite } from '@/lib/db/items';
 import { prisma } from '@/lib/prisma';
 
 const mockAuth = vi.mocked(auth);
 const mockCreateItem = vi.mocked(createItem);
 const mockUpdateItem = vi.mocked(updateItem);
 const mockDeleteItem = vi.mocked(deleteItem);
+const mockToggleItemFavorite = vi.mocked(toggleItemFavorite);
 const mockFindFirstItemType = vi.mocked(prisma.itemType.findFirst);
 
 const validInput = {
@@ -287,5 +289,29 @@ describe('deleteItemAction', () => {
     const result = await deleteItemAction('item-1');
     expect(result).toEqual({ success: true });
     expect(mockDeleteItem).toHaveBeenCalledWith('item-1', 'user-1');
+  });
+});
+
+describe('toggleItemFavoriteAction', () => {
+  it('returns unauthorized when no session', async () => {
+    mockAuth.mockResolvedValue(null as never);
+    const result = await toggleItemFavoriteAction('item-1');
+    expect(result).toEqual({ success: false, error: 'Unauthorized' });
+    expect(mockToggleItemFavorite).not.toHaveBeenCalled();
+  });
+
+  it('returns item not found when toggleItemFavorite returns null', async () => {
+    mockAuth.mockResolvedValue({ user: { id: 'user-1' } } as never);
+    mockToggleItemFavorite.mockResolvedValue(null);
+    const result = await toggleItemFavoriteAction('item-1');
+    expect(result).toEqual({ success: false, error: 'Item not found' });
+  });
+
+  it('returns success with new isFavorite value', async () => {
+    mockAuth.mockResolvedValue({ user: { id: 'user-1' } } as never);
+    mockToggleItemFavorite.mockResolvedValue(true);
+    const result = await toggleItemFavoriteAction('item-1');
+    expect(result).toEqual({ success: true, data: { isFavorite: true } });
+    expect(mockToggleItemFavorite).toHaveBeenCalledWith('item-1', 'user-1');
   });
 });

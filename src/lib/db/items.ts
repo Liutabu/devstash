@@ -379,6 +379,17 @@ export async function createItem(
   return mapItemDetail(item);
 }
 
+export async function toggleItemFavorite(id: string, userId: string): Promise<boolean | null> {
+  const existing = await prisma.item.findFirst({ where: { id, userId }, select: { id: true, isFavorite: true } });
+  if (!existing) return null;
+  const updated = await prisma.item.update({
+    where: { id },
+    data: { isFavorite: !existing.isFavorite },
+    select: { isFavorite: true },
+  });
+  return updated.isFavorite;
+}
+
 export async function deleteItem(id: string, userId: string): Promise<boolean> {
   const existing = await prisma.item.findFirst({ where: { id, userId } });
   if (!existing) return false;

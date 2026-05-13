@@ -21,7 +21,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { EditCollectionDialog } from '@/components/collections/EditCollectionDialog';
-import { deleteCollectionAction } from '@/actions/collections';
+import { deleteCollectionAction, toggleCollectionFavoriteAction } from '@/actions/collections';
 import { ITEM_TYPE_ICON_MAP } from '@/lib/item-type-icons';
 
 interface Collection {
@@ -43,8 +43,23 @@ export function CollectionCard({ collection }: CollectionCardProps) {
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [favoriting, setFavoriting] = useState(false);
   const [localName, setLocalName] = useState(collection.name);
   const [localDescription, setLocalDescription] = useState(collection.description);
+  const [localIsFavorite, setLocalIsFavorite] = useState(collection.isFavorite);
+
+  async function handleFavorite() {
+    setFavoriting(true);
+    const result = await toggleCollectionFavoriteAction(collection.id);
+    setFavoriting(false);
+    if (!result.success) {
+      toast.error(result.error || 'Failed to update favorite');
+      return;
+    }
+    setLocalIsFavorite(result.data.isFavorite);
+    toast.success(result.data.isFavorite ? 'Added to favorites' : 'Removed from favorites');
+    router.refresh();
+  }
 
   async function handleDelete() {
     setDeleting(true);
@@ -71,7 +86,7 @@ export function CollectionCard({ collection }: CollectionCardProps) {
           <div className="min-w-0">
             <div className="flex items-center gap-1.5 mb-0.5">
               <span className="text-sm font-medium truncate">{localName}</span>
-              {collection.isFavorite && (
+              {localIsFavorite && (
                 <Star className="h-3.5 w-3.5 shrink-0 fill-yellow-400 text-yellow-400" />
               )}
             </div>
@@ -99,9 +114,9 @@ export function CollectionCard({ collection }: CollectionCardProps) {
                   <Trash2 className="h-3.5 w-3.5 mr-2" />
                   Delete
                 </DropdownMenuItem>
-                <DropdownMenuItem disabled>
-                  <Star className="h-3.5 w-3.5 mr-2" />
-                  Favorite
+                <DropdownMenuItem onClick={handleFavorite} disabled={favoriting}>
+                  <Star className={`h-3.5 w-3.5 mr-2 ${localIsFavorite ? 'fill-yellow-400 text-yellow-400' : ''}`} />
+                  {localIsFavorite ? 'Unfavorite' : 'Favorite'}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

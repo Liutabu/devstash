@@ -3,7 +3,7 @@
 import { z } from 'zod';
 import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
-import { createItem, updateItem, deleteItem } from '@/lib/db/items';
+import { createItem, updateItem, deleteItem, toggleItemFavorite } from '@/lib/db/items';
 import type { ItemDetail } from '@/lib/db/items';
 
 const UpdateItemSchema = z.object({
@@ -112,4 +112,18 @@ export async function deleteItemAction(itemId: string): Promise<DeleteItemResult
   if (!deleted) return { success: false, error: 'Item not found' };
 
   return { success: true };
+}
+
+type ToggleItemFavoriteResult =
+  | { success: true; data: { isFavorite: boolean } }
+  | { success: false; error: string };
+
+export async function toggleItemFavoriteAction(itemId: string): Promise<ToggleItemFavoriteResult> {
+  const session = await auth();
+  if (!session?.user?.id) return { success: false, error: 'Unauthorized' };
+
+  const isFavorite = await toggleItemFavorite(itemId, session.user.id);
+  if (isFavorite === null) return { success: false, error: 'Item not found' };
+
+  return { success: true, data: { isFavorite } };
 }
