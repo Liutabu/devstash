@@ -1,25 +1,11 @@
-# Current Feature: Favorite Toggle
+# Current Feature
 
 ## Status
-In Progress
+Not Started
 
 ## Goals
 
-- Wire up the Favorite button in the item drawer (currently disabled/Coming soon) to toggle `isFavorite` on an item
-- Wire up the Favorite action in the collection card dropdown (currently disabled) to toggle `isFavorite` on a collection
-- Wire up the Favorite button in the collection detail page header (currently a disabled placeholder) to toggle `isFavorite` on a collection
-- Add `toggleItemFavorite(id, userId)` DB helper and `toggleItemFavoriteAction` server action
-- Add `toggleCollectionFavorite(id, userId)` DB helper and `toggleCollectionFavoriteAction` server action
-- UI updates optimistically or via `router.refresh()` after toggle; toast on success/error
-- Write unit tests for both server actions
-
 ## Notes
-
-- Item drawer Favorite button is in `src/components/items/ItemDrawer.tsx` — currently `<ActionButton disabled title="Coming soon">`
-- Collection card Favorite dropdown item is in `src/components/dashboard/CollectionCard.tsx` — currently a disabled menu item
-- Collection detail Favorite button is in `src/components/collections/CollectionDetailActions.tsx` — currently a disabled `<button>`
-- The favorites page at `/favorites` already reads `isFavorite` from DB — toggling should cause it to appear/disappear there on refresh
-- The sidebar shows favorite collections — toggling should update sidebar on next navigation/refresh
 
 ## History
 
@@ -388,3 +374,13 @@ In Progress
 - Updated `src/components/dashboard/TopBar.tsx` — added `Star` icon link to `/favorites` in the actions bar
 - Created `src/components/favorites/FavoriteItemRow.tsx` — `'use client'` component using `drawer?.open(itemId)`; shows colored type icon, title, type badge, and date in monospace compact style
 - Created `src/app/favorites/page.tsx` — async server component with two sections (Items + Collections with counts), empty state with star icon, monospace/high-density list rows; collection rows are plain `<Link>` with colored dot, name, item count badge, and date
+
+### 2026-05-13 — Favorite Toggle
+- Added `toggleItemFavorite(id, userId)` to `src/lib/db/items.ts` — ownership-checked, flips `isFavorite` and returns new value
+- Added `toggleCollectionFavorite(id, userId)` to `src/lib/db/collections.ts` — same pattern for collections
+- Added `toggleItemFavoriteAction` to `src/actions/items.ts` — auth-gated, `{ success, data: { isFavorite } }` return pattern
+- Added `toggleCollectionFavoriteAction` to `src/actions/collections.ts` — same pattern
+- Updated `src/components/items/ItemDrawer.tsx` — Favorite button now live; calls action, updates drawer via `onUpdate`, refreshes router
+- Updated `src/components/dashboard/CollectionCard.tsx` — Favorite dropdown item now live; uses `localIsFavorite` state for immediate star update
+- Updated `src/components/collections/CollectionDetailActions.tsx` — Favorite button now live; filled yellow when active, disabled while in-flight
+- Added 6 unit tests: `toggleItemFavoriteAction` (unauthorized, not found, success) and `toggleCollectionFavoriteAction` (unauthorized, not found, success)
