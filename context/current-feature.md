@@ -1,11 +1,25 @@
-# Current Feature
+# Current Feature: Favorite Toggle
 
 ## Status
-Not Started
+In Progress
 
 ## Goals
 
+- Wire up the Favorite button in the item drawer (currently disabled/Coming soon) to toggle `isFavorite` on an item
+- Wire up the Favorite action in the collection card dropdown (currently disabled) to toggle `isFavorite` on a collection
+- Wire up the Favorite button in the collection detail page header (currently a disabled placeholder) to toggle `isFavorite` on a collection
+- Add `toggleItemFavorite(id, userId)` DB helper and `toggleItemFavoriteAction` server action
+- Add `toggleCollectionFavorite(id, userId)` DB helper and `toggleCollectionFavoriteAction` server action
+- UI updates optimistically or via `router.refresh()` after toggle; toast on success/error
+- Write unit tests for both server actions
+
 ## Notes
+
+- Item drawer Favorite button is in `src/components/items/ItemDrawer.tsx` — currently `<ActionButton disabled title="Coming soon">`
+- Collection card Favorite dropdown item is in `src/components/dashboard/CollectionCard.tsx` — currently a disabled menu item
+- Collection detail Favorite button is in `src/components/collections/CollectionDetailActions.tsx` — currently a disabled `<button>`
+- The favorites page at `/favorites` already reads `isFavorite` from DB — toggling should cause it to appear/disappear there on refresh
+- The sidebar shows favorite collections — toggling should update sidebar on next navigation/refresh
 
 ## History
 

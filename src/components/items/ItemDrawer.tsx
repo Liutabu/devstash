@@ -19,7 +19,7 @@ import {
 import { ITEM_TYPE_ICON_MAP } from '@/lib/item-type-icons';
 import { CodeEditor } from '@/components/ui/CodeEditor';
 import { MarkdownEditor } from '@/components/ui/MarkdownEditor';
-import { updateItemAction, deleteItemAction } from '@/actions/items';
+import { updateItemAction, deleteItemAction, toggleItemFavoriteAction } from '@/actions/items';
 import { formatBytes } from '@/lib/format';
 import { CollectionPicker } from '@/components/ui/CollectionPicker';
 import type { UserCollectionOption } from '@/lib/db/collections';
@@ -112,6 +112,7 @@ function DrawerBody({ detail, onUpdate, onDelete, userCollections }: DrawerBodyP
 
   const [isEditing, setIsEditing] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [favoriting, setFavoriting] = useState(false);
   const [editState, setEditState] = useState<EditState>({
     title: '', description: '', content: '', url: '', language: '', tagsInput: '', collectionIds: [],
   });
@@ -131,6 +132,22 @@ function DrawerBody({ detail, onUpdate, onDelete, userCollections }: DrawerBodyP
   const updatedAt = new Date(detail.updatedAt).toLocaleDateString('en-US', {
     month: 'long', day: 'numeric', year: 'numeric',
   });
+
+  async function handleFavorite() {
+    setFavoriting(true);
+    try {
+      const result = await toggleItemFavoriteAction(detail.id);
+      if (!result.success) {
+        toast.error(result.error);
+        return;
+      }
+      onUpdate({ ...detail, isFavorite: result.data.isFavorite });
+      toast.success(result.data.isFavorite ? 'Added to favorites' : 'Removed from favorites');
+      router.refresh();
+    } finally {
+      setFavoriting(false);
+    }
+  }
 
   function handleCopy() {
     const text = detail.content ?? detail.url ?? detail.title;
@@ -270,7 +287,11 @@ function DrawerBody({ detail, onUpdate, onDelete, userCollections }: DrawerBodyP
           </div>
         ) : (
           <div className="flex items-center gap-0.5">
-            <ActionButton onClick={undefined} disabled title="Coming soon">
+            <ActionButton
+              onClick={handleFavorite}
+              disabled={favoriting}
+              title={detail.isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+            >
               <Star className={`h-3.5 w-3.5 ${detail.isFavorite ? 'fill-yellow-400 text-yellow-400' : ''}`} />
               Favorite
             </ActionButton>

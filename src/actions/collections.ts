@@ -2,7 +2,7 @@
 
 import { z } from 'zod';
 import { auth } from '@/auth';
-import { createCollection, updateCollection, deleteCollection } from '@/lib/db/collections';
+import { createCollection, updateCollection, deleteCollection, toggleCollectionFavorite } from '@/lib/db/collections';
 import type { CollectionDetail } from '@/lib/db/collections';
 
 const CreateCollectionSchema = z.object({
@@ -78,5 +78,24 @@ export async function deleteCollectionAction(id: string): Promise<DeleteCollecti
     return { success: true };
   } catch {
     return { success: false, error: 'Failed to delete collection' };
+  }
+}
+
+type ToggleCollectionFavoriteResult =
+  | { success: true; data: { isFavorite: boolean } }
+  | { success: false; error: string };
+
+export async function toggleCollectionFavoriteAction(
+  collectionId: string,
+): Promise<ToggleCollectionFavoriteResult> {
+  const session = await auth();
+  if (!session?.user?.id) return { success: false, error: 'Unauthorized' };
+
+  try {
+    const isFavorite = await toggleCollectionFavorite(collectionId, session.user.id);
+    if (isFavorite === null) return { success: false, error: 'Collection not found' };
+    return { success: true, data: { isFavorite } };
+  } catch {
+    return { success: false, error: 'Failed to update favorite' };
   }
 }

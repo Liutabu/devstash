@@ -8,16 +8,18 @@ vi.mock('@/lib/db/collections', () => ({
   createCollection: vi.fn(),
   updateCollection: vi.fn(),
   deleteCollection: vi.fn(),
+  toggleCollectionFavorite: vi.fn(),
 }));
 
-import { createCollectionAction, updateCollectionAction, deleteCollectionAction } from './collections';
+import { createCollectionAction, updateCollectionAction, deleteCollectionAction, toggleCollectionFavoriteAction } from './collections';
 import { auth } from '@/auth';
-import { createCollection, updateCollection, deleteCollection } from '@/lib/db/collections';
+import { createCollection, updateCollection, deleteCollection, toggleCollectionFavorite } from '@/lib/db/collections';
 
 const mockAuth = vi.mocked(auth);
 const mockCreateCollection = vi.mocked(createCollection);
 const mockUpdateCollection = vi.mocked(updateCollection);
 const mockDeleteCollection = vi.mocked(deleteCollection);
+const mockToggleCollectionFavorite = vi.mocked(toggleCollectionFavorite);
 
 const mockCollectionDetail = {
   id: 'col-1',
@@ -145,5 +147,29 @@ describe('deleteCollectionAction', () => {
     const result = await deleteCollectionAction('col-1');
     expect(result).toEqual({ success: true });
     expect(mockDeleteCollection).toHaveBeenCalledWith('col-1', 'user-1');
+  });
+});
+
+describe('toggleCollectionFavoriteAction', () => {
+  it('returns unauthorized when no session', async () => {
+    mockAuth.mockResolvedValue(null as never);
+    const result = await toggleCollectionFavoriteAction('col-1');
+    expect(result).toEqual({ success: false, error: 'Unauthorized' });
+    expect(mockToggleCollectionFavorite).not.toHaveBeenCalled();
+  });
+
+  it('returns not found when toggleCollectionFavorite returns null', async () => {
+    mockAuth.mockResolvedValue({ user: { id: 'user-1' } } as never);
+    mockToggleCollectionFavorite.mockResolvedValue(null);
+    const result = await toggleCollectionFavoriteAction('col-1');
+    expect(result).toEqual({ success: false, error: 'Collection not found' });
+  });
+
+  it('returns success with new isFavorite value', async () => {
+    mockAuth.mockResolvedValue({ user: { id: 'user-1' } } as never);
+    mockToggleCollectionFavorite.mockResolvedValue(true);
+    const result = await toggleCollectionFavoriteAction('col-1');
+    expect(result).toEqual({ success: true, data: { isFavorite: true } });
+    expect(mockToggleCollectionFavorite).toHaveBeenCalledWith('col-1', 'user-1');
   });
 });

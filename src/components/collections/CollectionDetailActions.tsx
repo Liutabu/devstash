@@ -16,7 +16,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { EditCollectionDialog } from '@/components/collections/EditCollectionDialog';
-import { deleteCollectionAction } from '@/actions/collections';
+import { deleteCollectionAction, toggleCollectionFavoriteAction } from '@/actions/collections';
 
 interface CollectionDetailActionsProps {
   collection: {
@@ -32,7 +32,22 @@ export function CollectionDetailActions({ collection }: CollectionDetailActionsP
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [favoriting, setFavoriting] = useState(false);
   const [localName, setLocalName] = useState(collection.name);
+  const [localIsFavorite, setLocalIsFavorite] = useState(collection.isFavorite);
+
+  async function handleFavorite() {
+    setFavoriting(true);
+    const result = await toggleCollectionFavoriteAction(collection.id);
+    setFavoriting(false);
+    if (!result.success) {
+      toast.error(result.error || 'Failed to update favorite');
+      return;
+    }
+    setLocalIsFavorite(result.data.isFavorite);
+    toast.success(result.data.isFavorite ? 'Added to favorites' : 'Removed from favorites');
+    router.refresh();
+  }
 
   async function handleDelete() {
     setDeleting(true);
@@ -54,11 +69,12 @@ export function CollectionDetailActions({ collection }: CollectionDetailActionsP
           type="button"
           variant="ghost"
           size="icon"
-          title="Favorite (coming soon)"
-          className="h-8 w-8 text-muted-foreground"
-          disabled
+          title={localIsFavorite ? 'Remove from favorites' : 'Add to favorites'}
+          className={`h-8 w-8 ${localIsFavorite ? 'text-yellow-400 hover:text-yellow-400' : 'text-muted-foreground hover:text-foreground'}`}
+          onClick={handleFavorite}
+          disabled={favoriting}
         >
-          <Star className="h-4 w-4" />
+          <Star className={`h-4 w-4 ${localIsFavorite ? 'fill-yellow-400' : ''}`} />
         </Button>
 
         <Button
