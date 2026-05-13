@@ -7,7 +7,8 @@ import { getFavoriteCollections, getSidebarCollections, getUserCollections } fro
 import { getSearchData } from '@/lib/db/search';
 import { getEditorPreferences } from '@/lib/db/profile';
 import { DashboardShell } from '@/components/dashboard/DashboardShell';
-import { FavoriteItemRow } from '@/components/favorites/FavoriteItemRow';
+import { FavoriteItemsList } from '@/components/favorites/FavoriteItemsList';
+import { FavoriteCollectionsList } from '@/components/favorites/FavoriteCollectionsList';
 
 export default async function FavoritesPage() {
   const session = await auth();
@@ -60,45 +61,10 @@ export default async function FavoritesPage() {
         ) : (
           <div className="space-y-6">
             {favoriteItems.length > 0 && (
-              <section>
-                <p className="mb-2 px-3 font-mono text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-                  Items ({favoriteItems.length})
-                </p>
-                <div className="divide-y divide-border overflow-hidden rounded-md border border-border">
-                  {favoriteItems.map((item) => (
-                    <FavoriteItemRow key={item.id} item={item} />
-                  ))}
-                </div>
-              </section>
+              <FavoriteItemsList items={favoriteItems} />
             )}
-
             {favoriteCollections.length > 0 && (
-              <section>
-                <p className="mb-2 px-3 font-mono text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-                  Collections ({favoriteCollections.length})
-                </p>
-                <div className="divide-y divide-border overflow-hidden rounded-md border border-border">
-                  {favoriteCollections.map((col) => (
-                    <Link
-                      key={col.id}
-                      href={`/collections/${col.id}`}
-                      className="flex items-center gap-3 px-3 py-2 hover:bg-muted/50 transition-colors"
-                    >
-                      <div
-                        className="h-4 w-4 shrink-0 rounded-full"
-                        style={{ backgroundColor: col.dominantColor }}
-                      />
-                      <span className="flex-1 truncate font-mono text-sm">{col.name}</span>
-                      <span className="shrink-0 rounded bg-muted px-1.5 py-0.5 font-mono text-xs text-muted-foreground">
-                        {col.itemCount} {col.itemCount === 1 ? 'item' : 'items'}
-                      </span>
-                      <span className="shrink-0 font-mono text-xs tabular-nums text-muted-foreground">
-                        {col.updatedAt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                      </span>
-                    </Link>
-                  ))}
-                </div>
-              </section>
+              <FavoriteCollectionsList collections={favoriteCollections} />
             )}
           </div>
         )}

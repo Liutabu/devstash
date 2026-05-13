@@ -1,11 +1,27 @@
-# Current Feature
+# Current Feature: Client-Side Sorting on Favorites Page
 
 ## Status
-Not Started
+In Progress
 
 ## Goals
 
+- Add a sort control to the favorites page (items and collections sections)
+- Support sorting by: Name (A→Z / Z→A), Date (newest / oldest), and Item Type
+- Sorting is client-side — no additional server fetches
+- Sort state persists within the page session (can reset on navigation)
+- Items and Collections have independent sort controls
+- **Items** sort options: Name (A→Z / Z→A), Date (newest / oldest), Item Type (A→Z)
+- **Collections** sort options: Name (A→Z / Z→A), Date (newest / oldest), Item Count (most / least)
+
 ## Notes
+
+- The favorites page is at `src/app/favorites/page.tsx` (server component)
+- Items are rendered via `FavoriteItemRow` (`src/components/favorites/FavoriteItemRow.tsx`)
+- Collections are plain `<Link>` rows in the page
+- Data is fetched server-side via `getFavoriteItems(userId)` and `getFavoriteCollections(userId)`
+- `FavoriteCollectionData` includes `itemCount` already — no DB changes needed
+- To add interactivity, extract two client wrapper components (one for items list, one for collections list) that hold sort state and render sorted rows
+- Item type sort uses the type name string (e.g. Command, Note, Prompt, Snippet…)
 
 ## History
 
