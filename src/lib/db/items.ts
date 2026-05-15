@@ -169,7 +169,7 @@ export async function getItemsByType(slug: string, userId: string, page = 1): Pr
   const [items, total] = await Promise.all([
     prisma.item.findMany({
       where,
-      orderBy: { createdAt: 'desc' },
+      orderBy: [{ isPinned: 'desc' }, { createdAt: 'desc' }],
       skip,
       take: ITEMS_PER_PAGE,
       ...itemWithTypeAndTags,
@@ -377,6 +377,17 @@ export async function createItem(
   });
 
   return mapItemDetail(item);
+}
+
+export async function toggleItemPin(id: string, userId: string): Promise<boolean | null> {
+  const existing = await prisma.item.findFirst({ where: { id, userId }, select: { id: true, isPinned: true } });
+  if (!existing) return null;
+  const updated = await prisma.item.update({
+    where: { id },
+    data: { isPinned: !existing.isPinned },
+    select: { isPinned: true },
+  });
+  return updated.isPinned;
 }
 
 export async function toggleItemFavorite(id: string, userId: string): Promise<boolean | null> {

@@ -9,6 +9,7 @@ vi.mock('@/lib/db/items', () => ({
   updateItem: vi.fn(),
   deleteItem: vi.fn(),
   toggleItemFavorite: vi.fn(),
+  toggleItemPin: vi.fn(),
 }));
 
 vi.mock('@/lib/prisma', () => ({
@@ -17,9 +18,9 @@ vi.mock('@/lib/prisma', () => ({
   },
 }));
 
-import { createItemAction, updateItemAction, deleteItemAction, toggleItemFavoriteAction } from './items';
+import { createItemAction, updateItemAction, deleteItemAction, toggleItemFavoriteAction, toggleItemPinAction } from './items';
 import { auth } from '@/auth';
-import { createItem, updateItem, deleteItem, toggleItemFavorite } from '@/lib/db/items';
+import { createItem, updateItem, deleteItem, toggleItemFavorite, toggleItemPin } from '@/lib/db/items';
 import { prisma } from '@/lib/prisma';
 
 const mockAuth = vi.mocked(auth);
@@ -27,6 +28,7 @@ const mockCreateItem = vi.mocked(createItem);
 const mockUpdateItem = vi.mocked(updateItem);
 const mockDeleteItem = vi.mocked(deleteItem);
 const mockToggleItemFavorite = vi.mocked(toggleItemFavorite);
+const mockToggleItemPin = vi.mocked(toggleItemPin);
 const mockFindFirstItemType = vi.mocked(prisma.itemType.findFirst);
 
 const validInput = {
@@ -313,5 +315,29 @@ describe('toggleItemFavoriteAction', () => {
     const result = await toggleItemFavoriteAction('item-1');
     expect(result).toEqual({ success: true, data: { isFavorite: true } });
     expect(mockToggleItemFavorite).toHaveBeenCalledWith('item-1', 'user-1');
+  });
+});
+
+describe('toggleItemPinAction', () => {
+  it('returns unauthorized when no session', async () => {
+    mockAuth.mockResolvedValue(null as never);
+    const result = await toggleItemPinAction('item-1');
+    expect(result).toEqual({ success: false, error: 'Unauthorized' });
+    expect(mockToggleItemPin).not.toHaveBeenCalled();
+  });
+
+  it('returns item not found when toggleItemPin returns null', async () => {
+    mockAuth.mockResolvedValue({ user: { id: 'user-1' } } as never);
+    mockToggleItemPin.mockResolvedValue(null);
+    const result = await toggleItemPinAction('item-1');
+    expect(result).toEqual({ success: false, error: 'Item not found' });
+  });
+
+  it('returns success with new isPinned value', async () => {
+    mockAuth.mockResolvedValue({ user: { id: 'user-1' } } as never);
+    mockToggleItemPin.mockResolvedValue(true);
+    const result = await toggleItemPinAction('item-1');
+    expect(result).toEqual({ success: true, data: { isPinned: true } });
+    expect(mockToggleItemPin).toHaveBeenCalledWith('item-1', 'user-1');
   });
 });

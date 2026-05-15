@@ -19,7 +19,7 @@ import {
 import { ITEM_TYPE_ICON_MAP } from '@/lib/item-type-icons';
 import { CodeEditor } from '@/components/ui/CodeEditor';
 import { MarkdownEditor } from '@/components/ui/MarkdownEditor';
-import { updateItemAction, deleteItemAction, toggleItemFavoriteAction } from '@/actions/items';
+import { updateItemAction, deleteItemAction, toggleItemFavoriteAction, toggleItemPinAction } from '@/actions/items';
 import { formatBytes } from '@/lib/format';
 import { CollectionPicker } from '@/components/ui/CollectionPicker';
 import type { UserCollectionOption } from '@/lib/db/collections';
@@ -113,6 +113,7 @@ function DrawerBody({ detail, onUpdate, onDelete, userCollections }: DrawerBodyP
   const [isEditing, setIsEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [favoriting, setFavoriting] = useState(false);
+  const [pinning, setPinning] = useState(false);
   const [editState, setEditState] = useState<EditState>({
     title: '', description: '', content: '', url: '', language: '', tagsInput: '', collectionIds: [],
   });
@@ -146,6 +147,22 @@ function DrawerBody({ detail, onUpdate, onDelete, userCollections }: DrawerBodyP
       router.refresh();
     } finally {
       setFavoriting(false);
+    }
+  }
+
+  async function handlePin() {
+    setPinning(true);
+    try {
+      const result = await toggleItemPinAction(detail.id);
+      if (!result.success) {
+        toast.error(result.error);
+        return;
+      }
+      onUpdate({ ...detail, isPinned: result.data.isPinned });
+      toast.success(result.data.isPinned ? 'Item pinned' : 'Item unpinned');
+      router.refresh();
+    } finally {
+      setPinning(false);
     }
   }
 
@@ -295,7 +312,11 @@ function DrawerBody({ detail, onUpdate, onDelete, userCollections }: DrawerBodyP
               <Star className={`h-3.5 w-3.5 ${detail.isFavorite ? 'fill-yellow-400 text-yellow-400' : ''}`} />
               Favorite
             </ActionButton>
-            <ActionButton onClick={undefined} disabled title="Coming soon">
+            <ActionButton
+              onClick={handlePin}
+              disabled={pinning}
+              title={detail.isPinned ? 'Unpin item' : 'Pin item'}
+            >
               <Pin className={`h-3.5 w-3.5 ${detail.isPinned ? 'fill-foreground text-foreground' : ''}`} />
               Pin
             </ActionButton>

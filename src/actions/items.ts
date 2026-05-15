@@ -3,7 +3,7 @@
 import { z } from 'zod';
 import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
-import { createItem, updateItem, deleteItem, toggleItemFavorite } from '@/lib/db/items';
+import { createItem, updateItem, deleteItem, toggleItemFavorite, toggleItemPin } from '@/lib/db/items';
 import type { ItemDetail } from '@/lib/db/items';
 
 const UpdateItemSchema = z.object({
@@ -126,4 +126,18 @@ export async function toggleItemFavoriteAction(itemId: string): Promise<ToggleIt
   if (isFavorite === null) return { success: false, error: 'Item not found' };
 
   return { success: true, data: { isFavorite } };
+}
+
+type ToggleItemPinResult =
+  | { success: true; data: { isPinned: boolean } }
+  | { success: false; error: string };
+
+export async function toggleItemPinAction(itemId: string): Promise<ToggleItemPinResult> {
+  const session = await auth();
+  if (!session?.user?.id) return { success: false, error: 'Unauthorized' };
+
+  const isPinned = await toggleItemPin(itemId, session.user.id);
+  if (isPinned === null) return { success: false, error: 'Item not found' };
+
+  return { success: true, data: { isPinned } };
 }

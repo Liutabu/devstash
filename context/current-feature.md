@@ -1,11 +1,23 @@
-# Current Feature
+# Current Feature: Pinned Items
 
 ## Status
-Not Started
+In Progress
 
 ## Goals
 
+- `toggleItemPin` server action (mirrors `toggleItemFavoriteAction` pattern)
+- Pin button in `ItemDrawer` wired up with onClick, optimistic UI, and toast
+- Pinned items sort to top in item listings (`getItemsByType`)
+- Dashboard pinned items section reflects live data (already fetched via `getPinnedItems`)
+- Pin icon on `ItemCard` remains a static indicator (no change needed)
+
 ## Notes
+
+- Items only — no collection pinning
+- Follow the Favorite button pattern exactly: auth-gated action, `{ success, data: { isPinned } }` return, optimistic local state in the drawer, `onUpdate` callback to refresh drawer in-place, `router.refresh()` for server data
+- `toggleItemPin` goes in `src/lib/db/items.ts` + `src/actions/items.ts`
+- Pinned-first sort: update `getItemsByType` to `orderBy: [{ isPinned: 'desc' }, { updatedAt: 'desc' }]`
+- Write unit tests for `toggleItemPinAction` (unauthorized, not found, success)
 
 ## History
 
