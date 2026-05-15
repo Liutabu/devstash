@@ -1,23 +1,11 @@
-# Current Feature: Pinned Items
+# Current Feature
 
 ## Status
-In Progress
+Not Started
 
 ## Goals
 
-- `toggleItemPin` server action (mirrors `toggleItemFavoriteAction` pattern)
-- Pin button in `ItemDrawer` wired up with onClick, optimistic UI, and toast
-- Pinned items sort to top in item listings (`getItemsByType`)
-- Dashboard pinned items section reflects live data (already fetched via `getPinnedItems`)
-- Pin icon on `ItemCard` remains a static indicator (no change needed)
-
 ## Notes
-
-- Items only — no collection pinning
-- Follow the Favorite button pattern exactly: auth-gated action, `{ success, data: { isPinned } }` return, optimistic local state in the drawer, `onUpdate` callback to refresh drawer in-place, `router.refresh()` for server data
-- `toggleItemPin` goes in `src/lib/db/items.ts` + `src/actions/items.ts`
-- Pinned-first sort: update `getItemsByType` to `orderBy: [{ isPinned: 'desc' }, { updatedAt: 'desc' }]`
-- Write unit tests for `toggleItemPinAction` (unauthorized, not found, success)
 
 ## History
 
@@ -396,6 +384,13 @@ In Progress
 - Updated `src/components/dashboard/CollectionCard.tsx` — Favorite dropdown item now live; uses `localIsFavorite` state for immediate star update
 - Updated `src/components/collections/CollectionDetailActions.tsx` — Favorite button now live; filled yellow when active, disabled while in-flight
 - Added 6 unit tests: `toggleItemFavoriteAction` (unauthorized, not found, success) and `toggleCollectionFavoriteAction` (unauthorized, not found, success)
+
+### 2026-05-15 — Pinned Items
+- Added `toggleItemPin(id, userId)` to `src/lib/db/items.ts` — ownership-checked, flips `isPinned` and returns new value
+- Added `toggleItemPinAction` to `src/actions/items.ts` — auth-gated, `{ success, data: { isPinned } }` return pattern
+- Updated `src/components/items/ItemDrawer.tsx` — Pin button now live; calls action, updates drawer via `onUpdate`, refreshes router; `pinning` state disables button during in-flight request
+- Updated `getItemsByType` in `src/lib/db/items.ts` — now orders by `[isPinned desc, createdAt desc]` so pinned items float to the top of listings
+- Added 3 unit tests for `toggleItemPinAction` (unauthorized, not found, success)
 
 ### 2026-05-13 — Client-Side Sorting on Favorites Page
 - Created `src/components/favorites/FavoriteItemsList.tsx` — client component wrapping item rows with sort controls (Date / Name / Type); clicking the active sort toggles direction (↑/↓); Date defaults desc, Name/Type default asc
