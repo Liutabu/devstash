@@ -1,31 +1,11 @@
-# Current Feature: Homepage Mockup
+# Current Feature
 
 ## Status
-In Progress
+Not Started
 
 ## Goals
 
-- Create a standalone marketing homepage at `prototypes/homepage/` (`index.html`, `styles.css`, `script.js`)
-- Hero section shows "chaos to order" concept: floating chaos icons (left) → pulsing arrow (center) → dashboard preview (right)
-- Chaos icons animate: float/bounce off walls, rotate/scale pulse, repel from mouse cursor
-- Dashboard preview mockup with sidebar + item cards using type accent colors
-- Navigation: fixed top nav with logo, links, and Sign In / Get Started buttons; gets more opaque on scroll
-- Features section: 6 cards with item type accent colors
-- AI section: Pro badge + capabilities checklist + code editor mockup with AI tags demo
-- Pricing section: Free vs Pro cards, yearly toggle ($72/yr), "Most Popular" highlight
-- CTA section and footer with current year
-- Scroll animations: elements fade in on scroll
-- Responsive: stack hero vertically on mobile, arrow rotates 90°
-
 ## Notes
-
-- Output is a standalone prototype — no Next.js, no build step, pure HTML/CSS/JS
-- Dark theme
-- Item type colors: Snippet `#3b82f6`, Prompt `#f59e0b`, Command `#06b6d4`, Note `#22c55e`, File `#64748b`, Image `#ec4899`, URL/Link `#6366f1`
-- Chaos icons represent: Notion, GitHub, Slack, VS Code logos + Browser tabs, Terminal, Text file, Bookmark
-- Chaos animation uses `requestAnimationFrame`; icons bounce off container walls and repel from mouse
-- Arrow pulses with CSS animation
-- Scroll fade-in via IntersectionObserver
 
 ## History
 
@@ -416,3 +396,13 @@ In Progress
 - Created `src/components/favorites/FavoriteItemsList.tsx` — client component wrapping item rows with sort controls (Date / Name / Type); clicking the active sort toggles direction (↑/↓); Date defaults desc, Name/Type default asc
 - Created `src/components/favorites/FavoriteCollectionsList.tsx` — same pattern for collections with sort controls (Date / Name / Items); Date and Items default desc, Name defaults asc
 - Updated `src/app/favorites/page.tsx` — replaced inline item and collection rendering with `<FavoriteItemsList>` and `<FavoriteCollectionsList>`; no DB changes needed (`FavoriteCollectionData` already included `itemCount`)
+
+### 2026-05-15 — Homepage Mockup Prototype
+- Created `prototypes/homepage/` — standalone marketing homepage (pure HTML/CSS/JS, no build step)
+- `index.html` — 7 sections: fixed nav, hero (chaos/arrow/dashboard visual), 6-card features grid, AI section, pricing, CTA, footer with dynamic year
+- `styles.css` — dark theme with CSS custom properties, all section styles, `fade-in` scroll animation class, responsive breakpoints (768px mobile, 560px small); arrow rotates 90° on mobile
+- `script.js` — `requestAnimationFrame` chaos animation (wall bounce + mouse repulsion + minimum speed nudge + tab-pause optimization), `IntersectionObserver` scroll fade-ins, navbar opacity on scroll, monthly/yearly pricing toggle
+- Hero chaos icons: Notion, GitHub, Slack, VS Code, Browser, Terminal, Text file, Bookmark — each 44px rounded square with inline SVG
+- Dashboard mockup: mini sidebar with 6 colored type dots + 2×3 grid of colored-border item cards
+- AI section: code editor mockup with syntax-highlighted TypeScript snippet + AI-generated tag chips
+- Pricing: Free ($0) vs Pro ($8/mo or $6/mo billed $72/yr) with "Most Popular" badge and toggle
