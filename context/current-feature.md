@@ -1,11 +1,30 @@
-# Current Feature
+# Current Feature: Marketing Homepage
 
 ## Status
-Not Started
+In Progress
 
 ## Goals
+- Convert `prototypes/homepage/` mockup into a proper Next.js page under `src/app/(marketing)/`
+- Implement all 8 sections: Navbar, Hero, Features, AI, Pricing, CTA, Footer
+- Port `ChaosArena` animation (rAF loop + mouse repulsion) from prototype JS into a React client component
+- Add `DashboardMockup` as a static server component
+- Implement monthly/yearly pricing toggle in `PricingSection`
+- Add scroll fade-in via a `FadeIn` client wrapper using `IntersectionObserver`
+- Navbar: scroll opacity, mobile hamburger menu, Sign In / Get Started links
+- Auth redirect: if signed in, `redirect('/dashboard')` from the marketing page
+- All routing correct: `/sign-in`, `/register`, `/dashboard`, `#features`, `#pricing`
+- No `DashboardShell` — marketing layout is standalone with its own `layout.tsx`
 
 ## Notes
+- Visual reference: `prototypes/homepage/` (pure HTML/CSS/JS — do not import it, port it)
+- Dark background: `bg-[#0a0a0a]` matching prototype's `#0d0d0d`
+- Hero h1 gradient: `bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent`
+- Feature card colors: #3b82f6, #f59e0b, #6366f1, #06b6d4, #64748b, #10b981
+- Dashboard mockup colors: #3b82f6, #f59e0b, #06b6d4, #22c55e, #6366f1, #ec4899
+- Arrow between hero boxes: CSS pulse animation, `rotate-90 md:rotate-0`
+- AI section code block: static `<pre><code>` with `<span>` color classes — no syntax highlighting library
+- Copyright year: server-side `new Date().getFullYear()` (no client component needed)
+- Tailwind only — no custom CSS files
 
 ## History
 

@@ -126,7 +126,25 @@
     }
   html {
     @apply font-sans;
+    scroll-behavior: smooth;
     }
+}
+
+/* Code editor syntax highlighting (AI section mockup) */
+.c-kw { color: #c586c0; }
+.c-fn { color: #dcdcaa; }
+.c-type { color: #4ec9b0; }
+.c-str { color: #ce9178; }
+.c-var { color: #9cdcfe; }
+.c-p { color: #d4d4d4; }
+
+/* Marketing homepage animations */
+@keyframes arrow-pulse {
+  0%, 100% { opacity: 1; transform: translateX(0); }
+  50% { opacity: 0.6; transform: translateX(4px); }
+}
+.animate-arrow-pulse {
+  animation: arrow-pulse 2s ease-in-out infinite;
 }
 
 /* Markdown preview — dark-first, scoped to .markdown-preview */
