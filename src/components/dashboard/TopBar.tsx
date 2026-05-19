@@ -18,7 +18,7 @@ export function TopBar({ onToggleSidebar, onMobileMenuClick, onNewItem, onNewCol
         <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary text-primary-foreground text-sm font-bold">
           S
         </div>
-        <span className="text-base">DevStash</span>
+        <span className="hidden min-[410px]:inline text-base">DevStash</span>
       </Link>
 
       {/* Desktop sidebar toggle */}
@@ -41,11 +41,11 @@ export function TopBar({ onToggleSidebar, onMobileMenuClick, onNewItem, onNewCol
         <Menu className="h-4 w-4" />
       </Button>
 
-      {/* Search */}
+      {/* Search — full pill at 410px+, icon-only below */}
       <button
         type="button"
         onClick={onSearchClick}
-        className="relative flex-1 max-w-sm flex items-center gap-2 h-9 rounded-md border border-border bg-muted/50 px-3 text-sm text-muted-foreground hover:bg-muted transition-colors cursor-pointer text-left"
+        className="relative flex-1 max-w-sm hidden min-[410px]:flex items-center gap-2 h-9 rounded-md border border-border bg-muted/50 px-3 text-sm text-muted-foreground hover:bg-muted transition-colors cursor-pointer text-left"
       >
         <Search className="h-4 w-4 shrink-0" />
         <span className="flex-1 truncate">Search items...</span>
@@ -53,12 +53,20 @@ export function TopBar({ onToggleSidebar, onMobileMenuClick, onNewItem, onNewCol
           <span>⌘</span><span>K</span>
         </kbd>
       </button>
+      <button
+        type="button"
+        onClick={onSearchClick}
+        className="min-[410px]:hidden h-8 w-8 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+        title="Search"
+      >
+        <Search className="h-4 w-4" />
+      </button>
 
       {/* Actions */}
       <div className="ml-auto flex items-center gap-2">
         <Link
           href="/favorites"
-          className="inline-flex items-center justify-center h-8 w-8 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+          className="hidden min-[410px]:inline-flex items-center justify-center h-8 w-8 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
           title="Favorites"
         >
           <Star className="h-4 w-4" />

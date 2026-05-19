@@ -1,4 +1,22 @@
-# Current Feature: Marketing Homepage
+# Current Feature: TopBar xs Responsiveness
+
+## Status
+In Progress
+
+## Goals
+- Hide "DevStash" wordmark below 410px — show only the `S` square logo
+- Replace the full search pill with an icon-only button below 410px (still opens command palette)
+- Hide the Star/Favorites icon from the topbar below 410px (redundant with sidebar at that size)
+- Result: `[S] [☰] [🔍] [+]` at xs, full bar at 410px+
+
+## Notes
+- All changes in `src/components/dashboard/TopBar.tsx`
+- Use `min-[410px]:` Tailwind breakpoint (Tailwind v4 arbitrary breakpoints work inline)
+- Search icon button must call the same `onSearchClick` prop as the full pill
+
+---
+
+# Previous Feature: Marketing Homepage
 
 ## Status
 In Progress
