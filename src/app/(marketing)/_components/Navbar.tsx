@@ -34,8 +34,8 @@ export default function Navbar() {
         </Link>
 
         <div className="hidden md:flex gap-6 flex-1">
-          <a href="#features" className="text-sm text-[#7a7a8a] hover:text-white transition-colors">Features</a>
-          <a href="#pricing" className="text-sm text-[#7a7a8a] hover:text-white transition-colors">Pricing</a>
+          <a href="/#features" className="text-sm text-[#7a7a8a] hover:text-white transition-colors">Features</a>
+          <a href="/#pricing" className="text-sm text-[#7a7a8a] hover:text-white transition-colors">Pricing</a>
         </div>
 
         <div className="hidden md:flex items-center gap-2.5 ml-auto">
@@ -62,8 +62,8 @@ export default function Navbar() {
 
       {mobileOpen && (
         <div className="md:hidden flex flex-col gap-1 px-6 pb-5 border-t border-[#1e1e24] bg-[rgba(10,10,11,0.96)]">
-          <a href="#features" className="px-3 py-2.5 text-[15px] text-[#7a7a8a] hover:text-white hover:bg-[#111113] rounded-lg transition-colors" onClick={() => setMobileOpen(false)}>Features</a>
-          <a href="#pricing" className="px-3 py-2.5 text-[15px] text-[#7a7a8a] hover:text-white hover:bg-[#111113] rounded-lg transition-colors" onClick={() => setMobileOpen(false)}>Pricing</a>
+          <a href="/#features" className="px-3 py-2.5 text-[15px] text-[#7a7a8a] hover:text-white hover:bg-[#111113] rounded-lg transition-colors" onClick={() => setMobileOpen(false)}>Features</a>
+          <a href="/#pricing" className="px-3 py-2.5 text-[15px] text-[#7a7a8a] hover:text-white hover:bg-[#111113] rounded-lg transition-colors" onClick={() => setMobileOpen(false)}>Pricing</a>
           <Link href="/sign-in" className="px-3 py-2.5 text-[15px] text-[#7a7a8a] hover:text-white hover:bg-[#111113] rounded-lg transition-colors" onClick={() => setMobileOpen(false)}>Sign In</Link>
           <Link href="/register" onClick={() => setMobileOpen(false)}>
             <Button className="w-full bg-blue-500 hover:bg-blue-600 text-white mt-1">Get Started</Button>
