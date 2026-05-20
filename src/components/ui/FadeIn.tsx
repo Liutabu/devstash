@@ -13,6 +13,13 @@ export default function FadeIn({ children, delay = 0, className = '' }: FadeInPr
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
+
+    // Apply hidden state only after JS hydrates — SSR renders content visible,
+    // so no-JS and slow-connection users always see the content.
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(20px)';
+    el.style.transition = `opacity 0.6s ease ${delay}ms, transform 0.6s ease ${delay}ms`;
+
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
@@ -25,18 +32,10 @@ export default function FadeIn({ children, delay = 0, className = '' }: FadeInPr
     );
     observer.observe(el);
     return () => observer.disconnect();
-  }, []);
+  }, [delay]);
 
   return (
-    <div
-      ref={ref}
-      className={className}
-      style={{
-        opacity: 0,
-        transform: 'translateY(20px)',
-        transition: `opacity 0.6s ease ${delay}ms, transform 0.6s ease ${delay}ms`,
-      }}
-    >
+    <div ref={ref} className={className}>
       {children}
     </div>
   );

@@ -112,7 +112,7 @@ export default function PricingSection() {
               </ul>
               <Link href="/register">
                 <Button className="w-full bg-blue-500 hover:bg-blue-600 text-white shadow-[0_4px_16px_rgba(59,130,246,0.3)]">
-                  Start Pro Free Trial
+                  Get Started
                 </Button>
               </Link>
             </div>
