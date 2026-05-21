@@ -1,24 +1,19 @@
-# Current Feature: Auth Pages Navbar + Dashboard Logo
+# Current Feature
 
 ## Status
-In Progress
+Not Started
 
 ## Goals
-- Add a marketing-style top navbar to all auth pages (sign-in, register, forgot-password, reset-password, check-email, verify-email) via the auth layout
-- The auth navbar should visually match the homepage Navbar: same logo, same scroll opacity/blur behavior, same Sign In / Get Started buttons, mobile hamburger
-- Features and Pricing nav links should point to `/#features` and `/#pricing` so they work from any page
-- Replace the "S" box in the dashboard `TopBar` with the same Package SVG icon used in the marketing Navbar (blue, same size as current box)
 
 ## Notes
-- Marketing Navbar is at `src/app/(marketing)/_components/Navbar.tsx` — reuse or extract a shared component
-- Auth layout is at `src/app/(auth)/layout.tsx` — add the navbar here so all auth pages get it
-- The auth navbar can reuse the existing `Navbar` component but with `href="/#features"` and `href="/#pricing"` instead of `href="#features"` / `href="#pricing"` — the homepage currently uses bare `#` anchors which only work on `/`
-- Dashboard TopBar logo section is at `src/components/dashboard/TopBar.tsx` lines 17-22 — the `<div>S</div>` box gets replaced with the inline SVG
-- The Package SVG is already in `Navbar.tsx` — copy it into `TopBar.tsx` with `className="h-5 w-5 text-blue-500"`
-- If the Navbar is reused in auth layout, the scroll-based opacity/blur still works fine since auth pages can scroll too
-- Auth layout currently centers content with no navbar — it will need padding-top added after the navbar is included
 
 ## History
+
+### 2026-05-20 — Auth Pages Navbar + Dashboard Logo
+- Added marketing `Navbar` to all auth pages via `src/app/(auth)/layout.tsx` — sign-in, register, forgot/reset-password, check/verify-email all share the same nav
+- Auth layout background changed to `bg-[#0a0a0a]` and `pt-16` added to clear the fixed navbar
+- Fixed `Navbar.tsx` anchor links from `#features`/`#pricing` to `/#features`/`/#pricing` so they navigate correctly from any page, not just `/`
+- Replaced the blue `S` box in the dashboard `TopBar` with the same Package SVG icon used in the marketing Navbar (`h-5 w-5 text-blue-500`)
 
 ### 2026-05-19 — TopBar xs Responsiveness
 - Updated `src/components/dashboard/TopBar.tsx` with `min-[410px]:` breakpoints
