@@ -24,12 +24,16 @@ model User {
   emailVerified        DateTime?
   image                String?
   password             String?
-  isPro                Boolean   @default(false)
-  stripeCustomerId     String?   @unique
-  stripeSubscriptionId String?   @unique
-  editorPreferences    Json?
-  createdAt            DateTime  @default(now())
-  updatedAt            DateTime  @updatedAt
+  isPro                   Boolean   @default(false)
+  stripeCustomerId        String?   @unique
+  stripeSubscriptionId    String?   @unique
+  subscriptionStatus      String?
+  subscriptionPeriodEnd   DateTime?
+  subscriptionCancelAtEnd Boolean   @default(false)
+  subscriptionInterval    String?
+  editorPreferences       Json?
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
 
   accounts    Account[]
   sessions    Session[]
