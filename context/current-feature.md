@@ -1,11 +1,28 @@
-# Current Feature
+# Current Feature: Stripe Phase 1 — Core Infrastructure
 
 ## Status
-Not Started
+In Progress
 
 ## Goals
+- Configure Stripe Dashboard (products, prices, customer portal, API keys) — manual one-time setup
+- Install Stripe SDK and create `src/lib/stripe.ts` singleton client with `STRIPE_PRICE_IDS` map and `BillingInterval` type
+- Migrate Prisma `User` model: add `subscriptionStatus`, `subscriptionPeriodEnd`, `subscriptionCancelAtEnd`, `subscriptionInterval`
+- Extend NextAuth session so `session.user.isPro` is available everywhere (add `jwt` callback that re-reads `isPro` from DB; update `session` callback)
+- Update `src/types/next-auth.d.ts` to add `isPro: boolean` on `Session.user` and `JWT.isPro`
+- Create `src/lib/limits.ts` with `FREE_LIMITS`, `getUserLimits(userId)`, `isProType()`, and `BYPASS_PRO_LIMITS` dev override
+- Create `src/lib/db/subscription.ts` with `getSubscriptionStatus(userId)` reader (used by Phase 2 Settings UI)
+- Cover `limits.ts` with unit tests (`src/lib/limits.test.ts`) — isProType, free/Pro boundaries, BYPASS_PRO_LIMITS, parallel Promise.all
+- Document `BYPASS_PRO_LIMITS` in `.env.example` (default `"false"`)
 
 ## Notes
+- Phase 1 lays foundation only — no user-facing flow changes; app behaves identically after merge
+- Out of scope (Phase 2): checkout/portal server actions, webhook handler, UI changes, calling `getUserLimits()` from any write path
+- Phase 1 is gated on Stripe Dashboard setup, but limits helper still works without `STRIPE_PRICE_ID_*` (checkout testing deferred to Phase 2)
+- Test patterns: per-test `vi.mock('@/lib/prisma')` (see `src/actions/items.test.ts`); test utilities, not components
+- Reference docs: `docs/stripe-phase-1-core-infrastructure.md` and `docs/stripe-integration-plan.md`
+- Branch name: `feature/stripe-phase-1-core`
+- Run `npx prisma migrate dev --name add_subscription_state` for the schema migration
+- `isPro` returned by `getUserLimits` must be the real DB value, not affected by `BYPASS_PRO_LIMITS` (UI uses real flag for badge display)
 
 ## History
 
