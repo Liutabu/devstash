@@ -28,6 +28,12 @@ interface CreateItemDialogProps {
   itemTypes: ItemTypeWithCount[];
   userCollections: UserCollectionOption[];
   initialTypeId?: string;
+  isPro?: boolean;
+}
+
+function isProTypeName(name: string): boolean {
+  const n = name.toLowerCase();
+  return n === 'file' || n === 'image';
 }
 
 function getContentType(typeName: string): 'text' | 'url' | 'file' {
@@ -55,7 +61,7 @@ function shouldShowUpload(typeName: string): boolean {
   return n === 'file' || n === 'image';
 }
 
-export function CreateItemDialog({ open, onClose, itemTypes, userCollections, initialTypeId }: CreateItemDialogProps) {
+export function CreateItemDialog({ open, onClose, itemTypes, userCollections, initialTypeId, isPro }: CreateItemDialogProps) {
   const router = useRouter();
 
   const [selectedTypeId, setSelectedTypeId] = useState<string>(itemTypes[0]?.id ?? '');
@@ -153,21 +159,37 @@ export function CreateItemDialog({ open, onClose, itemTypes, userCollections, in
             {itemTypes.map((type) => {
               const Icon = ITEM_TYPE_ICON_MAP[type.icon];
               const isSelected = type.id === selectedType?.id;
+              const isProLocked = !isPro && isProTypeName(type.name);
               return (
                 <button
                   key={type.id}
                   type="button"
-                  onClick={() => { setSelectedTypeId(type.id); setUploadResult(null); }}
+                  onClick={() => {
+                    if (isProLocked) {
+                      handleClose();
+                      router.push('/settings?upgrade=true');
+                      return;
+                    }
+                    setSelectedTypeId(type.id);
+                    setUploadResult(null);
+                  }}
+                  title={isProLocked ? 'Pro only — click to upgrade' : undefined}
                   className={cn(
                     'flex items-center gap-1.5 rounded px-2.5 py-1.5 text-xs font-medium transition-colors',
                     isSelected
                       ? ''
                       : 'text-muted-foreground hover:text-foreground hover:bg-muted',
+                    isProLocked && 'opacity-50',
                   )}
                   style={isSelected ? { backgroundColor: `${type.color}20`, color: type.color } : {}}
                 >
                   {Icon && <Icon className="h-3.5 w-3.5" />}
                   {type.name}
+                  {isProLocked && (
+                    <span className="ml-0.5 rounded bg-muted px-1 text-[9px] font-semibold uppercase tracking-wide text-muted-foreground">
+                      Pro
+                    </span>
+                  )}
                 </button>
               );
             })}

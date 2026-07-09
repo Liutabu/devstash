@@ -15,6 +15,7 @@ interface SidebarUser {
   name?: string | null;
   email?: string | null;
   image?: string | null;
+  isPro?: boolean;
 }
 
 interface SidebarProps {
@@ -67,7 +68,7 @@ export function Sidebar({ collapsed, itemTypes, collections, user }: SidebarProp
                   {!collapsed && (
                     <>
                       <span className="flex-1 truncate">{type.name}</span>
-                      {(type.slug === 'files' || type.slug === 'images') && (
+                      {!user.isPro && (type.slug === 'files' || type.slug === 'images') && (
                         <span className={cn(badgeVariants({ variant: 'secondary' }), 'px-1.5 text-[10px] font-semibold tracking-wide')}>
                           PRO
                         </span>

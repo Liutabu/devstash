@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { auth } from '@/auth';
 import { createCollection, updateCollection, deleteCollection, toggleCollectionFavorite } from '@/lib/db/collections';
 import type { CollectionDetail } from '@/lib/db/collections';
+import { getUserLimits } from '@/lib/limits';
 
 const CreateCollectionSchema = z.object({
   name: z.string().trim().min(1, 'Name is required'),
@@ -24,6 +25,14 @@ export async function createCollectionAction(
 
   const parsed = CreateCollectionSchema.safeParse(data);
   if (!parsed.success) return { success: false, error: parsed.error.flatten().fieldErrors };
+
+  const limits = await getUserLimits(session.user.id);
+  if (!limits.canCreateCollection) {
+    return {
+      success: false,
+      error: 'Collection limit reached. Upgrade to Pro for unlimited collections.',
+    };
+  }
 
   try {
     const collection = await createCollection(session.user.id, parsed.data);

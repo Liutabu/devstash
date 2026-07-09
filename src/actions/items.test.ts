@@ -18,10 +18,16 @@ vi.mock('@/lib/prisma', () => ({
   },
 }));
 
+vi.mock('@/lib/limits', () => ({
+  getUserLimits: vi.fn(),
+  isProType: vi.fn(),
+}));
+
 import { createItemAction, updateItemAction, deleteItemAction, toggleItemFavoriteAction, toggleItemPinAction } from './items';
 import { auth } from '@/auth';
 import { createItem, updateItem, deleteItem, toggleItemFavorite, toggleItemPin } from '@/lib/db/items';
 import { prisma } from '@/lib/prisma';
+import { getUserLimits, isProType } from '@/lib/limits';
 
 const mockAuth = vi.mocked(auth);
 const mockCreateItem = vi.mocked(createItem);
@@ -30,6 +36,17 @@ const mockDeleteItem = vi.mocked(deleteItem);
 const mockToggleItemFavorite = vi.mocked(toggleItemFavorite);
 const mockToggleItemPin = vi.mocked(toggleItemPin);
 const mockFindFirstItemType = vi.mocked(prisma.itemType.findFirst);
+const mockGetUserLimits = vi.mocked(getUserLimits);
+const mockIsProType = vi.mocked(isProType);
+
+const ALLOW_ALL_LIMITS = {
+  isPro: false,
+  itemCount: 0,
+  collectionCount: 0,
+  canCreateItem: true,
+  canCreateCollection: true,
+  canUseProType: true,
+};
 
 const validInput = {
   title: 'Test Title',
@@ -63,6 +80,8 @@ const mockDetail = {
 
 beforeEach(() => {
   vi.resetAllMocks();
+  mockGetUserLimits.mockResolvedValue(ALLOW_ALL_LIMITS);
+  mockIsProType.mockReturnValue(false);
 });
 
 const validCreateInput = {

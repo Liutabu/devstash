@@ -10,6 +10,8 @@ import { DashboardShell } from '@/components/dashboard/DashboardShell';
 import { ChangePasswordSection } from '@/components/profile/ChangePasswordSection';
 import { DeleteAccountButton } from '@/components/profile/DeleteAccountButton';
 import { EditorPreferencesSection } from '@/components/settings/EditorPreferencesSection';
+import { SubscriptionSection } from '@/components/settings/SubscriptionSection';
+import { SuccessBanner, ErrorBanner } from '@/components/ui/banners';
 
 const PASSWORD_ERRORS: Record<string, string> = {
   required: 'All fields are required.',
@@ -19,10 +21,17 @@ const PASSWORD_ERRORS: Record<string, string> = {
   no_password: 'No password is set on this account.',
 };
 
+const UPGRADE_MESSAGES: Record<string, { kind: 'success' | 'error'; message: string }> = {
+  success: { kind: 'success', message: 'Welcome to Pro! Your subscription is active.' },
+  cancelled: { kind: 'error', message: 'Upgrade cancelled. You can try again any time.' },
+  error: { kind: 'error', message: 'Something went wrong starting checkout. Please try again.' },
+  no_customer: { kind: 'error', message: 'No billing record on file yet — upgrade first.' },
+};
+
 export default async function SettingsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string; success?: string }>;
+  searchParams: Promise<{ error?: string; success?: string; upgrade?: string }>;
 }) {
   const session = await auth();
   if (!session?.user?.id) redirect('/sign-in');
@@ -42,6 +51,7 @@ export default async function SettingsPage({
 
   const errorMsg = params.error ? (PASSWORD_ERRORS[params.error] ?? 'Something went wrong.') : null;
   const passwordChanged = params.success === 'password';
+  const upgradeBanner = params.upgrade ? UPGRADE_MESSAGES[params.upgrade] ?? null : null;
 
   return (
     <DashboardShell
@@ -64,8 +74,15 @@ export default async function SettingsPage({
           <h1 className="text-2xl font-semibold tracking-tight">Settings</h1>
         </div>
 
+        {upgradeBanner && (upgradeBanner.kind === 'success'
+          ? <SuccessBanner message={upgradeBanner.message} />
+          : <ErrorBanner message={upgradeBanner.message} />)}
+
         {/* Editor preferences */}
         <EditorPreferencesSection />
+
+        {/* Subscription */}
+        <SubscriptionSection userId={userId} />
 
         {/* Change password — email users only */}
         {profile.hasPassword && (

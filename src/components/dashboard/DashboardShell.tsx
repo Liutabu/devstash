@@ -19,6 +19,7 @@ interface SidebarUser {
   name?: string | null;
   email?: string | null;
   image?: string | null;
+  isPro?: boolean;
 }
 
 interface DashboardShellProps {
@@ -76,6 +77,7 @@ export function DashboardShell({ children, itemTypes, sidebarCollections, userCo
         itemTypes={itemTypes}
         userCollections={userCollections}
         initialTypeId={createTypeId}
+        isPro={user.isPro}
       />
 
       <div className="relative flex flex-1 overflow-hidden" suppressHydrationWarning>
