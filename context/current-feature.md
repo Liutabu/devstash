@@ -1,38 +1,33 @@
-# Current Feature: Stripe Phase 2 — Integration & UI
+# Current Feature
 
 ## Status
-In Progress
+Not Started
 
 ## Goals
-- Create `src/actions/billing.ts` with `createCheckoutSessionAction(interval)`, `createPortalSessionAction()`, and `getOrCreateCustomer()` helper
-- Create `src/app/api/stripe/webhook/route.ts` — POST handler that verifies signature and switches on 5 event types (`checkout.session.completed`, `customer.subscription.created`, `customer.subscription.updated`, `customer.subscription.deleted`, `invoice.payment_failed`)
-- Create `src/components/settings/SubscriptionSection.tsx` (server component) dispatching to Upgrade vs Manage card
-- Create `src/components/settings/UpgradeCard.tsx` (client) with Monthly/Yearly toggle, submits to checkout action
-- Create `src/components/settings/ManageSubscriptionCard.tsx` showing plan + renewal date with "Manage subscription" button → portal action
-- Gate write paths via Phase 1's `getUserLimits()`:
-  - `src/actions/items.ts` — `createItemAction`: return error if `!canCreateItem`; after type lookup, check `isProType && !canUseProType`
-  - `src/actions/collections.ts` — `createCollectionAction`: return error if `!canCreateCollection`
-  - `src/app/api/upload/route.ts` — return 403 if `!canUseProType`
-- Update `src/app/settings/page.tsx` — fetch `getSubscriptionStatus` in parallel; render `<SubscriptionSection>` between Editor Preferences and Change Password; handle `?upgrade=success/cancelled/error/no_customer` with `SuccessBanner` / `ErrorBanner`
-- Update `src/components/dashboard/Sidebar.tsx` — extend `SidebarUser` with `isPro?: boolean`; hide PRO badge on files/images for Pro users
-- Update `src/components/items/CreateItemDialog.tsx` — include file/image in type picker; render disabled + Pro hint for free users (onClick → `router.push('/settings?upgrade=true')`)
-- Write `src/actions/billing.test.ts` unit tests for checkout & portal actions (mock `auth`, `prisma`, `stripe`)
-- Full QA walk via Stripe CLI: happy path, plan switch, cancellation, deletion, payment failure, webhook security, limit enforcement, bypass flag, session sync
 
 ## Notes
-- Branch: `feature/stripe-phase-2-integration`
-- Prerequisite Phase 1 already merged: `getUserLimits()`, `session.user.isPro`, `stripe` client, subscription columns all in place
-- Stripe CLI required for local webhook testing: `stripe listen --forward-to http://localhost:3000/api/stripe/webhook` → copy `whsec_…` into `STRIPE_WEBHOOK_SECRET`
-- Test cards: `4242 4242 4242 4242` (success), `4000 0000 0000 0341` (payment failure)
-- Webhook route must **not** be added to `PROTECTED_PREFIXES` in `src/proxy.ts` — Stripe reaches it unauthenticated; signature verification gates it
-- Webhook uses `req.text()` for raw body (Next 16 App Router provides raw body by default — no `bodyParser: false` config needed)
-- Reference docs: `docs/stripe-phase-2-integration-and-ui.md` and `docs/stripe-integration-plan.md`
-- Out of scope: AI features, Export, Custom types, email notifications on subscription changes, proration UI preview, annual→monthly downgrade UX (Portal handles it natively)
-- Suggested commit slicing: `feat(billing): add Stripe checkout & portal server actions` → `feat(billing): add Stripe webhook handler` → `feat(billing): enforce free-tier limits on write paths` → `feat(settings): add subscription section` → `feat(ui): hide Pro badges & gate item types for Pro users`
-- Optional polish: rate-limit `createCheckoutSessionAction` (10/min); update marketing PricingSection to route signed-in users straight to checkout
-- `STRIPE_*` secrets only in `.env.local`, never committed
 
 ## History
+
+### 2026-07-09 — Stripe Phase 2 — Integration & UI
+- Created `src/actions/billing.ts` — `createCheckoutSessionAction(interval)` and `createPortalSessionAction()` server actions; internal `getOrCreateCustomer(userId, email, name)` helper reuses `stripeCustomerId` when present and persists a new one when creating; both actions `redirect()` on error and success (per the profile.ts pattern)
+- Created `src/app/api/stripe/webhook/route.ts` — Node runtime; `req.text()` for raw body; signature verification via `stripe.webhooks.constructEvent`; handles `checkout.session.completed`, `customer.subscription.{created,updated,deleted}`, `invoice.payment_failed`; sub/customer/subscription-id fields normalized via `typeof x === 'string'` checks; uses `sub.metadata.userId` when present, falls back to `updateMany` scoped by `stripeCustomerId`
+- Note: Stripe API `2026-05-27.dahlia` moved `current_period_end` from subscription-level to subscription-item-level; cast via `(item as unknown as { current_period_end?: number })` until SDK types catch up
+- Gated `createItemAction` in `src/actions/items.ts` — `getUserLimits` check for `canCreateItem` before type lookup; `isProType(itemType.name) && !canUseProType` after type lookup
+- Gated `createCollectionAction` in `src/actions/collections.ts` — checks `canCreateCollection`
+- Gated `POST /api/upload` — returns 403 with `File uploads require Pro.` when `!canUseProType`
+- Created `src/components/settings/SubscriptionSection.tsx` (server component) — dispatches to Upgrade vs Manage card based on `getSubscriptionStatus(userId).isPro`
+- Created `src/components/settings/UpgradeCard.tsx` — Monthly/Yearly toggle, dynamic pricing ($8/mo or $6/mo billed $72/yr), feature list, form submits to `createCheckoutSessionAction`
+- Created `src/components/settings/ManageSubscriptionCard.tsx` — plan label + renewal/cancel-at-period-end date; "Manage subscription" button submits to `createPortalSessionAction`
+- Updated `src/app/settings/page.tsx` — renders `<SubscriptionSection userId={userId}>` between Editor Preferences and Change Password; `?upgrade=success|cancelled|error|no_customer` banners via existing `SuccessBanner` / `ErrorBanner`
+- Extended `SidebarUser` in `Sidebar.tsx` and `DashboardShell.tsx` with `isPro?: boolean`; PRO badge on Files/Images entries hidden when `user.isPro`
+- Updated `src/components/items/CreateItemDialog.tsx` — File/Image type buttons render dimmed with an inline "Pro" hint for free users; click routes to `/settings?upgrade=true` instead of selecting the type; `isProTypeName` duplicated locally (client component can't import from `@/lib/limits` because it drags Prisma into the bundle)
+- Refactored `src/lib/stripe.ts` — lazy initialization via Proxy so the module loads without `STRIPE_SECRET_KEY` (Next 16 collects page data at build time and imports every route)
+- Added 11 unit tests in `src/actions/billing.test.ts` covering unauthenticated → sign-in redirect, session without email → sign-in redirect, customer reuse vs create-and-persist, monthly/yearly price selection with metadata + subscription_data.metadata, no-url → `/settings?upgrade=error`, portal no-customer → `/settings?upgrade=no_customer`, and success redirects for both actions
+- Updated `src/actions/items.test.ts` and `src/actions/collections.test.ts` to mock `@/lib/limits`; added `ALLOW_ALL_LIMITS` default in each `beforeEach` so pre-existing tests pass through the new gating
+- `npm run test:run` — 119 pass (108 prior + 11 new billing)
+- Pre-existing lint errors in `Navbar.tsx` and `EditCollectionDialog.tsx` untouched; zero new
+- Manual QA via Stripe CLI required before production: happy path (checkout → webhook → isPro=true), plan switch (monthly→yearly), cancellation at period end, subscription deletion, payment failure, webhook signature security, free-tier limit enforcement, `BYPASS_PRO_LIMITS=true` override, cross-tab session sync
 
 ### 2026-06-17 — Stripe Phase 1 — Core Infrastructure
 - Installed `stripe` SDK; created `src/lib/stripe.ts` singleton with `STRIPE_PRICE_IDS` map and `BillingInterval` type (pinned API version to `2026-05-27.dahlia` to match installed SDK)
