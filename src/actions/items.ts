@@ -5,6 +5,7 @@ import { auth } from '@/auth';
 import { prisma } from '@/lib/prisma';
 import { createItem, updateItem, deleteItem, toggleItemFavorite, toggleItemPin } from '@/lib/db/items';
 import type { ItemDetail } from '@/lib/db/items';
+import { getUserLimits, isProType } from '@/lib/limits';
 
 const UpdateItemSchema = z.object({
   title: z.string().trim().min(1, 'Title is required'),
@@ -65,10 +66,22 @@ export async function createItemAction(data: CreateItemInput): Promise<CreateIte
     return { success: false, error: 'Invalid file reference' };
   }
 
+  const limits = await getUserLimits(session.user.id);
+  if (!limits.canCreateItem) {
+    return {
+      success: false,
+      error: 'Item limit reached. Upgrade to Pro for unlimited items.',
+    };
+  }
+
   const itemType = await prisma.itemType.findFirst({
     where: { id: parsed.data.itemTypeId, OR: [{ isSystem: true }, { userId: session.user.id }] },
   });
   if (!itemType) return { success: false, error: 'Invalid item type' };
+
+  if (isProType(itemType.name) && !limits.canUseProType) {
+    return { success: false, error: 'File and image items require Pro.' };
+  }
 
   const created = await createItem(session.user.id, {
     ...parsed.data,

@@ -3,6 +3,7 @@ import { randomUUID } from 'crypto';
 import path from 'path';
 import { auth } from '@/auth';
 import { uploadToR2 } from '@/lib/r2';
+import { getUserLimits } from '@/lib/limits';
 
 const IMAGE_TYPES = new Set([
   'image/png',
@@ -32,6 +33,11 @@ export async function POST(req: NextRequest) {
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  const limits = await getUserLimits(session.user.id);
+  if (!limits.canUseProType) {
+    return NextResponse.json({ error: 'File uploads require Pro.' }, { status: 403 });
   }
 
   let formData: FormData;

@@ -11,15 +11,30 @@ vi.mock('@/lib/db/collections', () => ({
   toggleCollectionFavorite: vi.fn(),
 }));
 
+vi.mock('@/lib/limits', () => ({
+  getUserLimits: vi.fn(),
+}));
+
 import { createCollectionAction, updateCollectionAction, deleteCollectionAction, toggleCollectionFavoriteAction } from './collections';
 import { auth } from '@/auth';
 import { createCollection, updateCollection, deleteCollection, toggleCollectionFavorite } from '@/lib/db/collections';
+import { getUserLimits } from '@/lib/limits';
 
 const mockAuth = vi.mocked(auth);
 const mockCreateCollection = vi.mocked(createCollection);
 const mockUpdateCollection = vi.mocked(updateCollection);
 const mockDeleteCollection = vi.mocked(deleteCollection);
 const mockToggleCollectionFavorite = vi.mocked(toggleCollectionFavorite);
+const mockGetUserLimits = vi.mocked(getUserLimits);
+
+const ALLOW_ALL_LIMITS = {
+  isPro: false,
+  itemCount: 0,
+  collectionCount: 0,
+  canCreateItem: true,
+  canCreateCollection: true,
+  canUseProType: true,
+};
 
 const mockCollectionDetail = {
   id: 'col-1',
@@ -32,6 +47,7 @@ const mockCollectionDetail = {
 
 beforeEach(() => {
   vi.resetAllMocks();
+  mockGetUserLimits.mockResolvedValue(ALLOW_ALL_LIMITS);
 });
 
 describe('createCollectionAction', () => {
