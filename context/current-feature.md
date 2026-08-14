@@ -1,11 +1,15 @@
 # Current Feature
 
 ## Status
-Not Started
+In Progress
 
 ## Goals
+- Free users visiting `/items/files` or `/items/images` see an upgrade prompt instead of the (empty) list view
 
 ## Notes
+- Gate lives in `src/app/items/[type]/page.tsx` — after fetching, if `isProType(typeName) && !limits.canUseProType`, render `<ProTypeUpgrade>` inside `DashboardShell` instead of the list
+- `limits.canUseProType` (from `getUserLimits`) already respects real `isPro` and the `BYPASS_PRO_LIMITS` dev override, so Pro/bypass users are unaffected
+- `src/components/items/ProTypeUpgrade.tsx` — centered card with locked type icon + reused `<UpgradeCard>` (existing Stripe checkout flow)
 
 ## History
 
