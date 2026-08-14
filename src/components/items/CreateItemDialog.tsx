@@ -167,7 +167,7 @@ export function CreateItemDialog({ open, onClose, itemTypes, userCollections, in
                   onClick={() => {
                     if (isProLocked) {
                       handleClose();
-                      router.push('/settings?upgrade=true');
+                      router.push('/upgrade');
                       return;
                     }
                     setSelectedTypeId(type.id);
