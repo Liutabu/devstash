@@ -5,11 +5,13 @@ import { ItemCard } from '@/components/items/ItemCard';
 import { ImageThumbnailCard } from '@/components/items/ImageThumbnailCard';
 import { FileListRow } from '@/components/items/FileListRow';
 import { NewItemButton } from '@/components/items/NewItemButton';
+import { ProTypeUpgrade } from '@/components/items/ProTypeUpgrade';
 import { Pagination } from '@/components/ui/Pagination';
 import { getItemsByType, getItemTypesWithCounts } from '@/lib/db/items';
 import { getSidebarCollections, getUserCollections } from '@/lib/db/collections';
 import { getSearchData } from '@/lib/db/search';
 import { getEditorPreferences } from '@/lib/db/profile';
+import { getUserLimits, isProType } from '@/lib/limits';
 import { ITEMS_PER_PAGE } from '@/lib/constants';
 
 interface ItemsPageProps {
@@ -26,12 +28,13 @@ export default async function ItemsPage({ params, searchParams }: ItemsPageProps
   if (!session?.user?.id) redirect('/sign-in');
 
   const userId = session.user.id;
-  const [itemTypes, sidebarCollections, userCollections, searchData, editorPreferences, result] = await Promise.all([
+  const [itemTypes, sidebarCollections, userCollections, searchData, editorPreferences, limits, result] = await Promise.all([
     getItemTypesWithCounts(userId),
     getSidebarCollections(userId),
     getUserCollections(userId),
     getSearchData(userId),
     getEditorPreferences(userId),
+    getUserLimits(userId),
     getItemsByType(type, userId, page),
   ]);
 
@@ -40,6 +43,15 @@ export default async function ItemsPage({ params, searchParams }: ItemsPageProps
   const user = session.user;
   const { items, total, typeName, typeColor, typeId } = result;
   const totalPages = Math.ceil(total / ITEMS_PER_PAGE);
+
+  // Gate Pro-only item types (file/image) for free users behind an upgrade prompt.
+  if (isProType(typeName) && !limits.canUseProType) {
+    return (
+      <DashboardShell itemTypes={itemTypes} sidebarCollections={sidebarCollections} userCollections={userCollections} searchData={searchData} user={user} editorPreferences={editorPreferences}>
+        <ProTypeUpgrade type={type} typeName={typeName} typeColor={typeColor} />
+      </DashboardShell>
+    );
+  }
 
   return (
     <DashboardShell itemTypes={itemTypes} sidebarCollections={sidebarCollections} userCollections={userCollections} searchData={searchData} user={user} editorPreferences={editorPreferences}>
