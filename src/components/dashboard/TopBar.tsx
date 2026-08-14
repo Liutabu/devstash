@@ -1,4 +1,4 @@
-import { Search, Plus, PanelLeft, Menu, Star } from "lucide-react";
+import { Search, Plus, PanelLeft, Menu, Star, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
@@ -8,9 +8,10 @@ interface TopBarProps {
   onNewItem?: () => void;
   onNewCollection?: () => void;
   onSearchClick?: () => void;
+  isPro?: boolean;
 }
 
-export function TopBar({ onToggleSidebar, onMobileMenuClick, onNewItem, onNewCollection, onSearchClick }: TopBarProps) {
+export function TopBar({ onToggleSidebar, onMobileMenuClick, onNewItem, onNewCollection, onSearchClick, isPro }: TopBarProps) {
   return (
     <header className="flex h-14 shrink-0 items-center gap-3 border-b border-border bg-background px-4">
       {/* Logo */}
@@ -66,6 +67,18 @@ export function TopBar({ onToggleSidebar, onMobileMenuClick, onNewItem, onNewCol
 
       {/* Actions */}
       <div className="ml-auto flex items-center gap-2">
+        {!isPro && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-muted-foreground hover:text-foreground"
+            nativeButton={false}
+            render={<Link href="/upgrade" />}
+          >
+            <Sparkles className="h-4 w-4" />
+            <span className="hidden sm:inline">Upgrade</span>
+          </Button>
+        )}
         <Link
           href="/favorites"
           className="hidden min-[410px]:inline-flex items-center justify-center h-8 w-8 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"

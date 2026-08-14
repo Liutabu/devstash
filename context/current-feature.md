@@ -4,63 +4,24 @@
 In Progress
 
 ## Goals
-- Free users visiting `/items/files` or `/items/images` see an upgrade prompt instead of the (empty) list view
+- Free users see a subtle "Upgrade" ghost button in the dashboard header
+- Button routes to a new `/upgrade` page (not straight to Stripe checkout)
+- `/upgrade` shows Free vs Pro plan comparison like the marketing homepage pricing section
+- Monthly ($8/mo) / Yearly ($72/yr) toggle; the Pro CTA starts Stripe checkout for the selected interval
 
 ## Notes
-- Gate lives in `src/app/items/[type]/page.tsx` — after fetching, if `isProType(typeName) && !limits.canUseProType`, render `<ProTypeUpgrade>` inside `DashboardShell` instead of the list
-- `limits.canUseProType` (from `getUserLimits`) already respects real `isPro` and the `BYPASS_PRO_LIMITS` dev override, so Pro/bypass users are unaffected
-- `src/components/items/ProTypeUpgrade.tsx` — centered card with locked type icon + reused `<UpgradeCard>` (existing Stripe checkout flow)
+- `src/app/upgrade/page.tsx` — protected server page inside `DashboardShell`; redirects Pro users to `/settings`
+- `src/components/upgrade/UpgradePlans.tsx` — client component; interval toggle + Free/Pro cards; Pro CTA submits to existing `createCheckoutSessionAction(interval)`
+- `TopBar` gains an `isPro` prop; ghost "Upgrade" button rendered only for non-Pro users (uses real DB `isPro` from session, same as the sidebar PRO badge — `BYPASS_PRO_LIMITS` does not hide it)
+- Checkout success/cancel still land on `/settings?upgrade=…` (existing banner handling), unchanged
+- `/upgrade` added to `PROTECTED_PREFIXES` and the proxy matcher
 
-## History
-
-### 2026-07-09 — Stripe Phase 2 — Integration & UI
-- Created `src/actions/billing.ts` — `createCheckoutSessionAction(interval)` and `createPortalSessionAction()` server actions; internal `getOrCreateCustomer(userId, email, name)` helper reuses `stripeCustomerId` when present and persists a new one when creating; both actions `redirect()` on error and success (per the profile.ts pattern)
-- Created `src/app/api/stripe/webhook/route.ts` — Node runtime; `req.text()` for raw body; signature verification via `stripe.webhooks.constructEvent`; handles `checkout.session.completed`, `customer.subscription.{created,updated,deleted}`, `invoice.payment_failed`; sub/customer/subscription-id fields normalized via `typeof x === 'string'` checks; uses `sub.metadata.userId` when present, falls back to `updateMany` scoped by `stripeCustomerId`
-- Note: Stripe API `2026-05-27.dahlia` moved `current_period_end` from subscription-level to subscription-item-level; cast via `(item as unknown as { current_period_end?: number })` until SDK types catch up
-- Gated `createItemAction` in `src/actions/items.ts` — `getUserLimits` check for `canCreateItem` before type lookup; `isProType(itemType.name) && !canUseProType` after type lookup
-- Gated `createCollectionAction` in `src/actions/collections.ts` — checks `canCreateCollection`
-- Gated `POST /api/upload` — returns 403 with `File uploads require Pro.` when `!canUseProType`
-- Created `src/components/settings/SubscriptionSection.tsx` (server component) — dispatches to Upgrade vs Manage card based on `getSubscriptionStatus(userId).isPro`
-- Created `src/components/settings/UpgradeCard.tsx` — Monthly/Yearly toggle, dynamic pricing ($8/mo or $6/mo billed $72/yr), feature list, form submits to `createCheckoutSessionAction`
-- Created `src/components/settings/ManageSubscriptionCard.tsx` — plan label + renewal/cancel-at-period-end date; "Manage subscription" button submits to `createPortalSessionAction`
-- Updated `src/app/settings/page.tsx` — renders `<SubscriptionSection userId={userId}>` between Editor Preferences and Change Password; `?upgrade=success|cancelled|error|no_customer` banners via existing `SuccessBanner` / `ErrorBanner`
-- Extended `SidebarUser` in `Sidebar.tsx` and `DashboardShell.tsx` with `isPro?: boolean`; PRO badge on Files/Images entries hidden when `user.isPro`
-- Updated `src/components/items/CreateItemDialog.tsx` — File/Image type buttons render dimmed with an inline "Pro" hint for free users; click routes to `/settings?upgrade=true` instead of selecting the type; `isProTypeName` duplicated locally (client component can't import from `@/lib/limits` because it drags Prisma into the bundle)
-- Refactored `src/lib/stripe.ts` — lazy initialization via Proxy so the module loads without `STRIPE_SECRET_KEY` (Next 16 collects page data at build time and imports every route)
-- Added 11 unit tests in `src/actions/billing.test.ts` covering unauthenticated → sign-in redirect, session without email → sign-in redirect, customer reuse vs create-and-persist, monthly/yearly price selection with metadata + subscription_data.metadata, no-url → `/settings?upgrade=error`, portal no-customer → `/settings?upgrade=no_customer`, and success redirects for both actions
-- Updated `src/actions/items.test.ts` and `src/actions/collections.test.ts` to mock `@/lib/limits`; added `ALLOW_ALL_LIMITS` default in each `beforeEach` so pre-existing tests pass through the new gating
-- `npm run test:run` — 119 pass (108 prior + 11 new billing)
-- Pre-existing lint errors in `Navbar.tsx` and `EditCollectionDialog.tsx` untouched; zero new
-- Manual QA via Stripe CLI required before production: happy path (checkout → webhook → isPro=true), plan switch (monthly→yearly), cancellation at period end, subscription deletion, payment failure, webhook signature security, free-tier limit enforcement, `BYPASS_PRO_LIMITS=true` override, cross-tab session sync
-
-### 2026-06-17 — Stripe Phase 1 — Core Infrastructure
-- Installed `stripe` SDK; created `src/lib/stripe.ts` singleton with `STRIPE_PRICE_IDS` map and `BillingInterval` type (pinned API version to `2026-05-27.dahlia` to match installed SDK)
-- Prisma migration `20260617203119_add_subscription_state` adds `subscriptionStatus`, `subscriptionPeriodEnd`, `subscriptionCancelAtEnd`, `subscriptionInterval` to `User`
-- Updated `src/types/next-auth.d.ts` — added `isPro: boolean` on `Session.user`; augmented JWT for both `next-auth/jwt` and `@auth/core/jwt` paths
-- Updated `src/auth.ts` — added `jwt` callback that re-reads `isPro` from DB on every token issuance; session callback uses `token.isPro === true` for type-safe coercion (Next.js typecheck doesn't fully apply the JWT augmentation even though standalone `tsc` does)
-- Created `src/lib/limits.ts` — `FREE_LIMITS` constants (50 items, 3 collections), `isProType()` (case-insensitive match against file/image), `getUserLimits(userId)` runs Prisma user/item count/collection count via `Promise.all`; `BYPASS_PRO_LIMITS=true` dev override grants effective Pro for limit checks but `isPro` field returned is still the real DB value
-- Created `src/lib/db/subscription.ts` — `getSubscriptionStatus(userId)` reader for Phase 2 Settings UI
-- Documented `BYPASS_PRO_LIMITS` in `.env.example`
-- Added 23 unit tests in `src/lib/limits.test.ts` covering `isProType` cases, free-user boundaries at 49/50/51 items and 2/3 collections, Pro user paths, `BYPASS_PRO_LIMITS` true/false/unset variants, and parallel `Promise.all` query execution
-- No `getUserLimits()` calls in any write path yet — Phase 2 wires those up
-
-### 2026-05-20 — Auth Pages Navbar + Dashboard Logo
-- Added marketing `Navbar` to all auth pages via `src/app/(auth)/layout.tsx` — sign-in, register, forgot/reset-password, check/verify-email all share the same nav
-- Auth layout background changed to `bg-[#0a0a0a]` and `pt-16` added to clear the fixed navbar
-- Fixed `Navbar.tsx` anchor links from `#features`/`#pricing` to `/#features`/`/#pricing` so they navigate correctly from any page, not just `/`
-- Replaced the blue `S` box in the dashboard `TopBar` with the same Package SVG icon used in the marketing Navbar (`h-5 w-5 text-blue-500`)
-
-### 2026-05-19 — TopBar xs Responsiveness
-- Updated `src/components/dashboard/TopBar.tsx` with `min-[410px]:` breakpoints
-- Hides "DevStash" wordmark below 410px — square `S` logo only
-- Replaces full search pill with a search icon button below 410px (same `onSearchClick`, opens command palette)
-- Hides the Star/Favorites icon from the topbar below 410px (accessible via mobile sidebar)
-- Result: `[S] [☰] [🔍] [+]` at xs, full bar restored at 410px+
+---
 
 # Previous Feature: Marketing Homepage
 
 ## Status
-In Progress
+Completed
 
 ## Goals
 - Convert `prototypes/homepage/` mockup into a proper Next.js page under `src/app/(marketing)/`
@@ -85,7 +46,11 @@ In Progress
 - Copyright year: server-side `new Date().getFullYear()` (no client component needed)
 - Tailwind only — no custom CSS files
 
-## History
+---
+
+# History
+
+> Ordered oldest → newest. Append new entries at the bottom.
 
 ### 2026-04-04 — Initial Next.js Setup
 - Bootstrapped Next.js 16 with App Router, React 19, TypeScript, and Tailwind CSS v4
@@ -252,15 +217,15 @@ In Progress
 - Added `npm run test` (watch) and `npm run test:run` (CI) scripts
 - Updated `CLAUDE.md` and `context/ai-interaction.md` to document test scope and workflow step
 
-### 2026-04-30 — Items List 3-Column Layout
-- Updated grid in `src/app/items/[type]/page.tsx` from `md:grid-cols-2` to `md:grid-cols-2 lg:grid-cols-3`
-- Items now show 1 column on mobile, 2 on `md` (768px+), 3 on `lg` (1024px+)
-
 ### 2026-04-30 — Items List View
 - Added `getItemsByType(slug)` to `src/lib/db/items.ts` — looks up system ItemType by slug (strips trailing 's', case-insensitive), returns null for unknown slugs, fetches items with type+tags joined via existing `itemWithTypeAndTags` pattern
 - Created `src/components/items/ItemCard.tsx` — card with colored left border, icon, title, description excerpt (2-line clamp), type badge, tags (up to 3), and date
 - Created `src/app/items/[type]/page.tsx` — async server component; reuses `DashboardShell` for layout; parallel data fetching; 404 on unknown type; 1-column mobile / 2-column md+ grid; empty state message
 - Updated `src/proxy.ts` — added `/items` to `PROTECTED_PREFIXES` and `/items/:path*` to middleware matcher
+
+### 2026-04-30 — Items List 3-Column Layout
+- Updated grid in `src/app/items/[type]/page.tsx` from `md:grid-cols-2` to `md:grid-cols-2 lg:grid-cols-3`
+- Items now show 1 column on mobile, 2 on `md` (768px+), 3 on `lg` (1024px+)
 
 ### 2026-04-30 — Item Drawer
 - Installed shadcn `Sheet` component (`src/components/ui/sheet.tsx`)
@@ -463,17 +428,17 @@ In Progress
 - Updated `src/components/collections/CollectionDetailActions.tsx` — Favorite button now live; filled yellow when active, disabled while in-flight
 - Added 6 unit tests: `toggleItemFavoriteAction` (unauthorized, not found, success) and `toggleCollectionFavoriteAction` (unauthorized, not found, success)
 
+### 2026-05-13 — Client-Side Sorting on Favorites Page
+- Created `src/components/favorites/FavoriteItemsList.tsx` — client component wrapping item rows with sort controls (Date / Name / Type); clicking the active sort toggles direction (↑/↓); Date defaults desc, Name/Type default asc
+- Created `src/components/favorites/FavoriteCollectionsList.tsx` — same pattern for collections with sort controls (Date / Name / Items); Date and Items default desc, Name defaults asc
+- Updated `src/app/favorites/page.tsx` — replaced inline item and collection rendering with `<FavoriteItemsList>` and `<FavoriteCollectionsList>`; no DB changes needed (`FavoriteCollectionData` already included `itemCount`)
+
 ### 2026-05-15 — Pinned Items
 - Added `toggleItemPin(id, userId)` to `src/lib/db/items.ts` — ownership-checked, flips `isPinned` and returns new value
 - Added `toggleItemPinAction` to `src/actions/items.ts` — auth-gated, `{ success, data: { isPinned } }` return pattern
 - Updated `src/components/items/ItemDrawer.tsx` — Pin button now live; calls action, updates drawer via `onUpdate`, refreshes router; `pinning` state disables button during in-flight request
 - Updated `getItemsByType` in `src/lib/db/items.ts` — now orders by `[isPinned desc, createdAt desc]` so pinned items float to the top of listings
 - Added 3 unit tests for `toggleItemPinAction` (unauthorized, not found, success)
-
-### 2026-05-13 — Client-Side Sorting on Favorites Page
-- Created `src/components/favorites/FavoriteItemsList.tsx` — client component wrapping item rows with sort controls (Date / Name / Type); clicking the active sort toggles direction (↑/↓); Date defaults desc, Name/Type default asc
-- Created `src/components/favorites/FavoriteCollectionsList.tsx` — same pattern for collections with sort controls (Date / Name / Items); Date and Items default desc, Name defaults asc
-- Updated `src/app/favorites/page.tsx` — replaced inline item and collection rendering with `<FavoriteItemsList>` and `<FavoriteCollectionsList>`; no DB changes needed (`FavoriteCollectionData` already included `itemCount`)
 
 ### 2026-05-15 — Homepage Mockup Prototype
 - Created `prototypes/homepage/` — standalone marketing homepage (pure HTML/CSS/JS, no build step)
@@ -484,3 +449,53 @@ In Progress
 - Dashboard mockup: mini sidebar with 6 colored type dots + 2×3 grid of colored-border item cards
 - AI section: code editor mockup with syntax-highlighted TypeScript snippet + AI-generated tag chips
 - Pricing: Free ($0) vs Pro ($8/mo or $6/mo billed $72/yr) with "Most Popular" badge and toggle
+
+### 2026-05-19 — TopBar xs Responsiveness
+- Updated `src/components/dashboard/TopBar.tsx` with `min-[410px]:` breakpoints
+- Hides "DevStash" wordmark below 410px — square `S` logo only
+- Replaces full search pill with a search icon button below 410px (same `onSearchClick`, opens command palette)
+- Hides the Star/Favorites icon from the topbar below 410px (accessible via mobile sidebar)
+- Result: `[S] [☰] [🔍] [+]` at xs, full bar restored at 410px+
+
+### 2026-05-20 — Auth Pages Navbar + Dashboard Logo
+- Added marketing `Navbar` to all auth pages via `src/app/(auth)/layout.tsx` — sign-in, register, forgot/reset-password, check/verify-email all share the same nav
+- Auth layout background changed to `bg-[#0a0a0a]` and `pt-16` added to clear the fixed navbar
+- Fixed `Navbar.tsx` anchor links from `#features`/`#pricing` to `/#features`/`/#pricing` so they navigate correctly from any page, not just `/`
+- Replaced the blue `S` box in the dashboard `TopBar` with the same Package SVG icon used in the marketing Navbar (`h-5 w-5 text-blue-500`)
+
+### 2026-06-17 — Stripe Phase 1 — Core Infrastructure
+- Installed `stripe` SDK; created `src/lib/stripe.ts` singleton with `STRIPE_PRICE_IDS` map and `BillingInterval` type (pinned API version to `2026-05-27.dahlia` to match installed SDK)
+- Prisma migration `20260617203119_add_subscription_state` adds `subscriptionStatus`, `subscriptionPeriodEnd`, `subscriptionCancelAtEnd`, `subscriptionInterval` to `User`
+- Updated `src/types/next-auth.d.ts` — added `isPro: boolean` on `Session.user`; augmented JWT for both `next-auth/jwt` and `@auth/core/jwt` paths
+- Updated `src/auth.ts` — added `jwt` callback that re-reads `isPro` from DB on every token issuance; session callback uses `token.isPro === true` for type-safe coercion (Next.js typecheck doesn't fully apply the JWT augmentation even though standalone `tsc` does)
+- Created `src/lib/limits.ts` — `FREE_LIMITS` constants (50 items, 3 collections), `isProType()` (case-insensitive match against file/image), `getUserLimits(userId)` runs Prisma user/item count/collection count via `Promise.all`; `BYPASS_PRO_LIMITS=true` dev override grants effective Pro for limit checks but `isPro` field returned is still the real DB value
+- Created `src/lib/db/subscription.ts` — `getSubscriptionStatus(userId)` reader for Phase 2 Settings UI
+- Documented `BYPASS_PRO_LIMITS` in `.env.example`
+- Added 23 unit tests in `src/lib/limits.test.ts` covering `isProType` cases, free-user boundaries at 49/50/51 items and 2/3 collections, Pro user paths, `BYPASS_PRO_LIMITS` true/false/unset variants, and parallel `Promise.all` query execution
+- No `getUserLimits()` calls in any write path yet — Phase 2 wires those up
+
+### 2026-07-09 — Stripe Phase 2 — Integration & UI
+- Created `src/actions/billing.ts` — `createCheckoutSessionAction(interval)` and `createPortalSessionAction()` server actions; internal `getOrCreateCustomer(userId, email, name)` helper reuses `stripeCustomerId` when present and persists a new one when creating; both actions `redirect()` on error and success (per the profile.ts pattern)
+- Created `src/app/api/stripe/webhook/route.ts` — Node runtime; `req.text()` for raw body; signature verification via `stripe.webhooks.constructEvent`; handles `checkout.session.completed`, `customer.subscription.{created,updated,deleted}`, `invoice.payment_failed`; sub/customer/subscription-id fields normalized via `typeof x === 'string'` checks; uses `sub.metadata.userId` when present, falls back to `updateMany` scoped by `stripeCustomerId`
+- Note: Stripe API `2026-05-27.dahlia` moved `current_period_end` from subscription-level to subscription-item-level; cast via `(item as unknown as { current_period_end?: number })` until SDK types catch up
+- Gated `createItemAction` in `src/actions/items.ts` — `getUserLimits` check for `canCreateItem` before type lookup; `isProType(itemType.name) && !canUseProType` after type lookup
+- Gated `createCollectionAction` in `src/actions/collections.ts` — checks `canCreateCollection`
+- Gated `POST /api/upload` — returns 403 with `File uploads require Pro.` when `!canUseProType`
+- Created `src/components/settings/SubscriptionSection.tsx` (server component) — dispatches to Upgrade vs Manage card based on `getSubscriptionStatus(userId).isPro`
+- Created `src/components/settings/UpgradeCard.tsx` — Monthly/Yearly toggle, dynamic pricing ($8/mo or $6/mo billed $72/yr), feature list, form submits to `createCheckoutSessionAction`
+- Created `src/components/settings/ManageSubscriptionCard.tsx` — plan label + renewal/cancel-at-period-end date; "Manage subscription" button submits to `createPortalSessionAction`
+- Updated `src/app/settings/page.tsx` — renders `<SubscriptionSection userId={userId}>` between Editor Preferences and Change Password; `?upgrade=success|cancelled|error|no_customer` banners via existing `SuccessBanner` / `ErrorBanner`
+- Extended `SidebarUser` in `Sidebar.tsx` and `DashboardShell.tsx` with `isPro?: boolean`; PRO badge on Files/Images entries hidden when `user.isPro`
+- Updated `src/components/items/CreateItemDialog.tsx` — File/Image type buttons render dimmed with an inline "Pro" hint for free users; click routes to `/settings?upgrade=true` instead of selecting the type; `isProTypeName` duplicated locally (client component can't import from `@/lib/limits` because it drags Prisma into the bundle)
+- Refactored `src/lib/stripe.ts` — lazy initialization via Proxy so the module loads without `STRIPE_SECRET_KEY` (Next 16 collects page data at build time and imports every route)
+- Added 11 unit tests in `src/actions/billing.test.ts` covering unauthenticated → sign-in redirect, session without email → sign-in redirect, customer reuse vs create-and-persist, monthly/yearly price selection with metadata + subscription_data.metadata, no-url → `/settings?upgrade=error`, portal no-customer → `/settings?upgrade=no_customer`, and success redirects for both actions
+- Updated `src/actions/items.test.ts` and `src/actions/collections.test.ts` to mock `@/lib/limits`; added `ALLOW_ALL_LIMITS` default in each `beforeEach` so pre-existing tests pass through the new gating
+- `npm run test:run` — 119 pass (108 prior + 11 new billing)
+- Pre-existing lint errors in `Navbar.tsx` and `EditCollectionDialog.tsx` untouched; zero new
+- Manual QA via Stripe CLI required before production: happy path (checkout → webhook → isPro=true), plan switch (monthly→yearly), cancellation at period end, subscription deletion, payment failure, webhook signature security, free-tier limit enforcement, `BYPASS_PRO_LIMITS=true` override, cross-tab session sync
+
+### 2026-08-14 — Pro Type Page Gate
+- Gated `/items/files` and `/items/images` in `src/app/items/[type]/page.tsx` — after fetching, if `isProType(typeName) && !limits.canUseProType`, renders `<ProTypeUpgrade>` inside `DashboardShell` instead of the list view
+- `limits.canUseProType` (from `getUserLimits`) respects real `isPro` and the `BYPASS_PRO_LIMITS` dev override, so Pro and bypass users are unaffected
+- Created `src/components/items/ProTypeUpgrade.tsx` — centered card with locked type icon + reused `<UpgradeCard>` (existing Stripe checkout flow)
+- Limited the demo seed to 3 collections and under 50 items so the seeded account sits inside the free tier

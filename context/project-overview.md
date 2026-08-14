@@ -111,7 +111,7 @@ Full-text and metadata search across:
 | **Explain This Code** | AI explains a code snippet in plain language |
 | **Prompt Optimizer** | Rewrite and improve AI prompts |
 
-> **Note:** During development, all users will have access to Pro features for testing purposes.
+> **Note:** Pro gating is enforced in all environments. To test Pro features locally, set `BYPASS_PRO_LIMITS=true` in `.env` — it grants effective Pro for limit and type checks while leaving the stored `isPro` value untouched.
 
 ---
 
@@ -147,16 +147,22 @@ datasource db {
 
 // Extends NextAuth's default User model
 model User {
-  id                   String       @id @default(cuid())
-  name                 String?
-  email                String?      @unique
-  emailVerified        DateTime?
-  image                String?
-  isPro                Boolean      @default(false)
-  stripeCustomerId     String?      @unique
-  stripeSubscriptionId String?      @unique
-  createdAt            DateTime     @default(now())
-  updatedAt            DateTime     @updatedAt
+  id                      String    @id @default(cuid())
+  name                    String?
+  email                   String?   @unique
+  emailVerified           DateTime?
+  image                   String?
+  password                String?   // bcrypt hash; null for OAuth-only accounts
+  isPro                   Boolean   @default(false)
+  stripeCustomerId        String?   @unique
+  stripeSubscriptionId    String?   @unique
+  subscriptionStatus      String?
+  subscriptionPeriodEnd   DateTime?
+  subscriptionCancelAtEnd Boolean   @default(false)
+  subscriptionInterval    String?   // "month" | "year"
+  editorPreferences       Json?     // see src/lib/editor-preferences.ts
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
 
   accounts    Account[]
   sessions    Session[]
@@ -356,7 +362,7 @@ Freemium model with a Pro tier.
 
 **Pricing:** $8/month or $72/year (~25% discount)
 
-> During development, all users will bypass Pro restrictions for easier testing.
+> Limits are enforced by default. Set `BYPASS_PRO_LIMITS=true` in `.env` to bypass them during local development — the flag is opt-in and is never set in production.
 
 ---
 
@@ -449,7 +455,7 @@ Refer to the screenshots below as a base design for the dashboard ui. Use it as 
 
 ### Docs
 
-- [Next.js 15 Docs](https://nextjs.org/docs)
+- [Next.js 16 Docs](https://nextjs.org/docs)
 - [React 19 Docs](https://react.dev/)
 - [Prisma 7 Docs](https://www.prisma.io/docs)
 - [NextAuth v5 (Auth.js)](https://authjs.dev/)
@@ -478,4 +484,4 @@ Refer to the screenshots below as a base design for the dashboard ui. Use it as 
 
 ---
 
-*Last updated: April 2026*
+*Last updated: August 2026*

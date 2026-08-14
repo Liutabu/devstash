@@ -66,6 +66,7 @@ export function DashboardShell({ children, itemTypes, sidebarCollections, userCo
         onNewItem={() => openCreate()}
         onNewCollection={() => setCollectionCreateOpen(true)}
         onSearchClick={() => setSearchOpen(true)}
+        isPro={user.isPro}
       />
       <CreateCollectionDialog
         open={collectionCreateOpen}
