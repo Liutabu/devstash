@@ -6,18 +6,21 @@ import { Copy } from 'lucide-react';
 import { toast } from 'sonner';
 import { useEditorPreferences } from './EditorPreferencesContext';
 import { MONACO_THEMES } from '@/lib/monaco-themes';
+import { LANGUAGE_OPTIONS, getLanguageLabel, normalizeLanguage } from '@/lib/languages';
 
 interface CodeEditorProps {
   value: string;
   onChange?: (value: string) => void;
   language?: string;
+  /** When provided, the header shows a language dropdown instead of a static label. */
+  onLanguageChange?: (language: string) => void;
   readOnly?: boolean;
 }
 
 const MIN_HEIGHT = 120;
 const MAX_HEIGHT = 400;
 
-export function CodeEditor({ value, onChange, language, readOnly = false }: CodeEditorProps) {
+export function CodeEditor({ value, onChange, language, onLanguageChange, readOnly = false }: CodeEditorProps) {
   const [editorHeight, setEditorHeight] = useState(MIN_HEIGHT);
   const editorRef = useRef<Parameters<OnMount>[0] | null>(null);
   const { preferences } = useEditorPreferences();
@@ -46,7 +49,7 @@ export function CodeEditor({ value, onChange, language, readOnly = false }: Code
     toast.success('Copied to clipboard');
   }
 
-  const displayLanguage = language?.toLowerCase() || 'plaintext';
+  const displayLanguage = normalizeLanguage(language);
 
   return (
     <div className="rounded-md overflow-hidden border border-border" style={{ backgroundColor: '#1e1e1e' }}>
@@ -59,10 +62,27 @@ export function CodeEditor({ value, onChange, language, readOnly = false }: Code
         </div>
 
         <div className="flex items-center gap-2">
-          {language && (
-            <span className="text-xs" style={{ color: '#858585' }}>
-              {language}
-            </span>
+          {onLanguageChange ? (
+            <select
+              value={displayLanguage}
+              onChange={(e) => onLanguageChange(e.target.value)}
+              aria-label="Language"
+              title="Language"
+              className="cursor-pointer rounded border-0 px-1.5 py-0.5 text-xs outline-none focus:ring-1 focus:ring-white/20"
+              style={{ backgroundColor: '#3c3c3c', color: '#cccccc' }}
+            >
+              {LANGUAGE_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+          ) : (
+            language && (
+              <span className="text-xs" style={{ color: '#858585' }}>
+                {getLanguageLabel(language)}
+              </span>
+            )
           )}
           <button
             type="button"
