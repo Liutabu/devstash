@@ -1,69 +1,13 @@
-# Current Feature: Language Selector in Code Editor
+# Current Feature
 
 ## Status
-In Progress
+Not Started
 
 ## Goals
-- Pick the code language from a dropdown instead of typing it into a free-text field
-- Dropdown sits directly above the content (in the editor's header bar) so syntax highlighting updates live as you type
-- Works in both the New Item modal and the drawer's edit mode
+<!-- What success looks like -->
 
 ## Notes
-- `src/lib/languages.ts` — `LANGUAGE_OPTIONS` (30 Monaco language ids + labels), `normalizeLanguage()` (aliases like `ts`/`py`/`yml`, falls back to `plaintext`), `getLanguageLabel()`
-- `CodeEditor` gains an optional `onLanguageChange` prop — when passed, the header renders a `<select>` in place of the static language label; read-only view mode keeps the plain label
-- Standalone "Language" text inputs removed from `CreateItemDialog` and `ItemDrawer`'s `EditForm`
-- Existing free-text values in the DB still highlight correctly via `normalizeLanguage` aliases; unknown values fall back to Plain Text
-- Drawer view header shows the friendly label (`TypeScript`) rather than the raw stored value
-
----
-
-# Previous Feature: Upgrade Page
-
-## Status
-Completed
-
-## Goals
-- Free users see a subtle "Upgrade" ghost button in the dashboard header
-- Button routes to a new `/upgrade` page (not straight to Stripe checkout)
-- `/upgrade` shows Free vs Pro plan comparison like the marketing homepage pricing section
-- Monthly ($8/mo) / Yearly ($72/yr) toggle; the Pro CTA starts Stripe checkout for the selected interval
-
-## Notes
-- `src/app/upgrade/page.tsx` — protected server page inside `DashboardShell`; redirects Pro users to `/settings`
-- `src/components/upgrade/UpgradePlans.tsx` — client component; interval toggle + Free/Pro cards; Pro CTA submits to existing `createCheckoutSessionAction(interval)`
-- `TopBar` gains an `isPro` prop; ghost "Upgrade" button rendered only for non-Pro users (uses real DB `isPro` from session, same as the sidebar PRO badge — `BYPASS_PRO_LIMITS` does not hide it)
-- Checkout success/cancel still land on `/settings?upgrade=…` (existing banner handling), unchanged
-- `/upgrade` added to `PROTECTED_PREFIXES` and the proxy matcher
-
----
-
-# Older Feature: Marketing Homepage
-
-## Status
-Completed
-
-## Goals
-- Convert `prototypes/homepage/` mockup into a proper Next.js page under `src/app/(marketing)/`
-- Implement all 8 sections: Navbar, Hero, Features, AI, Pricing, CTA, Footer
-- Port `ChaosArena` animation (rAF loop + mouse repulsion) from prototype JS into a React client component
-- Add `DashboardMockup` as a static server component
-- Implement monthly/yearly pricing toggle in `PricingSection`
-- Add scroll fade-in via a `FadeIn` client wrapper using `IntersectionObserver`
-- Navbar: scroll opacity, mobile hamburger menu, Sign In / Get Started links
-- Auth redirect: if signed in, `redirect('/dashboard')` from the marketing page
-- All routing correct: `/sign-in`, `/register`, `/dashboard`, `#features`, `#pricing`
-- No `DashboardShell` — marketing layout is standalone with its own `layout.tsx`
-
-## Notes
-- Visual reference: `prototypes/homepage/` (pure HTML/CSS/JS — do not import it, port it)
-- Dark background: `bg-[#0a0a0a]` matching prototype's `#0d0d0d`
-- Hero h1 gradient: `bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent`
-- Feature card colors: #3b82f6, #f59e0b, #6366f1, #06b6d4, #64748b, #10b981
-- Dashboard mockup colors: #3b82f6, #f59e0b, #06b6d4, #22c55e, #6366f1, #ec4899
-- Arrow between hero boxes: CSS pulse animation, `rotate-90 md:rotate-0`
-- AI section code block: static `<pre><code>` with `<span>` color classes — no syntax highlighting library
-- Copyright year: server-side `new Date().getFullYear()` (no client component needed)
-- Tailwind only — no custom CSS files
+<!-- Context, constraints, details from spec -->
 
 ---
 
@@ -469,6 +413,15 @@ Completed
 - AI section: code editor mockup with syntax-highlighted TypeScript snippet + AI-generated tag chips
 - Pricing: Free ($0) vs Pro ($8/mo or $6/mo billed $72/yr) with "Most Popular" badge and toggle
 
+### 2026-05-16 — Marketing Homepage
+- Ported `prototypes/homepage/` into a real Next.js page under `src/app/(marketing)/` with its own standalone `layout.tsx` (no `DashboardShell`)
+- Implemented all sections: Navbar, Hero, Features, AI, Pricing, CTA, Footer
+- Ported the `ChaosArena` animation (rAF loop + mouse repulsion) from the prototype JS into a React client component; `DashboardMockup` is a static server component
+- Monthly/yearly toggle in `PricingSection`; scroll fade-ins via a `FadeIn` client wrapper using `IntersectionObserver`
+- Navbar: scroll opacity, mobile hamburger menu, Sign In / Get Started links
+- Signed-in visitors `redirect('/dashboard')` from the marketing page
+- Tailwind only — no custom CSS files; dark background `bg-[#0a0a0a]`
+
 ### 2026-05-19 — TopBar xs Responsiveness
 - Updated `src/components/dashboard/TopBar.tsx` with `min-[410px]:` breakpoints
 - Hides "DevStash" wordmark below 410px — square `S` logo only
@@ -524,3 +477,12 @@ Completed
 - Created `src/components/upgrade/UpgradePlans.tsx` — client component with Monthly/Yearly toggle and Free vs Pro cards; the Pro CTA submits to the existing `createCheckoutSessionAction(interval)`
 - `TopBar` gained an `isPro` prop; ghost "Upgrade" button rendered only for non-Pro users, using the real DB `isPro` from the session (so `BYPASS_PRO_LIMITS` does not hide it)
 - Added `/upgrade` to `PROTECTED_PREFIXES` and the proxy matcher; checkout success/cancel still land on `/settings?upgrade=…`
+
+### 2026-08-27 — Language Selector in Code Editor
+- Created `src/lib/languages.ts` — `LANGUAGE_OPTIONS` (30 Monaco language ids + display labels), `normalizeLanguage()` (resolves aliases like `ts`/`py`/`yml`/`c++`, falls back to `plaintext`), and `getLanguageLabel()`
+- Updated `src/components/ui/CodeEditor.tsx` — new optional `onLanguageChange` prop; when passed, the header bar (directly above the content) renders a `<select>` in place of the static language label, so highlighting updates live as you type; read-only view mode keeps the plain label
+- Removed the standalone free-text "Language" inputs from `CreateItemDialog` and `ItemDrawer`'s `EditForm` — the dropdown replaces both
+- `ItemDrawer` view header now shows the friendly label (`TypeScript`) instead of the raw stored value
+- Existing free-text language values in the DB still highlight correctly through the alias map; unknown values degrade to Plain Text rather than breaking
+- Added 10 unit tests in `src/lib/languages.test.ts` covering null/empty/unknown fallbacks, alias resolution, trimming/lowercasing, label lookup, and option-list integrity
+- Verified in the browser: created a snippet with live TypeScript highlighting, switched to Python and watched it re-highlight, then edited the saved item in the drawer and changed the language to Rust (persisted, badge updated)
