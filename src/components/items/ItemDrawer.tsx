@@ -21,6 +21,7 @@ import { CodeEditor } from '@/components/ui/CodeEditor';
 import { MarkdownEditor } from '@/components/ui/MarkdownEditor';
 import { updateItemAction, deleteItemAction, toggleItemFavoriteAction, toggleItemPinAction } from '@/actions/items';
 import { formatBytes } from '@/lib/format';
+import { getLanguageLabel } from '@/lib/languages';
 import { CollectionPicker } from '@/components/ui/CollectionPicker';
 import type { UserCollectionOption } from '@/lib/db/collections';
 
@@ -273,7 +274,7 @@ function DrawerBody({ detail, onUpdate, onDelete, userCollections }: DrawerBodyP
               </span>
               {!isEditing && detail.language && (
                 <span className="text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
-                  {detail.language}
+                  {getLanguageLabel(detail.language)}
                 </span>
               )}
             </div>
@@ -417,7 +418,8 @@ function EditForm({
             <CodeEditor
               value={editState.content}
               onChange={(v) => onEditStateChange({ content: v })}
-              language={editState.language || undefined}
+              language={editState.language}
+              onLanguageChange={(v) => onEditStateChange({ language: v })}
             />
           ) : (
             <MarkdownEditor
@@ -438,19 +440,6 @@ function EditForm({
             value={editState.url}
             onChange={(e) => onEditStateChange({ url: e.target.value })}
             placeholder="https://…"
-          />
-        </section>
-      )}
-
-      {showLanguage && (
-        <section>
-          <SectionHeading>Language</SectionHeading>
-          <input
-            type="text"
-            className="w-full bg-muted rounded px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-ring"
-            value={editState.language}
-            onChange={(e) => onEditStateChange({ language: e.target.value })}
-            placeholder="e.g. typescript"
           />
         </section>
       )}

@@ -1,7 +1,26 @@
-# Current Feature
+# Current Feature: Language Selector in Code Editor
 
 ## Status
 In Progress
+
+## Goals
+- Pick the code language from a dropdown instead of typing it into a free-text field
+- Dropdown sits directly above the content (in the editor's header bar) so syntax highlighting updates live as you type
+- Works in both the New Item modal and the drawer's edit mode
+
+## Notes
+- `src/lib/languages.ts` — `LANGUAGE_OPTIONS` (30 Monaco language ids + labels), `normalizeLanguage()` (aliases like `ts`/`py`/`yml`, falls back to `plaintext`), `getLanguageLabel()`
+- `CodeEditor` gains an optional `onLanguageChange` prop — when passed, the header renders a `<select>` in place of the static language label; read-only view mode keeps the plain label
+- Standalone "Language" text inputs removed from `CreateItemDialog` and `ItemDrawer`'s `EditForm`
+- Existing free-text values in the DB still highlight correctly via `normalizeLanguage` aliases; unknown values fall back to Plain Text
+- Drawer view header shows the friendly label (`TypeScript`) rather than the raw stored value
+
+---
+
+# Previous Feature: Upgrade Page
+
+## Status
+Completed
 
 ## Goals
 - Free users see a subtle "Upgrade" ghost button in the dashboard header
@@ -18,7 +37,7 @@ In Progress
 
 ---
 
-# Previous Feature: Marketing Homepage
+# Older Feature: Marketing Homepage
 
 ## Status
 Completed
@@ -499,3 +518,9 @@ Completed
 - `limits.canUseProType` (from `getUserLimits`) respects real `isPro` and the `BYPASS_PRO_LIMITS` dev override, so Pro and bypass users are unaffected
 - Created `src/components/items/ProTypeUpgrade.tsx` — centered card with locked type icon + reused `<UpgradeCard>` (existing Stripe checkout flow)
 - Limited the demo seed to 3 collections and under 50 items so the seeded account sits inside the free tier
+
+### 2026-08-14 — Upgrade Page
+- Created `src/app/upgrade/page.tsx` — protected server page inside `DashboardShell`; redirects Pro users to `/settings`
+- Created `src/components/upgrade/UpgradePlans.tsx` — client component with Monthly/Yearly toggle and Free vs Pro cards; the Pro CTA submits to the existing `createCheckoutSessionAction(interval)`
+- `TopBar` gained an `isPro` prop; ghost "Upgrade" button rendered only for non-Pro users, using the real DB `isPro` from the session (so `BYPASS_PRO_LIMITS` does not hide it)
+- Added `/upgrade` to `PROTECTED_PREFIXES` and the proxy matcher; checkout success/cancel still land on `/settings?upgrade=…`

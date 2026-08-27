@@ -267,7 +267,8 @@ export function CreateItemDialog({ open, onClose, itemTypes, userCollections, in
                   <CodeEditor
                     value={content}
                     onChange={setContent}
-                    language={language || undefined}
+                    language={language}
+                    onLanguageChange={setLanguage}
                   />
                 ) : (
                   <MarkdownEditor
@@ -277,22 +278,6 @@ export function CreateItemDialog({ open, onClose, itemTypes, userCollections, in
                   />
                 )}
               </div>
-            </div>
-          )}
-
-          {/* Language */}
-          {isLanguage && (
-            <div>
-              <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                Language
-              </label>
-              <input
-                type="text"
-                className="mt-1 w-full bg-muted rounded px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-ring"
-                placeholder="e.g. typescript"
-                value={language}
-                onChange={(e) => setLanguage(e.target.value)}
-              />
             </div>
           )}
 
