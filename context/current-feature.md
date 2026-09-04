@@ -1,13 +1,52 @@
-# Current Feature
+# Current Feature: AI Auto-Tagging
 
 ## Status
-Not Started
+In Progress
 
 ## Goals
-<!-- What success looks like -->
+- Create OpenAI client utility (`src/lib/openai.ts`) exporting an `AI_MODEL` constant set to `gpt-5-nano`, using the standard `openai` SDK — keep it simple (lazy init, same pattern as `src/lib/stripe.ts`)
+- Add an AI rate limit config (20 requests/hour per user) to `src/lib/rate-limit.ts`
+- Create a `generateAutoTags` server action with auth check, Pro gating (`getUserLimits`), Zod validation, and rate limiting; returns `{ success, data, error }` per the existing action pattern
+- Return 3–5 freeform tag suggestions derived from the item's title + content (tags are not restricted to existing DB tags)
+- Truncate content to 2000 chars before the API call
+- Add a "Suggest Tags" button (Sparkles icon, ghost variant) near the tags input in `CreateItemDialog` and `ItemDrawer` edit mode
+- Render suggestions as badges with per-tag accept (check) and reject (X) controls; accepted tags append to the item's tag list
+- Hide the button for free users (UI gating) while keeping server-side enforcement authoritative
+- Surface Pro-gating, rate-limit, and AI service errors via Sonner toasts
+- Unit tests for the server action
+- `npm run build` passes with no new lint errors
 
 ## Notes
-<!-- Context, constraints, details from spec -->
+
+### CRITICAL — OpenAI SDK / `gpt-5-nano` gotchas
+- The `openai` package v6+ has two APIs. **`gpt-5-nano` does NOT work with Chat Completions** — `completion.choices[0].message.content` comes back as an empty string. Use the **Responses API**.
+- Correct shape:
+  ```ts
+  const response = await client.responses.create({
+    model: 'gpt-5-nano',
+    instructions: 'You are a developer tool assistant...',
+    input: 'Suggest 3-5 tags for this snippet...',
+    text: { format: { type: 'json_object' } },
+  });
+  const text = response.output_text;
+  ```
+- Mapping from Chat Completions: `client.responses.create()` instead of `client.chat.completions.create()`; `instructions` (system) + `input` (user) instead of `messages`; `text: { format: { type: 'json_object' } }` instead of `response_format`; `response.output_text` instead of `choices[0].message.content`; `max_tokens` unsupported (use `max_output_tokens` if needed at all).
+- Do **not** use `zodResponseFormat` structured output — it burns excessive tokens with this model and hits length limits. Use `json_object` and parse manually.
+- The model may return `{"tags": ["a","b"]}` **or** a bare `["a","b"]` — handle both.
+- Normalize all returned tags to lowercase.
+- **Found during implementation:** `text: { format: { type: 'json_object' } }` is rejected with
+  `"Response input messages must contain the word 'json' in some form"` unless the word appears in
+  **`input`** — the word in `instructions` does not satisfy the check. `buildAutoTagInput` now opens
+  with "reply with JSON only" and a unit test guards it.
+- **Found during implementation:** `insufficient_quota` comes back as a 429, so the SDK's
+  `maxRetries: 2` retries it — a billing failure takes ~6s to surface instead of ~0.3s.
+
+### Other context
+- `OPENAI_API_KEY` is already present in `.env`.
+- `isPro` is available server-side via session but is **not** currently passed into the create/edit UI components. Server-side gating is the enforcement; UI button visibility needs `isPro` threaded down as a prop (`DashboardShell` already receives the session user with `isPro`).
+- This is the first AI feature, so it establishes the shared OpenAI foundation (client, action pattern, rate limit config) for the later AI features (summaries, explain code, prompt optimizer).
+- Full architectural context: `docs/ai-integration-plan.md`; source spec: `context/features/ai-auto-tag-spec.md`.
+- Existing patterns to follow: `src/actions/items.ts` (Zod + auth + `{ success, data, error }`), `src/lib/limits.ts` (`getUserLimits`), `src/lib/rate-limit.ts` (`checkRateLimit`, fails open), `src/lib/stripe.ts` (lazy client init so builds don't need the key).
 
 ---
 

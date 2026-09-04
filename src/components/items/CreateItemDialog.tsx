@@ -21,6 +21,7 @@ import { createItemAction } from '@/actions/items';
 import type { ItemTypeWithCount } from '@/lib/db/items';
 import { CollectionPicker } from '@/components/ui/CollectionPicker';
 import type { UserCollectionOption } from '@/lib/db/collections';
+import { SuggestTags } from '@/components/ai/SuggestTags';
 
 interface CreateItemDialogProps {
   open: boolean;
@@ -294,6 +295,13 @@ export function CreateItemDialog({ open, onClose, itemTypes, userCollections, in
               onChange={(e) => setTagsInput(e.target.value)}
             />
             <p className="text-xs text-muted-foreground mt-1">Comma-separated</p>
+            <SuggestTags
+              isPro={isPro}
+              title={title}
+              content={isContent ? content : ''}
+              value={tagsInput}
+              onChange={setTagsInput}
+            />
           </div>
 
           {/* Collections */}

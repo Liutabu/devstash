@@ -12,6 +12,7 @@ export interface UserLimits {
   canCreateItem: boolean;
   canCreateCollection: boolean;
   canUseProType: boolean;
+  canUseAi: boolean;
 }
 
 const PRO_TYPE_SLUGS = new Set(['file', 'image']);
@@ -38,5 +39,6 @@ export async function getUserLimits(userId: string): Promise<UserLimits> {
     canCreateItem: effectivePro || itemCount < FREE_LIMITS.items,
     canCreateCollection: effectivePro || collectionCount < FREE_LIMITS.collections,
     canUseProType: effectivePro,
+    canUseAi: effectivePro,
   };
 }

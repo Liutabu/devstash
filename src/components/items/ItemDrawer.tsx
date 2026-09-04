@@ -24,6 +24,7 @@ import { formatBytes } from '@/lib/format';
 import { getLanguageLabel } from '@/lib/languages';
 import { CollectionPicker } from '@/components/ui/CollectionPicker';
 import type { UserCollectionOption } from '@/lib/db/collections';
+import { SuggestTags } from '@/components/ai/SuggestTags';
 
 export interface ItemDetailResponse {
   id: string;
@@ -53,14 +54,15 @@ interface ItemDrawerProps {
   onUpdate: (detail: ItemDetailResponse) => void;
   onDelete: () => void;
   userCollections: UserCollectionOption[];
+  isPro?: boolean;
 }
 
-export function ItemDrawer({ isOpen, onClose, detail, loading, onUpdate, onDelete, userCollections }: ItemDrawerProps) {
+export function ItemDrawer({ isOpen, onClose, detail, loading, onUpdate, onDelete, userCollections, isPro }: ItemDrawerProps) {
   return (
     <Sheet open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
       <SheetContent side="right" className="sm:max-w-[480px] p-0 flex flex-col overflow-hidden gap-0">
         {loading && <DrawerSkeleton />}
-        {!loading && detail && <DrawerBody detail={detail} onUpdate={onUpdate} onDelete={onDelete} userCollections={userCollections} />}
+        {!loading && detail && <DrawerBody detail={detail} onUpdate={onUpdate} onDelete={onDelete} userCollections={userCollections} isPro={isPro} />}
         {!loading && !detail && isOpen && (
           <>
             <SheetTitle className="sr-only">Item</SheetTitle>
@@ -105,9 +107,10 @@ interface DrawerBodyProps {
   onUpdate: (detail: ItemDetailResponse) => void;
   onDelete: () => void;
   userCollections: UserCollectionOption[];
+  isPro?: boolean;
 }
 
-function DrawerBody({ detail, onUpdate, onDelete, userCollections }: DrawerBodyProps) {
+function DrawerBody({ detail, onUpdate, onDelete, userCollections, isPro }: DrawerBodyProps) {
   const router = useRouter();
   const Icon = ITEM_TYPE_ICON_MAP[detail.itemType.icon];
 
@@ -372,6 +375,7 @@ function DrawerBody({ detail, onUpdate, onDelete, userCollections }: DrawerBodyP
             createdAt={createdAt}
             updatedAt={updatedAt}
             userCollections={userCollections}
+            isPro={isPro}
           />
         ) : (
           <ViewBody detail={detail} createdAt={createdAt} updatedAt={updatedAt} />
@@ -391,12 +395,13 @@ interface EditFormProps {
   createdAt: string;
   updatedAt: string;
   userCollections: UserCollectionOption[];
+  isPro?: boolean;
 }
 
 function EditForm({
   editState, onEditStateChange,
   showContent, showLanguage, showUrl,
-  detail, createdAt, updatedAt, userCollections,
+  detail, createdAt, updatedAt, userCollections, isPro,
 }: EditFormProps) {
   return (
     <>
@@ -454,6 +459,13 @@ function EditForm({
           placeholder="react, hooks, typescript"
         />
         <p className="text-xs text-muted-foreground mt-1">Comma-separated</p>
+        <SuggestTags
+          isPro={isPro}
+          title={editState.title}
+          content={showContent ? editState.content : ''}
+          value={editState.tagsInput}
+          onChange={(v) => onEditStateChange({ tagsInput: v })}
+        />
       </section>
 
       <section>

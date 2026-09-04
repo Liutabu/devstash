@@ -17,9 +17,10 @@ export function useItemDrawer() {
 interface ItemDrawerProviderProps {
   children: React.ReactNode;
   userCollections: UserCollectionOption[];
+  isPro?: boolean;
 }
 
-export function ItemDrawerProvider({ children, userCollections }: ItemDrawerProviderProps) {
+export function ItemDrawerProvider({ children, userCollections, isPro }: ItemDrawerProviderProps) {
   const [itemId, setItemId] = useState<string | null>(null);
   const [detail, setDetail] = useState<ItemDetailResponse | null>(null);
   const [loading, setLoading] = useState(false);
@@ -54,6 +55,7 @@ export function ItemDrawerProvider({ children, userCollections }: ItemDrawerProv
         onUpdate={setDetail}
         onDelete={close}
         userCollections={userCollections}
+        isPro={isPro}
       />
     </DrawerContext.Provider>
   );
