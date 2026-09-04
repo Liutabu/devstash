@@ -46,6 +46,7 @@ const ALLOW_ALL_LIMITS = {
   canCreateItem: true,
   canCreateCollection: true,
   canUseProType: true,
+  canUseAi: true,
 };
 
 const validInput = {

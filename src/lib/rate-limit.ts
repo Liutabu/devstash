@@ -20,6 +20,7 @@ export const limiters = {
   forgotPassword: makeLimiter('forgot', 3, '1 h'),
   resetPassword: makeLimiter('reset', 5, '15 m'),
   resendVerification: makeLimiter('resend', 3, '15 m'),
+  ai: makeLimiter('ai', 20, '1 h'),
 };
 
 export interface RateLimitResult {

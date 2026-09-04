@@ -107,7 +107,7 @@ export function DashboardShell({ children, itemTypes, sidebarCollections, userCo
 
         {/* Main content */}
         <main className="flex-1 overflow-auto bg-background p-6">
-          <ItemDrawerProvider userCollections={userCollections}>
+          <ItemDrawerProvider userCollections={userCollections} isPro={user.isPro}>
             <CommandPalette
               open={searchOpen}
               onClose={() => setSearchOpen(false)}

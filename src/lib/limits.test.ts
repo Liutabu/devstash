@@ -113,6 +113,12 @@ describe('getUserLimits — Free user', () => {
     expect(limits.canUseProType).toBe(false);
   });
 
+  it('canUseAi is false for free user', async () => {
+    mockUserState({ isPro: false, itemCount: 0, collectionCount: 0 });
+    const limits = await getUserLimits('user-1');
+    expect(limits.canUseAi).toBe(false);
+  });
+
   it('missing user → isPro false, normal limit checks apply', async () => {
     mockUserState({ isPro: null, itemCount: 49, collectionCount: 2 });
     const limits = await getUserLimits('user-1');
@@ -142,6 +148,12 @@ describe('getUserLimits — Pro user', () => {
     const limits = await getUserLimits('user-1');
     expect(limits.canUseProType).toBe(true);
   });
+
+  it('canUseAi true for Pro user', async () => {
+    mockUserState({ isPro: true, itemCount: 0, collectionCount: 0 });
+    const limits = await getUserLimits('user-1');
+    expect(limits.canUseAi).toBe(true);
+  });
 });
 
 describe('getUserLimits — BYPASS_PRO_LIMITS dev flag', () => {
@@ -164,6 +176,13 @@ describe('getUserLimits — BYPASS_PRO_LIMITS dev flag', () => {
     mockUserState({ isPro: false, itemCount: 0, collectionCount: 0 });
     const limits = await getUserLimits('user-1');
     expect(limits.canUseProType).toBe(true);
+  });
+
+  it('bypass=true + free user → canUseAi true', async () => {
+    process.env.BYPASS_PRO_LIMITS = 'true';
+    mockUserState({ isPro: false, itemCount: 0, collectionCount: 0 });
+    const limits = await getUserLimits('user-1');
+    expect(limits.canUseAi).toBe(true);
   });
 
   it('bypass=false enforces limits normally', async () => {
