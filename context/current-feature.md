@@ -1,52 +1,13 @@
-# Current Feature: AI Auto-Tagging
+# Current Feature
 
 ## Status
-In Progress
+Not Started
 
 ## Goals
-- Create OpenAI client utility (`src/lib/openai.ts`) exporting an `AI_MODEL` constant set to `gpt-5-nano`, using the standard `openai` SDK — keep it simple (lazy init, same pattern as `src/lib/stripe.ts`)
-- Add an AI rate limit config (20 requests/hour per user) to `src/lib/rate-limit.ts`
-- Create a `generateAutoTags` server action with auth check, Pro gating (`getUserLimits`), Zod validation, and rate limiting; returns `{ success, data, error }` per the existing action pattern
-- Return 3–5 freeform tag suggestions derived from the item's title + content (tags are not restricted to existing DB tags)
-- Truncate content to 2000 chars before the API call
-- Add a "Suggest Tags" button (Sparkles icon, ghost variant) near the tags input in `CreateItemDialog` and `ItemDrawer` edit mode
-- Render suggestions as badges with per-tag accept (check) and reject (X) controls; accepted tags append to the item's tag list
-- Hide the button for free users (UI gating) while keeping server-side enforcement authoritative
-- Surface Pro-gating, rate-limit, and AI service errors via Sonner toasts
-- Unit tests for the server action
-- `npm run build` passes with no new lint errors
+<!-- What success looks like -->
 
 ## Notes
-
-### CRITICAL — OpenAI SDK / `gpt-5-nano` gotchas
-- The `openai` package v6+ has two APIs. **`gpt-5-nano` does NOT work with Chat Completions** — `completion.choices[0].message.content` comes back as an empty string. Use the **Responses API**.
-- Correct shape:
-  ```ts
-  const response = await client.responses.create({
-    model: 'gpt-5-nano',
-    instructions: 'You are a developer tool assistant...',
-    input: 'Suggest 3-5 tags for this snippet...',
-    text: { format: { type: 'json_object' } },
-  });
-  const text = response.output_text;
-  ```
-- Mapping from Chat Completions: `client.responses.create()` instead of `client.chat.completions.create()`; `instructions` (system) + `input` (user) instead of `messages`; `text: { format: { type: 'json_object' } }` instead of `response_format`; `response.output_text` instead of `choices[0].message.content`; `max_tokens` unsupported (use `max_output_tokens` if needed at all).
-- Do **not** use `zodResponseFormat` structured output — it burns excessive tokens with this model and hits length limits. Use `json_object` and parse manually.
-- The model may return `{"tags": ["a","b"]}` **or** a bare `["a","b"]` — handle both.
-- Normalize all returned tags to lowercase.
-- **Found during implementation:** `text: { format: { type: 'json_object' } }` is rejected with
-  `"Response input messages must contain the word 'json' in some form"` unless the word appears in
-  **`input`** — the word in `instructions` does not satisfy the check. `buildAutoTagInput` now opens
-  with "reply with JSON only" and a unit test guards it.
-- **Found during implementation:** `insufficient_quota` comes back as a 429, so the SDK's
-  `maxRetries: 2` retries it — a billing failure takes ~6s to surface instead of ~0.3s.
-
-### Other context
-- `OPENAI_API_KEY` is already present in `.env`.
-- `isPro` is available server-side via session but is **not** currently passed into the create/edit UI components. Server-side gating is the enforcement; UI button visibility needs `isPro` threaded down as a prop (`DashboardShell` already receives the session user with `isPro`).
-- This is the first AI feature, so it establishes the shared OpenAI foundation (client, action pattern, rate limit config) for the later AI features (summaries, explain code, prompt optimizer).
-- Full architectural context: `docs/ai-integration-plan.md`; source spec: `context/features/ai-auto-tag-spec.md`.
-- Existing patterns to follow: `src/actions/items.ts` (Zod + auth + `{ success, data, error }`), `src/lib/limits.ts` (`getUserLimits`), `src/lib/rate-limit.ts` (`checkRateLimit`, fails open), `src/lib/stripe.ts` (lazy client init so builds don't need the key).
+<!-- Context, constraints, details from spec -->
 
 ---
 
@@ -525,3 +486,20 @@ In Progress
 - Existing free-text language values in the DB still highlight correctly through the alias map; unknown values degrade to Plain Text rather than breaking
 - Added 10 unit tests in `src/lib/languages.test.ts` covering null/empty/unknown fallbacks, alias resolution, trimming/lowercasing, label lookup, and option-list integrity
 - Verified in the browser: created a snippet with live TypeScript highlighting, switched to Python and watched it re-highlight, then edited the saved item in the drawer and changed the language to Rust (persisted, badge updated)
+
+### 2026-09-04 — AI Auto-Tagging (first AI feature)
+- Installed `openai` (v7.8.0); added `OPENAI_API_KEY` to `.env.example`
+- Created `src/lib/openai.ts` — lazy Proxy client (same pattern as `src/lib/stripe.ts` so builds don't need the key), `maxRetries: 2`, 30s timeout, `AI_MODEL = 'gpt-5-nano'`
+- Created `src/lib/ai/tags.ts` — `AUTO_TAG_INSTRUCTIONS` prompt constant, `truncateForAi` (2000-char cap), `buildAutoTagInput` (wraps title+content in `<item>` markers as data, not instructions), `parseTagSuggestions` (accepts `{"tags":[…]}` or a bare array; lowercases, regex-validates, de-dupes, caps at 5)
+- Created `src/actions/ai.ts` with `generateAutoTags` — auth → Zod → Pro gate (`getUserLimits`) → rate limit → Responses API → parse; `{ success, data, error }` pattern; `store: false` so OpenAI does not retain item content; raw SDK errors logged server-side only
+- Added `ai` limiter (20 requests / 1 h, keyed on `userId`) to `src/lib/rate-limit.ts`
+- Added `canUseAi` to `UserLimits` in `src/lib/limits.ts` — same `effectivePro` expression as `canUseProType` but kept a separate field (separate product decision; `docs/ai-integration-plan.md` §7)
+- Created `src/components/ai/SuggestTags.tsx` — Sparkles ghost button (disabled without a title, spinner + `aria-busy` while pending) and per-tag chips with accept (✓) / dismiss (✕); accepted tags append to the comma-separated tags input; renders `null` for free users
+- Mounted below the tags input in `CreateItemDialog` and `ItemDrawer`'s `EditForm`; `isPro` threaded `DashboardShell → ItemDrawerProvider → ItemDrawer → DrawerBody → EditForm`
+- **Gotcha found live:** the Responses API rejects `text.format: json_object` unless the word "json" appears in **`input`** — the word in `instructions` does not satisfy it. `buildAutoTagInput` opens with "reply with JSON only"; a unit test guards it
+- **Gotcha found live:** `insufficient_quota` is returned as a 429, so the SDK retries it twice — billing failures take ~6s to surface
+- Deviation from `docs/ai-integration-plan.md` §12: the action takes `title` + `content` from the client rather than an `itemId`, because the button must work in the create dialog where no item exists yet. Mitigated by the Pro gate, the 20/hr per-user limit, and server-side truncation
+- `checkRateLimit` left fail-open (the plan suggests `failClosed` for metered AI paths) — an Upstash outage currently makes AI calls unlimited
+- Added 30 unit tests: 13 in `src/actions/ai.test.ts` (gating paths assert OpenAI is never called, truncation, both response shapes, no error leak), 14 in `src/lib/ai/tags.test.ts`, 3 for `canUseAi` in `src/lib/limits.test.ts`; `npm run test:run` — 160 pass
+- Verified in the browser (dev server + Playwright): button renders in both the create dialog and drawer edit mode, disabled without a title; clicking invokes the action and all gates pass
+- **Not verified:** the happy path. The OpenAI project has no credit (`insufficient_quota`), so no successful completion was ever returned — real tag quality and the accept/reject chip flow still need a run once billing is added
