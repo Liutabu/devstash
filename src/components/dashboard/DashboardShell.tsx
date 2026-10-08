@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useSyncExternalStore } from 'react';
 import { TopBar } from './TopBar';
 import { Sidebar } from './Sidebar';
 import { DashboardContext } from './DashboardContext';
@@ -14,6 +14,24 @@ import { CreateCollectionDialog } from '@/components/collections/CreateCollectio
 import { CommandPalette } from '@/components/search/CommandPalette';
 import { EditorPreferencesProvider } from '@/components/ui/EditorPreferencesContext';
 import { DEFAULT_EDITOR_PREFERENCES, type EditorPreferences } from '@/lib/editor-preferences';
+
+/** Below this the expanded 240px sidebar leaves too little room for the content grid. */
+const LARGE_SCREEN_QUERY = '(min-width: 1024px)';
+
+function subscribeToLargeScreen(onChange: () => void) {
+  const mql = window.matchMedia(LARGE_SCREEN_QUERY);
+  mql.addEventListener('change', onChange);
+  return () => mql.removeEventListener('change', onChange);
+}
+
+/** True at lg and above. Assumes large on the server so SSR matches the desktop default. */
+function useIsLargeScreen() {
+  return useSyncExternalStore(
+    subscribeToLargeScreen,
+    () => window.matchMedia(LARGE_SCREEN_QUERY).matches,
+    () => true,
+  );
+}
 
 interface SidebarUser {
   name?: string | null;
@@ -33,7 +51,10 @@ interface DashboardShellProps {
 }
 
 export function DashboardShell({ children, itemTypes, sidebarCollections, userCollections, searchData, user, editorPreferences }: DashboardShellProps) {
-  const [collapsed, setCollapsed] = useState(false);
+  const isLargeScreen = useIsLargeScreen();
+  // null = follow the viewport; the toggle pins an explicit choice.
+  const [collapsedOverride, setCollapsedOverride] = useState<boolean | null>(null);
+  const collapsed = collapsedOverride ?? !isLargeScreen;
   const [mobileOpen, setMobileOpen] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
   const [createTypeId, setCreateTypeId] = useState<string | undefined>(undefined);
@@ -61,7 +82,7 @@ export function DashboardShell({ children, itemTypes, sidebarCollections, userCo
     <DashboardContext value={{ openCreate, openCreateCollection: () => setCollectionCreateOpen(true) }}>
     <div className="flex h-full flex-col" suppressHydrationWarning>
       <TopBar
-        onToggleSidebar={() => setCollapsed((c) => !c)}
+        onToggleSidebar={() => setCollapsedOverride(!collapsed)}
         onMobileMenuClick={() => setMobileOpen(true)}
         onNewItem={() => openCreate()}
         onNewCollection={() => setCollectionCreateOpen(true)}
