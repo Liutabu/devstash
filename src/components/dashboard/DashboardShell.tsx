@@ -58,7 +58,7 @@ export function DashboardShell({ children, itemTypes, sidebarCollections, userCo
 
   return (
     <EditorPreferencesProvider initialPreferences={editorPreferences ?? DEFAULT_EDITOR_PREFERENCES}>
-    <DashboardContext value={{ openCreate }}>
+    <DashboardContext value={{ openCreate, openCreateCollection: () => setCollectionCreateOpen(true) }}>
     <div className="flex h-full flex-col" suppressHydrationWarning>
       <TopBar
         onToggleSidebar={() => setCollapsed((c) => !c)}
