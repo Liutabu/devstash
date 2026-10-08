@@ -1,7 +1,7 @@
 # Current Feature
 
 ## Status
-In Progress — flagged fixes and 4 of 5 High items merged; 1 High, Medium and Low remain.
+In Progress — flagged fixes and all High items merged; Medium and Low remain.
 
 ## Goals
 
@@ -18,7 +18,7 @@ UI/UX fixes from the 2026-10-08 Playwright review (12 pages/states driven live a
 - [x] **New Collection unavailable on mobile.** Done 2026-10-08 — `fix/mobile-nav-gaps`. (The button is hidden below `sm` / 640px, not 410px as first reported.)
 - [x] **New Item dialog footer is not sticky.** Done 2026-10-08 — `fix/mobile-nav-gaps`.
 - [x] **768px tablet breakpoint is broken.** Done 2026-10-08 — `fix/responsive-breakpoints`.
-- [ ] **Auth pages render for signed-in users.** `/sign-in` and `/register` both rendered fully while logged in. `/` already redirects to `/dashboard`; auth pages should too.
+- [x] **Auth pages render for signed-in users.** Done 2026-10-08 — `fix/auth-pages-redirect`.
 
 ### Medium
 
@@ -581,3 +581,11 @@ UI/UX fixes from the 2026-10-08 Playwright review (12 pages/states driven live a
 - Verified with Playwright: 768px defaults to the 52px strip and the toggle expands it back to 240px; 1440px still defaults to expanded; no hydration warnings or console errors
 - Side effect: the 768px stat-card label truncation ("Favorite Ite…") is also resolved. The 375px truncation remains open under Medium
 - Known pre-existing quirk, not addressed: sidebar collapse state resets on every navigation because each route mounts its own `DashboardShell`
+
+### 2026-10-08 — Redirect Signed-In Users Away From Auth Pages
+- `/sign-in` and `/register` rendered in full for an authenticated user, offering a second sign-in on top of a live session
+- Followed the existing marketing-page pattern (`src/app/(marketing)/page.tsx:12`) rather than adding middleware rules: `const session = await auth(); if (session) redirect('/dashboard');` at the top of each page component
+- Deliberately left the token-driven auth pages alone — `/verify-email` and `/reset-password` are reached from emailed links a signed-in user can legitimately follow, so redirecting would break those flows. `/forgot-password` and `/check-email` were also left as-is (not flagged in the review)
+- Signed-in users now land on `/dashboard` rather than any `callbackUrl` on the URL. Honouring that param would mean redirecting to a user-supplied absolute URL (the proxy sets `req.nextUrl.href`), which is an open-redirect risk without same-origin validation — not worth it for the two-tab edge case
+- Verified with Playwright: signed in, both pages redirect to `/dashboard`; signed out, both render, including the `?error=` / `?registered=` banner variants; full credentials sign-in round trip still works
+- Pre-existing behaviour confirmed unchanged: `signInWithCredentials` already landed on `/dashboard` rather than the `callbackUrl` before this change
