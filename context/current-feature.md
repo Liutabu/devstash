@@ -1,7 +1,7 @@
 # Current Feature
 
 ## Status
-Not Started
+In Progress — the two user-flagged fixes are merged; High / Medium / Low remain.
 
 ## Goals
 
@@ -9,8 +9,8 @@ UI/UX fixes from the 2026-10-08 Playwright review (12 pages/states driven live a
 
 ### Flagged by user (confirmed in browser)
 
-- [ ] **Sidebar active link highlighting.** `Sidebar.tsx` never imports `usePathname`; type links (:58) and collection links (:105, :124) all use one static class string. Add `usePathname()` + conditional `bg-sidebar-accent text-sidebar-accent-foreground` for `/items/[slug]` and `/collections/[id]`.
-- [ ] **GitHub button on register page.** `sign-in/page.tsx:96-104` has the OR divider + "Sign in with GitHub"; `register/page.tsx` has zero GitHub references. Port the block and reuse `signInWithGitHub` from `@/actions/auth`.
+- [x] **Sidebar active link highlighting.** Done 2026-10-08 — `fix/sidebar-active-state`.
+- [x] **GitHub button on register page.** Done 2026-10-08 — `fix/register-github-button`.
 
 ### High
 
@@ -546,3 +546,19 @@ UI/UX fixes from the 2026-10-08 Playwright review (12 pages/states driven live a
 - Added 30 unit tests: 13 in `src/actions/ai.test.ts` (gating paths assert OpenAI is never called, truncation, both response shapes, no error leak), 14 in `src/lib/ai/tags.test.ts`, 3 for `canUseAi` in `src/lib/limits.test.ts`; `npm run test:run` — 160 pass
 - Verified in the browser (dev server + Playwright): button renders in both the create dialog and drawer edit mode, disabled without a title; clicking invokes the action and all gates pass
 - **Not verified:** the happy path. The OpenAI project has no credit (`insufficient_quota`), so no successful completion was ever returned — real tag quality and the accept/reject chip flow still need a run once billing is added
+
+### 2026-10-08 — Sidebar Active Link Highlighting
+- `Sidebar.tsx` never read the current route, so no nav item ever showed an active state
+- Added `usePathname()` and a module-level `ACTIVE_LINK` constant (`bg-sidebar-accent text-sidebar-accent-foreground font-medium`)
+- Applied to all four link groups: item types, favourite collections, recent collections, and "View all collections"
+- `/collections` uses an exact match so collection detail pages don't light up the "View all" link
+- Added `aria-current="page"` on the matching link in every group
+- Verified with Playwright: correct link highlights on `/items/snippets`, `/items/prompts` and `/collections/[id]`; exactly one `aria-current` per route; works in the collapsed 52px sidebar
+
+### 2026-10-08 — GitHub OAuth Button on Register Page
+- The register page had no OAuth option while sign-in did — new users could only sign up with a password
+- Created `src/components/ui/GitHubAuthButton.tsx` exporting `GitHubAuthButton` (takes a `label` prop) and `AuthDivider`; follows the `banners.tsx` precedent for auth UI shared across pages
+- Extracted rather than copied because the inline GitHub SVG path is ~700 characters
+- Both pages now use it: sign-in keeps "Sign in with GitHub", register shows "Sign up with GitHub"; both submit to the existing `signInWithGitHub` action
+- Verified with Playwright: clicking the register button redirects to GitHub's authorize URL with the correct client id, PKCE challenge and callback; sign-in page unchanged visually
+- No unit tests — both changes are presentational, outside the server-actions/utilities test scope
