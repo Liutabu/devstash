@@ -1,4 +1,6 @@
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
+import { auth } from '@/auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { signInWithCredentials, resendVerificationAction } from '@/actions/auth';
@@ -20,6 +22,9 @@ export default async function SignInPage({
 }: {
   searchParams: Promise<{ error?: string; email?: string; registered?: string; verified?: string; reset?: string; resent?: string }>;
 }) {
+  const session = await auth();
+  if (session) redirect('/dashboard');
+
   const params = await searchParams;
   const errorMsg = params.error ? (ERROR_MESSAGES[params.error] ?? 'Something went wrong.') : null;
   const unverifiedEmail = params.error === 'unverified' || params.error === 'resend_rate_limited' ? (params.email ?? '') : '';
