@@ -4,10 +4,53 @@
 Not Started
 
 ## Goals
-<!-- What success looks like -->
+
+UI/UX fixes from the 2026-10-08 Playwright review (12 pages/states driven live at 1440, 768 and 375). Ordered by priority — tackle as one branch or split per section.
+
+### Flagged by user (confirmed in browser)
+
+- [ ] **Sidebar active link highlighting.** `Sidebar.tsx` never imports `usePathname`; type links (:58) and collection links (:105, :124) all use one static class string. Add `usePathname()` + conditional `bg-sidebar-accent text-sidebar-accent-foreground` for `/items/[slug]` and `/collections/[id]`.
+- [ ] **GitHub button on register page.** `sign-in/page.tsx:96-104` has the OR divider + "Sign in with GitHub"; `register/page.tsx` has zero GitHub references. Port the block and reuse `signInWithGitHub` from `@/actions/auth`.
+
+### High
+
+- [ ] **Favorites unreachable on mobile.** Only entry point is the topbar star, hidden below 410px; sidebar and user dropdown have no Favorites link. Add a Favorites nav entry to the sidebar.
+- [ ] **New Collection unavailable on mobile.** Button is in the DOM but hidden below 410px (verified) — collections cannot be created at all on a phone. Move it into the `+` menu or the sidebar.
+- [ ] **New Item dialog footer is not sticky.** At 375x812 "Create Item" renders at y=831, off-screen the moment the dialog opens. Make the footer `sticky bottom-0`.
+- [ ] **768px tablet breakpoint is broken.** Sidebar stays expanded at 240px leaving ~528px, so the 2-col grid crushes every title ("Docker multi...", "useDebounc...") and tags wrap to 3 rows. Auto-collapse the sidebar below `lg`, or drop to 1 column.
+- [ ] **Auth pages render for signed-in users.** `/sign-in` and `/register` both rendered fully while logged in. `/` already redirects to `/dashboard`; auth pages should too.
+
+### Medium
+
+- [ ] **`/favorites` and `/settings` use a different design language** — monospace rows, ~640-735px centered column, a "Back to dashboard" link — vs full-width sans-serif card grids everywhere else. Standardize container width and type scale.
+- [ ] **Item type names render raw lowercase** everywhere: sidebar "snippet", page heading "snippets", New Item chips, drawer badge. Capitalize at display time.
+- [ ] **New Item type chips** are alphabetical, wrap to 2 rows with "snippet" orphaned, and default to "command". Use spec order (snippet, prompt, command, note, link, file, image) and default to snippet.
+- [ ] **Hover-only controls invisible to keyboard and touch.** Collection 3-dot menu and card copy buttons are `opacity-0 group-hover:opacity-100` with no `focus-visible:opacity-100`. (`CollectionCard.tsx`, `ItemCard.tsx`)
+- [ ] **Item drawer too narrow (~384px)** — code wraps mid-token (`/app/package*.` / `json ./`). Widen to `sm:max-w-2xl` for snippet/command or allow horizontal scroll.
+- [ ] **Command palette polish.** Type badges sit inline after each title giving a ragged right edge; right-align them in a column. No up/down/enter/esc hint footer.
+- [ ] **Mobile sidebar drawer** covers the topbar with no close button — backdrop tap is the only dismissal.
+- [ ] **Collection detail has no back link and no "Add item"** — only route back is the sidebar's small "View all collections".
+- [ ] **375px truncation hits the wrong field.** Stat cards show "Favorite Ite...", favorites rows show "useDebo..." / "AI Work..." while the full date survives. Drop the date on mobile.
+
+### Low
+
+- [ ] **Two logos on auth pages** — navbar Package icon plus the old grey "S" square above the form.
+- [ ] **Text inputs have no focus ring** — only a faint 1px border shift (verified on sign-in email field). Buttons get the proper `ring-3`.
+- [ ] **Sidebar collapse toggle has no `aria-label` or `title`** — the only unlabeled icon button in the app.
+- [ ] **Language dropdown is a bare native `<select>`** (`appearance:auto`, `#3c3c3c`) inside the dark editor chrome. (`CodeEditor.tsx`)
+- [ ] **Pinned item repeated verbatim** in Recent Items on the dashboard.
+- [ ] **Card titles are not headings** — `/collections` has one `h1` and no `h2`/`h3` at all.
+- [ ] **No sorting/filtering** on item or collection lists; sort controls exist only on `/favorites`.
+- [ ] **Empty Monaco in New Item** shows a stray olive current-line bar; its "Copy" button is useless when empty.
+- [ ] **Next.js console warning**: `scroll-behavior: smooth` on `<html>` — add `data-scroll-behavior="smooth"` in `src/app/layout.tsx`.
 
 ## Notes
-<!-- Context, constraints, details from spec -->
+
+- Review method: Playwright MCP driving the live dev server, not code review. Pages covered: marketing `/`, `/sign-in`, `/register`, `/dashboard`, `/items/snippets`, `/collections`, `/collections/[id]`, `/favorites`, `/settings`, item drawer (view + edit), command palette, New Item dialog. Breakpoints: 1440x900, 768x1024, 375x812.
+- The `ui-reviewer` agent could not be used — its `mcp playwright *` tool pattern does not resolve the Playwright MCP server, so it falls back to code-only review. Either fix the pattern in the agent definition or drive Playwright directly.
+- Console is clean apart from the one `scroll-behavior` warning. No errors on any page.
+- **Not reviewed:** the demo account is Pro — Monthly, so PRO badges, the Upgrade button and the pro-type gates (`/items/files`, `/items/images`) never rendered. Free-tier UI needs a separate pass with a non-Pro account.
+- Screenshots from the review are in the session scratchpad, not the repo.
 
 ---
 
