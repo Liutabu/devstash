@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { AuthDivider, GitHubAuthButton } from '@/components/ui/GitHubAuthButton';
 import { registerAction } from '@/actions/auth';
 
 const ERROR_MESSAGES: Record<string, string> = {
@@ -57,6 +58,10 @@ export default async function RegisterPage({
         </div>
         <Button type="submit" className="w-full">Create account</Button>
       </form>
+
+      <AuthDivider />
+
+      <GitHubAuthButton label="Sign up with GitHub" />
 
       <p className="text-center text-sm text-muted-foreground">
         Already have an account?{' '}
