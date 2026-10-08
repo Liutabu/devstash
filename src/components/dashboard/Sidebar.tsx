@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { Star, ChevronDown, LogOut, User, Settings } from 'lucide-react';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
@@ -10,6 +11,9 @@ import { ITEM_TYPE_ICON_MAP } from '@/lib/item-type-icons';
 import { signOutAction } from '@/actions/auth';
 import type { ItemTypeWithCount } from '@/lib/db/items';
 import type { SidebarCollectionData } from '@/lib/db/collections';
+
+/** Applied to the sidebar link matching the current route. */
+const ACTIVE_LINK = 'bg-sidebar-accent text-sidebar-accent-foreground font-medium';
 
 interface SidebarUser {
   name?: string | null;
@@ -26,6 +30,7 @@ interface SidebarProps {
 }
 
 export function Sidebar({ collapsed, itemTypes, collections, user }: SidebarProps) {
+  const pathname = usePathname();
   const [collectionsOpen, setCollectionsOpen] = useState(true);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
 
@@ -52,14 +57,17 @@ export function Sidebar({ collapsed, itemTypes, collections, user }: SidebarProp
           <nav className="space-y-0.5 px-2">
             {itemTypes.map((type) => {
               const Icon = ITEM_TYPE_ICON_MAP[type.icon];
+              const isActive = pathname === `/items/${type.slug}`;
               return (
                 <Link
                   key={type.id}
                   href={`/items/${type.slug}`}
                   title={collapsed ? type.name : undefined}
+                  aria-current={isActive ? 'page' : undefined}
                   className={cn(
                     'flex items-center gap-2.5 rounded-md px-2 py-1.5 text-sm text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors',
                     collapsed && 'justify-center',
+                    isActive && ACTIVE_LINK,
                   )}
                 >
                   <span className="shrink-0" style={{ color: type.color }}>
@@ -103,7 +111,11 @@ export function Sidebar({ collapsed, itemTypes, collections, user }: SidebarProp
                     <Link
                       key={col.id}
                       href={`/collections/${col.id}`}
-                      className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors"
+                      aria-current={pathname === `/collections/${col.id}` ? 'page' : undefined}
+                      className={cn(
+                        'flex items-center gap-2 rounded-md px-2 py-1.5 text-sm text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors',
+                        pathname === `/collections/${col.id}` && ACTIVE_LINK,
+                      )}
                     >
                       <Star className="h-3.5 w-3.5 shrink-0 fill-yellow-400 text-yellow-400" />
                       <span className="flex-1 truncate">{col.name}</span>
@@ -122,7 +134,11 @@ export function Sidebar({ collapsed, itemTypes, collections, user }: SidebarProp
                     <Link
                       key={col.id}
                       href={`/collections/${col.id}`}
-                      className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors"
+                      aria-current={pathname === `/collections/${col.id}` ? 'page' : undefined}
+                      className={cn(
+                        'flex items-center gap-2 rounded-md px-2 py-1.5 text-sm text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors',
+                        pathname === `/collections/${col.id}` && ACTIVE_LINK,
+                      )}
                     >
                       <span
                         className="h-3.5 w-3.5 shrink-0 rounded-full"
@@ -140,7 +156,11 @@ export function Sidebar({ collapsed, itemTypes, collections, user }: SidebarProp
               <div className="px-2 pt-1">
                 <Link
                   href="/collections"
-                  className="block rounded-md px-2 py-1.5 text-xs text-muted-foreground hover:text-foreground hover:bg-sidebar-accent transition-colors"
+                  aria-current={pathname === '/collections' ? 'page' : undefined}
+                  className={cn(
+                    'block rounded-md px-2 py-1.5 text-xs text-muted-foreground hover:text-foreground hover:bg-sidebar-accent transition-colors',
+                    pathname === '/collections' && ACTIVE_LINK,
+                  )}
                 >
                   View all collections
                 </Link>
