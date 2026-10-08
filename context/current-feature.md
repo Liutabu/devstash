@@ -1,7 +1,7 @@
 # Current Feature
 
 ## Status
-In Progress — the two user-flagged fixes are merged; High / Medium / Low remain.
+In Progress — flagged fixes and 4 of 5 High items merged; 1 High, Medium and Low remain.
 
 ## Goals
 
@@ -14,10 +14,10 @@ UI/UX fixes from the 2026-10-08 Playwright review (12 pages/states driven live a
 
 ### High
 
-- [ ] **Favorites unreachable on mobile.** Only entry point is the topbar star, hidden below 410px; sidebar and user dropdown have no Favorites link. Add a Favorites nav entry to the sidebar.
-- [ ] **New Collection unavailable on mobile.** Button is in the DOM but hidden below 410px (verified) — collections cannot be created at all on a phone. Move it into the `+` menu or the sidebar.
-- [ ] **New Item dialog footer is not sticky.** At 375x812 "Create Item" renders at y=831, off-screen the moment the dialog opens. Make the footer `sticky bottom-0`.
-- [ ] **768px tablet breakpoint is broken.** Sidebar stays expanded at 240px leaving ~528px, so the 2-col grid crushes every title ("Docker multi...", "useDebounc...") and tags wrap to 3 rows. Auto-collapse the sidebar below `lg`, or drop to 1 column.
+- [x] **Favorites unreachable on mobile.** Done 2026-10-08 — `fix/mobile-nav-gaps`.
+- [x] **New Collection unavailable on mobile.** Done 2026-10-08 — `fix/mobile-nav-gaps`. (The button is hidden below `sm` / 640px, not 410px as first reported.)
+- [x] **New Item dialog footer is not sticky.** Done 2026-10-08 — `fix/mobile-nav-gaps`.
+- [x] **768px tablet breakpoint is broken.** Done 2026-10-08 — `fix/responsive-breakpoints`.
 - [ ] **Auth pages render for signed-in users.** `/sign-in` and `/register` both rendered fully while logged in. `/` already redirects to `/dashboard`; auth pages should too.
 
 ### Medium
@@ -562,3 +562,22 @@ UI/UX fixes from the 2026-10-08 Playwright review (12 pages/states driven live a
 - Both pages now use it: sign-in keeps "Sign in with GitHub", register shows "Sign up with GitHub"; both submit to the existing `signInWithGitHub` action
 - Verified with Playwright: clicking the register button redirects to GitHub's authorize URL with the correct client id, PKCE challenge and callback; sign-in page unchanged visually
 - No unit tests — both changes are presentational, outside the server-actions/utilities test scope
+
+### 2026-10-08 — Mobile Nav Gaps
+- Three paths were unreachable on a phone; all three fixed in `fix/mobile-nav-gaps`
+- **Favorites**: only entry point was the topbar star (`hidden min-[410px]:inline-flex`). Added a Favorites link at the top of `Sidebar.tsx`, which the mobile drawer renders; gets the same active-state treatment as the other nav links
+- **New Collection**: topbar button is `hidden sm:flex`, so it disappears below 640px (not 410px as the review first reported) — collections could not be created at all on mobile. Added a "New collection" button to the sidebar's Collections section
+- Added `openCreateCollection` to `DashboardContext` so `Sidebar` can open the existing `CreateCollectionDialog`; `DashboardShell` supplies it alongside `openCreate`
+- **New Item dialog footer**: `DialogContent` was a single `overflow-y-auto` block, so at 375x812 the Create Item button rendered at y=831 — off-screen on open. `DialogContent` is now `flex flex-col overflow-hidden` with only the body scrolling (`flex-1 min-h-0 overflow-y-auto`), pinning header and footer
+- Body uses `-mr-4 pr-4` so the scrollbar sits against the dialog edge rather than inset by the dialog's padding
+- Verified with Playwright at 375x812: Favorites and New collection reachable through the drawer, the collection dialog opens from the sidebar, and Create Item sits fully in view at y=683; desktop dialog unchanged
+- Confirmed the mobile drawer already closes on navigation (each route mounts its own `DashboardShell`, so the state resets) — no fix needed
+
+### 2026-10-08 — Responsive Sidebar at Tablet Widths
+- At 768px the expanded 240px sidebar left ~528px for content, so the 2-column grid truncated every card title and wrapped tags onto 3 rows
+- `DashboardShell` now derives sidebar collapse from the viewport: collapsed below `lg` (1024px), expanded at or above it, leaving ~716px for content at 768px
+- Viewport state comes from `useSyncExternalStore` over `matchMedia` with a server snapshot of `true` (large), so SSR matches the desktop default and hydration stays clean — avoids the `react-hooks/set-state-in-effect` lint rule that a `useEffect` + `setState` approach would have tripped
+- Collapse state is now `collapsedOverride ?? !isLargeScreen`; the topbar toggle pins an explicit choice so expanding at tablet width still works
+- Verified with Playwright: 768px defaults to the 52px strip and the toggle expands it back to 240px; 1440px still defaults to expanded; no hydration warnings or console errors
+- Side effect: the 768px stat-card label truncation ("Favorite Ite…") is also resolved. The 375px truncation remains open under Medium
+- Known pre-existing quirk, not addressed: sidebar collapse state resets on every navigation because each route mounts its own `DashboardShell`
