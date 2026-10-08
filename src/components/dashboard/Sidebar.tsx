@@ -2,9 +2,10 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Star, ChevronDown, LogOut, User, Settings } from 'lucide-react';
+import { Star, ChevronDown, LogOut, User, Settings, Plus } from 'lucide-react';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
+import { useDashboard } from './DashboardContext';
 import { badgeVariants } from '@/components/ui/badge';
 import { UserAvatar } from '@/components/ui/UserAvatar';
 import { ITEM_TYPE_ICON_MAP } from '@/lib/item-type-icons';
@@ -31,6 +32,7 @@ interface SidebarProps {
 
 export function Sidebar({ collapsed, itemTypes, collections, user }: SidebarProps) {
   const pathname = usePathname();
+  const { openCreateCollection } = useDashboard();
   const [collectionsOpen, setCollectionsOpen] = useState(true);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
 
@@ -47,6 +49,23 @@ export function Sidebar({ collapsed, itemTypes, collections, user }: SidebarProp
     >
       {/* Scrollable nav */}
       <div className="flex-1 overflow-y-auto overflow-x-hidden py-3 space-y-4">
+        {/* Favorites — the only entry point on mobile, where the topbar star is hidden */}
+        <nav className="px-2">
+          <Link
+            href="/favorites"
+            title={collapsed ? 'Favorites' : undefined}
+            aria-current={pathname === '/favorites' ? 'page' : undefined}
+            className={cn(
+              'flex items-center gap-2.5 rounded-md px-2 py-1.5 text-sm text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors',
+              collapsed && 'justify-center',
+              pathname === '/favorites' && ACTIVE_LINK,
+            )}
+          >
+            <Star className="h-4 w-4 shrink-0 fill-yellow-400 text-yellow-400" />
+            {!collapsed && <span className="flex-1 truncate">Favorites</span>}
+          </Link>
+        </nav>
+
         {/* Types */}
         <section>
           {!collapsed && (
@@ -153,7 +172,16 @@ export function Sidebar({ collapsed, itemTypes, collections, user }: SidebarProp
             )}
 
             {collectionsOpen && (
-              <div className="px-2 pt-1">
+              <div className="px-2 pt-1 space-y-0.5">
+                {/* Only way to create a collection below sm, where the topbar button is hidden */}
+                <button
+                  type="button"
+                  onClick={openCreateCollection}
+                  className="flex w-full items-center gap-1.5 rounded-md px-2 py-1.5 text-xs text-muted-foreground hover:text-foreground hover:bg-sidebar-accent transition-colors"
+                >
+                  <Plus className="h-3.5 w-3.5 shrink-0" />
+                  New collection
+                </button>
                 <Link
                   href="/collections"
                   aria-current={pathname === '/collections' ? 'page' : undefined}

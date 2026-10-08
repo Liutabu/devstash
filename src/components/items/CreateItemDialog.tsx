@@ -149,12 +149,14 @@ export function CreateItemDialog({ open, onClose, itemTypes, userCollections, in
 
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o) handleClose(); }}>
-      <DialogContent className="sm:max-w-[520px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[520px] max-h-[90vh] flex flex-col overflow-hidden">
         <DialogHeader>
           <DialogTitle>New Item</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4 py-2">
+        {/* Only the body scrolls, so the footer stays reachable on short viewports.
+            -mr-4/pr-4 keeps the scrollbar against the dialog edge, not inset by its padding. */}
+        <div className="flex-1 min-h-0 overflow-y-auto -mr-4 pr-4 space-y-4 py-2">
           {/* Type selector */}
           <div className="flex flex-wrap gap-1.5">
             {itemTypes.map((type) => {
